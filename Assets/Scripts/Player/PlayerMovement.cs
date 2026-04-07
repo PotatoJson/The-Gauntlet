@@ -8,22 +8,25 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed = 5f;
     public float sprintSpeed = 9f;
     
-    [Header("Dash Settings")]
-    public float dashSpeed = 15f;
-    public float dashDuration = 0.2f;
-    public float dashCooldown = 0.5f; 
-    public float dashIFrames = 0.15f; 
+    [Header("Roll Settings")]
+    [Tooltip("Draw how the speed changes over time. Start high, dip low at the end for recovery.")]
+    public AnimationCurve rollSpeedCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+    public float rollDistanceMultiplier = 15f; // How far the roll pushes you
+    public float rollDuration = 0.75f;         // Total time the roll takes
+    public float rollCooldown = 0.2f;          // Penalty time before you can roll again
     
-    [Tooltip("How fast the character turns while sprinting")]
+    [Header("Roll I-Frames")]
+    public float iFrameStartTime = 0.1f; // Startup frames (vulnerable before the dodge actually works)
+    public float iFrameDuration = 0.35f; // How long you are actually invincible
+    
+    [Header("Rotation Settings")]
     public float rotationSpeed = 15f; 
-    
-    [Tooltip("How fast the character aligns with the camera while strafing")]
     public float strafeTurnSpeed = 20f; 
 
     [Header("Buffering")]
     public float bufferWindow = 0.2f; 
-    private float _dashBufferTimer;
-    private bool _hasBufferedDash;
+    private float _rollBufferTimer;
+    private bool _hasBufferedRoll;
 
     [Header("Physics")]
     public float gravity = -9.81f;
@@ -38,110 +41,96 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 _moveInput;
     private float _smoothSpeed;
     private float _targetSpeed;
-    private float _dashCooldownTimer;
-    private float _iFrameTimer;
     
-    // Dash Logic
-    private bool _isDashing;
-    public bool IsDashing => _isDashing;
-    private float _dashTimer;
-    public bool IsInvincibleViaDash => _iFrameTimer > 0;
-    private Vector3 _dashDirection;
+    // Roll Logic
+    private bool _isRolling;
+    public bool IsRolling => _isRolling;
+    private float _rollTimer;
+    private float _rollCooldownTimer;
+    private Vector3 _rollDirection;
+
+    // Computed property for I-Frames
+    public bool IsInvincibleViaRoll 
+    {
+        get 
+        {
+            return _isRolling && 
+                   _rollTimer >= iFrameStartTime && 
+                   _rollTimer <= (iFrameStartTime + iFrameDuration);
+        }
+    }
 
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
         
-        // Failsafe check to ensure we have a Main Camera
-        if (Camera.main != null)
-        {
-            _cameraTransform = Camera.main.transform;
-        }
-        else
-        {
-            Debug.LogError("PlayerMovement: No camera tagged 'MainCamera' found in the scene!");
-        }
+        if (Camera.main != null) _cameraTransform = Camera.main.transform;
         
         _input = new PlayerControls();
         
         _input.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
         
-        _input.Player.Dash.performed += ctx => OnDashInput();
+    
+        _input.Player.Roll.performed += ctx => OnRollInput(); 
     }
 
     private void OnEnable() => _input.Enable();
     private void OnDisable() => _input.Disable();
 
-    private void OnDashInput()
+    private void OnRollInput()
     {
-        // If we are currently dashing or on cooldown, buffer the input
-        if (_isDashing || _dashCooldownTimer > 0)
+        if (_isRolling || _rollCooldownTimer > 0)
         {
-            _hasBufferedDash = true;
-            _dashBufferTimer = bufferWindow;
+            _hasBufferedRoll = true;
+            _rollBufferTimer = bufferWindow;
         }
         else
         {
-            AttemptDash(); 
+            AttemptRoll(); 
         }
     }
 
     private void Update()
     {
-        // Handle Cooldowns & Timers
-        if (_dashCooldownTimer > 0) _dashCooldownTimer -= Time.deltaTime;
-        if (_iFrameTimer > 0) _iFrameTimer -= Time.deltaTime;
+        if (_rollCooldownTimer > 0) _rollCooldownTimer -= Time.deltaTime;
 
-        // Handle Input Buffering for Dashes
-        if (_hasBufferedDash)
+        if (_hasBufferedRoll)
         {
-            _dashBufferTimer -= Time.deltaTime;
+            _rollBufferTimer -= Time.deltaTime;
             
-            if (_dashBufferTimer <= 0) 
+            if (_rollBufferTimer <= 0) 
             {
-                _hasBufferedDash = false;
+                _hasBufferedRoll = false;
             }
-            // If the buffer is active and we are clear to dash, execute it
-            else if (!_isDashing && _dashCooldownTimer <= 0)
+            else if (!_isRolling && _rollCooldownTimer <= 0)
             {
-                _hasBufferedDash = false;
-                AttemptDash();
+                _hasBufferedRoll = false;
+                AttemptRoll();
             }
         }
 
         ApplyGravity();
 
-        // Mouse Lock Toggle (Alt key)
-        if (Keyboard.current.leftAltKey.wasPressedThisFrame)
+        if (_isRolling)
         {
-            ToggleCursorLock();
-        }
-        
-        // If Dashing, override all other movement
-        if (_isDashing)
-        {
-            HandleDash();
+            HandleRoll();
             return;
         }
 
-        // Otherwise, handle standard movement
         HandleMovement();
     }
 
     private void HandleMovement()
     {
-        // If no input, smoothly decelerate to 0
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
             return;
         }
 
-        // Note: Currently using the Dash button for sprinting based on the original code
-        bool isSprinting = _input.Gameplay.Dash.IsPressed(); 
+        bool isSprinting = _input.Player.Sprint.IsPressed();
 
-        // Calculate World Direction relative to Camera
         Vector3 camForward = _cameraTransform.forward;
         Vector3 camRight = _cameraTransform.right;
         camForward.y = 0;
@@ -153,13 +142,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (isSprinting)
         {
-            // Sprinting: Face the direction we are moving
             Quaternion targetRotation = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
         else
         {
-            // Walking: Strafe relative to camera
             if (camForward != Vector3.zero)
             {
                 Quaternion strafeRotation = Quaternion.LookRotation(camForward);
@@ -173,44 +160,54 @@ public class PlayerMovement : MonoBehaviour
         _controller.Move(moveDir * _smoothSpeed * Time.deltaTime);
     }
 
-    private void AttemptDash()
+    private void AttemptRoll()
     {
-        if (_isDashing || _dashCooldownTimer > 0) return;
+        if (_isRolling || _rollCooldownTimer > 0) return;
         
-        _hasBufferedDash = false;
-        _isDashing = true;
-        _dashTimer = dashDuration;
-        _iFrameTimer = dashIFrames; 
-        _dashCooldownTimer = dashCooldown; 
+        _hasBufferedRoll = false;
+        _isRolling = true;
+        _rollTimer = 0f; // Reset timer to start evaluating the curve from 0
+        
+        // Cooldown starts AFTER the roll finishes
+        _rollCooldownTimer = rollDuration + rollCooldown; 
 
-        // Determine dash direction based on input or current facing direction
         if (_moveInput.magnitude > 0.1f)
         {
             Vector3 camForward = _cameraTransform.forward;
             Vector3 camRight = _cameraTransform.right;
             camForward.y = 0; 
             camRight.y = 0;
-            _dashDirection = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
+            _rollDirection = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
         }
         else
         {
-            _dashDirection = transform.forward;
+            // Backstep logic: In many Soulslikes, dodging with no input makes you hop backwards.
+            _rollDirection = -transform.forward; 
         }
     }
 
-    private void HandleDash()
+    private void HandleRoll()
     {
-        _controller.Move(_dashDirection * dashSpeed * Time.deltaTime);
+        _rollTimer += Time.deltaTime;
         
-        if (_dashDirection != Vector3.zero)
+        // Calculate where we are in the roll from 0.0 to 1.0
+        float normalizedTime = _rollTimer / rollDuration;
+
+        // Evaluate the curve to get our current speed multiplier
+        float currentCurveValue = rollSpeedCurve.Evaluate(normalizedTime);
+        float currentSpeed = currentCurveValue * rollDistanceMultiplier;
+
+        _controller.Move(_rollDirection * currentSpeed * Time.deltaTime);
+        
+        // Face the direction of the roll (unless we are backstepping)
+        if (_rollDirection != -transform.forward && _rollDirection != Vector3.zero)
         {
-            transform.rotation = Quaternion.LookRotation(_dashDirection);
+            transform.rotation = Quaternion.LookRotation(_rollDirection);
         }
 
-        _dashTimer -= Time.deltaTime;
-        if (_dashTimer <= 0)
+        if (_rollTimer >= rollDuration)
         {
-            _isDashing = false;
+            _isRolling = false;
         }
     }
 
@@ -218,24 +215,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_controller.isGrounded && _velocity.y < 0)
         {
-            _velocity.y = -2f; // Keeps the player grounded smoothly
+            _velocity.y = -2f; 
         }
 
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
         _controller.Move(_velocity * Time.deltaTime);
-    }
-
-    private void ToggleCursorLock()
-    {
-        if (Cursor.lockState == CursorLockMode.Locked)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
     }
 }
