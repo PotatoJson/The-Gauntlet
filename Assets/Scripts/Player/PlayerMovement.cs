@@ -8,16 +8,22 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed = 5f;
     public float sprintSpeed = 9f;
     
+    [Header("Sprint / Roll Input (Soulslike)")]
+    [Tooltip("How long to hold the button before it counts as a Sprint instead of a Roll")]
+    public float holdToSprintTime = 0.2f; 
+    private bool _isRollButtonHeld;
+    private float _rollButtonHoldTimer;
+    private bool _isSprinting;
+    
     [Header("Roll Settings")]
-    [Tooltip("Draw how the speed changes over time. Start high, dip low at the end for recovery.")]
     public AnimationCurve rollSpeedCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
-    public float rollDistanceMultiplier = 15f; // How far the roll pushes you
-    public float rollDuration = 0.75f;         // Total time the roll takes
-    public float rollCooldown = 0.2f;          // Penalty time before you can roll again
+    public float rollDistanceMultiplier = 15f; 
+    public float rollDuration = 0.75f;         
+    public float rollCooldown = 0.2f;          
     
     [Header("Roll I-Frames")]
-    public float iFrameStartTime = 0.1f; // Startup frames (vulnerable before the dodge actually works)
-    public float iFrameDuration = 0.35f; // How long you are actually invincible
+    public float iFrameStartTime = 0.1f; 
+    public float iFrameDuration = 0.35f; 
     
     [Header("Rotation Settings")]
     public float rotationSpeed = 15f; 
@@ -34,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
 
     // Internal Variables
     private CharacterController _controller;
-    private PlayerControls _input;
+    private PlayerControls _input; 
     private Transform _cameraTransform;
     
     private Vector3 _velocity;
@@ -49,16 +55,7 @@ public class PlayerMovement : MonoBehaviour
     private float _rollCooldownTimer;
     private Vector3 _rollDirection;
 
-    // Computed property for I-Frames
-    public bool IsInvincibleViaRoll 
-    {
-        get 
-        {
-            return _isRolling && 
-                   _rollTimer >= iFrameStartTime && 
-                   _rollTimer <= (iFrameStartTime + iFrameDuration);
-        }
-    }
+    public bool IsInvincibleViaRoll => _isRolling && _rollTimer >= iFrameStartTime && _rollTimer <= (iFrameStartTime + iFrameDuration);
 
     private void Awake()
     {
@@ -70,13 +67,35 @@ public class PlayerMovement : MonoBehaviour
         
         _input.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
+
+        _input.Player.Roll.started += ctx => OnRollButtonDown();
         
     
-        _input.Player.Roll.performed += ctx => OnRollInput(); 
+        _input.Player.Roll.canceled += ctx => OnRollButtonUp();
     }
 
     private void OnEnable() => _input.Enable();
     private void OnDisable() => _input.Disable();
+
+    private void OnRollButtonDown()
+    {
+        _isRollButtonHeld = true;
+        _rollButtonHoldTimer = 0f;
+    }
+
+    private void OnRollButtonUp()
+    {
+        _isRollButtonHeld = false;
+
+        // If we let go of the button BEFORE the sprint timer finished, it was a Tap!
+        if (!_isSprinting)
+        {
+            OnRollInput(); 
+        }
+
+        // Regardless of what happened, releasing the button always stops sprinting
+        _isSprinting = false;
+    }
 
     private void OnRollInput()
     {
@@ -93,16 +112,24 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // If holding the button and not sprinting yet, run the timer
+        if (_isRollButtonHeld && !_isSprinting)
+        {
+            _rollButtonHoldTimer += Time.deltaTime;
+            
+            // If we've held it long enough, trigger the Sprint state
+            if (_rollButtonHoldTimer >= holdToSprintTime)
+            {
+                _isSprinting = true;
+            }
+        }
+
         if (_rollCooldownTimer > 0) _rollCooldownTimer -= Time.deltaTime;
 
         if (_hasBufferedRoll)
         {
             _rollBufferTimer -= Time.deltaTime;
-            
-            if (_rollBufferTimer <= 0) 
-            {
-                _hasBufferedRoll = false;
-            }
+            if (_rollBufferTimer <= 0) _hasBufferedRoll = false;
             else if (!_isRolling && _rollCooldownTimer <= 0)
             {
                 _hasBufferedRoll = false;
@@ -129,7 +156,8 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        bool isSprinting = _input.Player.Sprint.IsPressed();
+        // Only physically sprint if the sprint state is active AND we are actually pressing a movement key
+        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
 
         Vector3 camForward = _cameraTransform.forward;
         Vector3 camRight = _cameraTransform.right;
@@ -140,7 +168,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDir = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
 
-        if (isSprinting)
+        if (actualSprint)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
@@ -154,7 +182,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        _targetSpeed = isSprinting ? sprintSpeed : walkSpeed;
+        _targetSpeed = actualSprint ? sprintSpeed : walkSpeed;
         _smoothSpeed = Mathf.Lerp(_smoothSpeed, _targetSpeed, 10f * Time.deltaTime);
         
         _controller.Move(moveDir * _smoothSpeed * Time.deltaTime);
@@ -166,11 +194,11 @@ public class PlayerMovement : MonoBehaviour
         
         _hasBufferedRoll = false;
         _isRolling = true;
-        _rollTimer = 0f; // Reset timer to start evaluating the curve from 0
+        _rollTimer = 0f; 
         
-        // Cooldown starts AFTER the roll finishes
         _rollCooldownTimer = rollDuration + rollCooldown; 
 
+        // If we are pressing a direction, Roll Forward
         if (_moveInput.magnitude > 0.1f)
         {
             Vector3 camForward = _cameraTransform.forward;
@@ -179,9 +207,9 @@ public class PlayerMovement : MonoBehaviour
             camRight.y = 0;
             _rollDirection = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
         }
+        // If we are standing still, Backstep
         else
         {
-            // Backstep logic: In many Soulslikes, dodging with no input makes you hop backwards.
             _rollDirection = -transform.forward; 
         }
     }
@@ -190,16 +218,12 @@ public class PlayerMovement : MonoBehaviour
     {
         _rollTimer += Time.deltaTime;
         
-        // Calculate where we are in the roll from 0.0 to 1.0
         float normalizedTime = _rollTimer / rollDuration;
-
-        // Evaluate the curve to get our current speed multiplier
         float currentCurveValue = rollSpeedCurve.Evaluate(normalizedTime);
         float currentSpeed = currentCurveValue * rollDistanceMultiplier;
 
         _controller.Move(_rollDirection * currentSpeed * Time.deltaTime);
         
-        // Face the direction of the roll (unless we are backstepping)
         if (_rollDirection != -transform.forward && _rollDirection != Vector3.zero)
         {
             transform.rotation = Quaternion.LookRotation(_rollDirection);
