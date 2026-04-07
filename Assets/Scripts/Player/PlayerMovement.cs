@@ -11,8 +11,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Dash Settings")]
     public float dashSpeed = 15f;
     public float dashDuration = 0.2f;
-    public float dashCooldown = 0.5f; // Time between dashes
-    public float dashIFrames = 0.15f; // How long you are invincible during the dash
+    public float dashCooldown = 0.5f; 
+    public float dashIFrames = 0.15f; 
     
     [Tooltip("How fast the character turns while sprinting")]
     public float rotationSpeed = 15f; 
@@ -21,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
     public float strafeTurnSpeed = 20f; 
 
     [Header("Buffering")]
-    public float bufferWindow = 0.2f; // How long to remember the dash input
+    public float bufferWindow = 0.2f; 
     private float _dashBufferTimer;
     private bool _hasBufferedDash;
 
@@ -33,9 +33,7 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController _controller;
     private PlayerControls _input;
     private Transform _cameraTransform;
-    //references for combat and animation
-    [SerializeField] private CombatSandBox _combat;
-    [SerializeField] private AnimationBridge _animator; 
+    
     private Vector3 _velocity;
     private Vector2 _moveInput;
     private float _smoothSpeed;
@@ -50,24 +48,26 @@ public class PlayerMovement : MonoBehaviour
     public bool IsInvincibleViaDash => _iFrameTimer > 0;
     private Vector3 _dashDirection;
 
-    // Anchor Logic
-    private Vector3 _defenseAnchorPosition;
-    private bool _wasBlocking;
-
-    
-
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
-        _cameraTransform = Camera.main.transform;
+        
+        // Failsafe check to ensure we have a Main Camera
+        if (Camera.main != null)
+        {
+            _cameraTransform = Camera.main.transform;
+        }
+        else
+        {
+            Debug.LogError("PlayerMovement: No camera tagged 'MainCamera' found in the scene!");
+        }
         
         _input = new PlayerControls();
         
-        _input.Gameplay.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
-        _input.Gameplay.Move.canceled += ctx => _moveInput = Vector2.zero;
+        _input.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
+        _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
         
-        _input.Gameplay.Dash.performed += ctx => AttemptDash();
-        _input.Gameplay.Dash.performed += ctx => OnDashInput();
+        _input.Player.Dash.performed += ctx => OnDashInput();
     }
 
     private void OnEnable() => _input.Enable();
@@ -75,32 +75,35 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDashInput()
     {
-        // If we are in active frames, buffer the dash instead of failing
-        if (_combat != null && _combat.IsAttacking && _combat.IsInActiveFrames)
+        // If we are currently dashing or on cooldown, buffer the input
+        if (_isDashing || _dashCooldownTimer > 0)
         {
             _hasBufferedDash = true;
             _dashBufferTimer = bufferWindow;
-            Debug.Log("Dash Buffered!");
         }
         else
         {
-            AttemptDash(); // Normal dash attempt
+            AttemptDash(); 
         }
     }
 
     private void Update()
     {
+        // Handle Cooldowns & Timers
         if (_dashCooldownTimer > 0) _dashCooldownTimer -= Time.deltaTime;
         if (_iFrameTimer > 0) _iFrameTimer -= Time.deltaTime;
 
-        // Tick down buffer
+        // Handle Input Buffering for Dashes
         if (_hasBufferedDash)
         {
             _dashBufferTimer -= Time.deltaTime;
-            if (_dashBufferTimer <= 0) _hasBufferedDash = false;
-
-            // If we are no longer in active frames, execute the buffered dash
-            if (_combat != null && !_combat.IsInActiveFrames)
+            
+            if (_dashBufferTimer <= 0) 
+            {
+                _hasBufferedDash = false;
+            }
+            // If the buffer is active and we are clear to dash, execute it
+            else if (!_isDashing && _dashCooldownTimer <= 0)
             {
                 _hasBufferedDash = false;
                 AttemptDash();
@@ -112,57 +115,13 @@ public class PlayerMovement : MonoBehaviour
         // Mouse Lock Toggle (Alt key)
         if (Keyboard.current.leftAltKey.wasPressedThisFrame)
         {
-            if (Cursor.lockState == CursorLockMode.Locked)
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
-            else
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-        }
-
-        if (_combat != null && _combat.IsStunned)
-        {
-            _smoothSpeed = 0f; // Rapidly decelerate
-            return;
+            ToggleCursorLock();
         }
         
-        // If Dashing, override everything
+        // If Dashing, override all other movement
         if (_isDashing)
         {
             HandleDash();
-            return;
-        }
-
-        // bool isBlocking = _combat != null && _combat.IsBlocking;
-
-        // // ANCHOR SYSTEM - so that player doesnt get pushed around when blocking./
-        // if (isBlocking)
-        // {
-        //     // The exact frame block started, save foot position
-        //     if (!_wasBlocking)
-        //     {
-        //         _defenseAnchorPosition = transform.position;
-        //     }
-            
-        //     // Force our X and Z position to stay exactly where we planted our feet.
-        //     transform.position = new Vector3(_defenseAnchorPosition.x, transform.position.y, _defenseAnchorPosition.z);
-            
-        //     // Sync with Unity's physics engine so it doesn't get confused
-        //     Physics.SyncTransforms(); 
-        // }
-        
-        // // Remember state for the next frame
-        // _wasBlocking = isBlocking;
-
-        // If Attacking, stop movement logic so Combat.cs controls rotation
-        if (_combat != null && (_combat.IsAttacking || _combat.IsDodging || _combat.IsBlocking))
-        {
-
-            _smoothSpeed = 0; // Rapidly decelerate to a stop
             return;
         }
 
@@ -172,11 +131,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        if (_moveInput.magnitude < 0.1f) return;
+        // If no input, smoothly decelerate to 0
+        if (_moveInput.magnitude < 0.1f) 
+        {
+            _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
+            return;
+        }
 
-        bool isSprinting = _input.Gameplay.Dash.IsPressed();
+        // Note: Currently using the Dash button for sprinting based on the original code
+        bool isSprinting = _input.Gameplay.Dash.IsPressed(); 
 
-        //Calculate World Direction relative to Camera
+        // Calculate World Direction relative to Camera
         Vector3 camForward = _cameraTransform.forward;
         Vector3 camRight = _cameraTransform.right;
         camForward.y = 0;
@@ -194,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // Walking: Strafe
+            // Walking: Strafe relative to camera
             if (camForward != Vector3.zero)
             {
                 Quaternion strafeRotation = Quaternion.LookRotation(camForward);
@@ -210,27 +175,15 @@ public class PlayerMovement : MonoBehaviour
 
     private void AttemptDash()
     {
-        // Check cooldown and state
         if (_isDashing || _dashCooldownTimer > 0) return;
-        if (_combat != null && _combat.IsStunned) return;
-        
-        if (_combat != null && _combat.IsAttacking)
-        {
-            // Double check: if still in active frames, we can't dash yet
-            if (_combat.IsInActiveFrames) return; 
-            Debug.Log("Check");
-            // If in recovery or windup, cancel it
-            _animator.BackToLocomotion();
-            _combat.CancelAttackForDash();
-        }
         
         _hasBufferedDash = false;
-
         _isDashing = true;
         _dashTimer = dashDuration;
-        _iFrameTimer = dashIFrames; // Start I-Frames
-        _dashCooldownTimer = dashCooldown; // Start Cooldown
+        _iFrameTimer = dashIFrames; 
+        _dashCooldownTimer = dashCooldown; 
 
+        // Determine dash direction based on input or current facing direction
         if (_moveInput.magnitude > 0.1f)
         {
             Vector3 camForward = _cameraTransform.forward;
@@ -248,7 +201,11 @@ public class PlayerMovement : MonoBehaviour
     private void HandleDash()
     {
         _controller.Move(_dashDirection * dashSpeed * Time.deltaTime);
-        transform.rotation = Quaternion.LookRotation(_dashDirection);
+        
+        if (_dashDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(_dashDirection);
+        }
 
         _dashTimer -= Time.deltaTime;
         if (_dashTimer <= 0)
@@ -261,10 +218,24 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_controller.isGrounded && _velocity.y < 0)
         {
-            _velocity.y = -2f;
+            _velocity.y = -2f; // Keeps the player grounded smoothly
         }
 
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
         _controller.Move(_velocity * Time.deltaTime);
+    }
+
+    private void ToggleCursorLock()
+    {
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 }

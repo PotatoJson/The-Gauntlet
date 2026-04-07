@@ -3,13 +3,13 @@ using UnityEngine;
 public class AnimationBridge : MonoBehaviour
 {
     private Animator _animator;
-    private MovementSandBox _movement;
+    private PlayerMovement _movement;
     private CharacterController _controller;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         _animator = GetComponentInChildren<Animator>();
-        _movement = GetComponent<MovementSandBox>();
+        _movement = GetComponent<PlayerMovement>();
         _controller = GetComponent<CharacterController>();
     }
 
