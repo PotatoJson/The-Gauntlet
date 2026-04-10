@@ -8,12 +8,15 @@ public class PlayerMovement : MonoBehaviour
     public float walkSpeed = 5f;
     public float sprintSpeed = 9f;
     
-    [Header("Sprint / Roll Input (Soulslike)")]
+    [Header("Sprint / Roll Input)")]
     [Tooltip("How long to hold the button before it counts as a Sprint instead of a Roll")]
     public float holdToSprintTime = 0.2f; 
     private bool _isRollButtonHeld;
     private float _rollButtonHoldTimer;
     private bool _isSprinting;
+    
+    [Header("Combat Settings")]
+    public bool isTargetLocked = false;
     
     [Header("Roll Settings")]
     public AnimationCurve rollSpeedCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
@@ -37,6 +40,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Physics")]
     public float gravity = -9.81f;
     public float gravityMultiplier = 2.0f;
+    public float jumpHeight = 2.0f;
 
     // Internal Variables
     private CharacterController _controller;
@@ -47,6 +51,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 _moveInput;
     private float _smoothSpeed;
     private float _targetSpeed;
+    private Vector3 _horizontalVelocity;
     
     // Roll Logic
     private bool _isRolling;
@@ -69,9 +74,11 @@ public class PlayerMovement : MonoBehaviour
         _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
 
         _input.Player.Roll.started += ctx => OnRollButtonDown();
-        
-    
         _input.Player.Roll.canceled += ctx => OnRollButtonUp();
+
+        _input.Player.LockOn.started += ctx => ToggleLockOn();
+
+        _input.Player.Jump.started += ctx => OnJumpInput();
     }
 
     private void OnEnable() => _input.Enable();
@@ -87,13 +94,11 @@ public class PlayerMovement : MonoBehaviour
     {
         _isRollButtonHeld = false;
 
-        // If we let go of the button BEFORE the sprint timer finished, it was a Tap!
         if (!_isSprinting)
         {
             OnRollInput(); 
         }
 
-        // Regardless of what happened, releasing the button always stops sprinting
         _isSprinting = false;
     }
 
@@ -112,12 +117,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // If holding the button and not sprinting yet, run the timer
         if (_isRollButtonHeld && !_isSprinting)
         {
             _rollButtonHoldTimer += Time.deltaTime;
-            
-            // If we've held it long enough, trigger the Sprint state
             if (_rollButtonHoldTimer >= holdToSprintTime)
             {
                 _isSprinting = true;
@@ -142,10 +144,14 @@ public class PlayerMovement : MonoBehaviour
         if (_isRolling)
         {
             HandleRoll();
-            return;
+        }
+        else
+        {
+            HandleMovement();
         }
 
-        HandleMovement();
+        Vector3 finalVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
+        _controller.Move(finalVelocity * Time.deltaTime);
     }
 
     private void HandleMovement()
@@ -153,10 +159,10 @@ public class PlayerMovement : MonoBehaviour
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
+            _horizontalVelocity = Vector3.zero; // Stop horizontal movement
             return;
         }
 
-        // Only physically sprint if the sprint state is active AND we are actually pressing a movement key
         bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
 
         Vector3 camForward = _cameraTransform.forward;
@@ -168,12 +174,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDir = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
 
-        if (actualSprint)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        }
-        else
+        if (isTargetLocked && !actualSprint)
         {
             if (camForward != Vector3.zero)
             {
@@ -181,16 +182,25 @@ public class PlayerMovement : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, strafeRotation, strafeTurnSpeed * Time.deltaTime);
             }
         }
+        else 
+        {
+            if (moveDir != Vector3.zero) 
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            }
+        }
 
         _targetSpeed = actualSprint ? sprintSpeed : walkSpeed;
         _smoothSpeed = Mathf.Lerp(_smoothSpeed, _targetSpeed, 10f * Time.deltaTime);
         
-        _controller.Move(moveDir * _smoothSpeed * Time.deltaTime);
+        // Save the speed instead of moving directly
+        _horizontalVelocity = moveDir * _smoothSpeed;
     }
 
     private void AttemptRoll()
     {
-        if (_isRolling || _rollCooldownTimer > 0) return;
+        if (_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
         
         _hasBufferedRoll = false;
         _isRolling = true;
@@ -198,7 +208,6 @@ public class PlayerMovement : MonoBehaviour
         
         _rollCooldownTimer = rollDuration + rollCooldown; 
 
-        // If we are pressing a direction, Roll Forward
         if (_moveInput.magnitude > 0.1f)
         {
             Vector3 camForward = _cameraTransform.forward;
@@ -207,10 +216,14 @@ public class PlayerMovement : MonoBehaviour
             camRight.y = 0;
             _rollDirection = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
         }
-        // If we are standing still, Backstep
         else
         {
             _rollDirection = -transform.forward; 
+        }
+
+        if (TryGetComponent<AnimationBridge>(out var animBridge))
+        {
+            animBridge.PlayRoll();
         }
     }
 
@@ -222,27 +235,67 @@ public class PlayerMovement : MonoBehaviour
         float currentCurveValue = rollSpeedCurve.Evaluate(normalizedTime);
         float currentSpeed = currentCurveValue * rollDistanceMultiplier;
 
-        _controller.Move(_rollDirection * currentSpeed * Time.deltaTime);
+        // Save the speed instead of moving directly
+        _horizontalVelocity = _rollDirection * currentSpeed;
         
         if (_rollDirection != -transform.forward && _rollDirection != Vector3.zero)
         {
             transform.rotation = Quaternion.LookRotation(_rollDirection);
         }
 
+        // Early Roll Cancel for smooth running
+        float cancelThreshold = rollDuration * 0.8f; 
+        if (_rollTimer >= cancelThreshold && _moveInput.magnitude > 0.1f)
+        {
+            _isRolling = false;
+            _targetSpeed = _isSprinting ? sprintSpeed : walkSpeed;
+            _smoothSpeed = _targetSpeed; 
+            
+            if (TryGetComponent<AnimationBridge>(out var animBridge))
+            {
+                animBridge.BackToLocomotion();
+            }
+            return;
+        }
+
         if (_rollTimer >= rollDuration)
         {
             _isRolling = false;
+            if (TryGetComponent<AnimationBridge>(out var animBridge))
+            {
+                animBridge.BackToLocomotion();
+            }
         }
     }
 
     private void ApplyGravity()
     {
-        if (_controller.isGrounded && _velocity.y < 0)
+        if (_controller.isGrounded && _velocity.y <= 0) 
         {
             _velocity.y = -2f; 
         }
 
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
-        _controller.Move(_velocity * Time.deltaTime);
+    }
+    
+    private void ToggleLockOn()
+    {
+        isTargetLocked = !isTargetLocked; 
+        
+        // Debug.Log("Target Locked: " + isTargetLocked);
+    }
+
+    private void OnJumpInput()
+    {
+        if (_controller.isGrounded && !_isRolling)
+        {
+            // Physics formula for jump height
+            _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * gravityMultiplier);
+
+            if (TryGetComponent<AnimationBridge>(out var animBridge))
+            {
+                animBridge.TriggerJump();
+            }
+        }
     }
 }
