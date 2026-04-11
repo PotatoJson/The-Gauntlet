@@ -17,7 +17,7 @@ public class RunTimeGauntlet
         //eventually loop through gems to see if any increase damage
         return totalDamage;
     }
-    public int getCurrentPoise()
+    public int GetCurrentPoise()
     {
         int totalPoise = BaseGauntlet.PoiseDamage;
         //loop through gems to get total poise based on gems later

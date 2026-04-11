@@ -10,8 +10,6 @@ public enum CombatInput
 
 public class PlayerCombat : MonoBehaviour
 {
-    private PlayerControls _input;
-
     [Header("Universal Combo Tree")]
     public AttackNode StartingLightAttack;
     public AttackNode StartingHeavyAttack;
@@ -37,7 +35,7 @@ public class PlayerCombat : MonoBehaviour
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
-    private CombatInput _currentBuffer = CombatInput.none;
+    private CombatInput _currentBuffer = CombatInput.None;
     private float BufferTimer = 0f;    
     
     void Awake()
@@ -103,7 +101,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void ProcessCombatLogic()
     {
-        if(_currentBuffer = CombatInput.None) return;
+        if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
         if(currentState == PlayerState.Idle || currentState == PlayerState.Moving)
@@ -128,37 +126,53 @@ public class PlayerCombat : MonoBehaviour
 
         if(CurrentStamina < node.StaminaCost)
         {
-            ComsumeBuffer();
+            ConsumeBuffer();
             return;
         }
 
         CurrentStamina -= node.StaminaCost;
         _currentAttackNode = node;
         _canCombo = false;
-        ConsumeBuffer;
+        ConsumeBuffer();
 
-        _stateManager.ChangeState(PlayerState.Attacking);
+        _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
     }
 
     /* Animation Events */
     public void ActivateHitbox(int handID)
     {
-        
+        RunTimeGauntlet activeWeapon = _leftGauntlet;
+
+        if(_currentAttackNode.StrikingHand == StrikeHand.Right)
+        {
+            activeWeapon = _rightGauntlet;
+        }
+        else if(_currentAttackNode.StrikingHand == StrikeHand.Both)
+        {
+            //future dual hand attack
+        }
+        int currntDamage = activeWeapon.GetCurrentDamage();
+        int currentPoise = activeWeapon.GetCurrentPoise();
+
+        //need to add the actual hitbox
     }
 
     public void DeactivateHitbox()
     {
-        
+        //turn off collider TODO later
     }
 
     public void OpenComboWindow()
     {
-        
+        _canCombo = true;
     }
 
     public void EndAttack()
     {
-        
+        _currentAttackNode = null;
+        _canCombo = false;
+
+        _stateManager.SetPlayerState(PlayerState.Idle);
     }
 }
