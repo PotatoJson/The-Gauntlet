@@ -1,16 +1,28 @@
 using UnityEngine;
 
+public enum PlayerState
+{
+    Idle,
+    Moving,
+    Attacking,
+    Parrying,
+    Dodging,
+    Staggered
+}
+
 public class PlayerManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Header("Current State for dubugging")]
+    [SerializeField] private PlayerState _currentState = PlayerState.Idle;
+
+    public PlayerState GetCurrentState()
     {
-        
+        return _currentState;    
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetPlayerState(PlayerState newState)
     {
-        
+        _currentState = newState;
     }
+    
 }
