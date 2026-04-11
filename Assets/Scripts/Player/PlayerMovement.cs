@@ -72,6 +72,7 @@ public class PlayerMovement : MonoBehaviour
         
         _input.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
         _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
+<<<<<<< Updated upstream
 
         _input.Player.Roll.started += ctx => OnRollButtonDown();
         _input.Player.Roll.canceled += ctx => OnRollButtonUp();
@@ -79,6 +80,10 @@ public class PlayerMovement : MonoBehaviour
         _input.Player.LockOn.started += ctx => ToggleLockOn();
 
         _input.Player.Jump.started += ctx => OnJumpInput();
+=======
+        
+        _input.Player.Roll.performed += ctx => OnDashInput();
+>>>>>>> Stashed changes
     }
 
     private void OnEnable() => _input.Enable();
@@ -163,7 +168,12 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+<<<<<<< Updated upstream
         bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+=======
+        // Note: Currently using the Dash button for sprinting based on the original code
+        bool isSprinting = false;
+>>>>>>> Stashed changes
 
         Vector3 camForward = _cameraTransform.forward;
         Vector3 camRight = _cameraTransform.right;
