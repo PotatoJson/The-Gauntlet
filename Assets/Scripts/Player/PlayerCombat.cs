@@ -10,6 +10,7 @@ public enum CombatInput
 
 public class PlayerCombat : MonoBehaviour
 {
+    #region Variables
     [Header("Universal Combo Tree")]
     public AttackNode StartingLightAttack;
     public AttackNode StartingHeavyAttack;
@@ -17,9 +18,16 @@ public class PlayerCombat : MonoBehaviour
     [Header("References")]
     public GauntletData LeftGauntletData;
     public GauntletData RightGauntletData;
+    [Space]
     private PlayerManager _stateManager;
     private Animator _animator;
     private PlayerControls _input;
+    
+    [Header("Physical Hitboxes")]
+    [SerializeField] private HitboxController _leftHitbox;
+    [SerializeField] private HitboxController _rightHitbox;
+    [Space]
+    private HitboxController _activeHitbox;
 
     [Header("Active Weapon (Wrapper)")]
     private RunTimeGauntlet _leftGauntlet;
@@ -28,6 +36,7 @@ public class PlayerCombat : MonoBehaviour
     [Header("Combat Tracking")]
     private AttackNode _currentAttackNode;
     private bool _canCombo = false;
+    private bool _comboQueued = false;
 
     [Header("Player Stats")]
     public int CurrentStamina = 100;
@@ -37,10 +46,11 @@ public class PlayerCombat : MonoBehaviour
     public float BufferDuration;
     private CombatInput _currentBuffer = CombatInput.None;
     private float BufferTimer = 0f;    
-    
+    #endregion
+    #region Setup
     void Awake()
     {
-        _animator = GetComponent<Animator>();
+        _animator = GetComponentInChildren<Animator>();
         _stateManager = GetComponent<PlayerManager>();
 
         _input = new PlayerControls();
@@ -49,14 +59,10 @@ public class PlayerCombat : MonoBehaviour
         _input.Player.HeavyAttack.started += ctx => OnHeavyAttackInput();
     }
 
-    private void OnEnable()
-    {
-        _input.Enable();
-    }
-    private void OnDisable()
-    {
-        _input.Disable();
-    }
+    private void OnEnable() => _input.Enable();
+    
+    private void OnDisable() => _input.Disable();
+    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -71,16 +77,17 @@ public class PlayerCombat : MonoBehaviour
         HandleInputBuffer();
         ProcessCombatLogic();
     }
+    #endregion
+    #region InputBuffer
+    private void OnLightAttackInput()
+    {
+        _currentBuffer = CombatInput.Light;
+        BufferTimer = BufferDuration;
+    }
 
     private void OnHeavyAttackInput()
     {
         _currentBuffer = CombatInput.Heavy;
-        BufferTimer = BufferDuration;
-    }
-
-    private void OnLightAttackInput()
-    {
-        _currentBuffer = CombatInput.Light;
         BufferTimer = BufferDuration;
     }
 
@@ -98,6 +105,7 @@ public class PlayerCombat : MonoBehaviour
         _currentBuffer = CombatInput.None;
         BufferTimer = 0;
     }
+    #endregion
 
     private void ProcessCombatLogic()
     {
@@ -116,6 +124,8 @@ public class PlayerCombat : MonoBehaviour
             AttackNode nextNode = (_currentBuffer == CombatInput.Light) 
                 ? _currentAttackNode.NextLightAttack 
                 : _currentAttackNode.NextHeavyAttack;
+
+            Debug.Log($"Attempting to chain from {_currentAttackNode.name} to {(nextNode != null ? nextNode.name : "NULL")}");
             if(nextNode != null) AttemptAttack(nextNode);
         }
     }
@@ -133,43 +143,54 @@ public class PlayerCombat : MonoBehaviour
         CurrentStamina -= node.StaminaCost;
         _currentAttackNode = node;
         _canCombo = false;
+        _comboQueued = true;
         ConsumeBuffer();
 
         _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
     }
 
-    /* Animation Events */
-    public void ActivateHitbox(int handID)
+    public void ArmTargetHitbox()
     {
         RunTimeGauntlet activeWeapon = _leftGauntlet;
+        _activeHitbox = _leftHitbox;
 
         if(_currentAttackNode.StrikingHand == StrikeHand.Right)
         {
             activeWeapon = _rightGauntlet;
+            _activeHitbox = _rightHitbox;
         }
         else if(_currentAttackNode.StrikingHand == StrikeHand.Both)
         {
             //future dual hand attack
         }
-        int currntDamage = activeWeapon.GetCurrentDamage();
+        int currentDamage = activeWeapon.GetCurrentDamage();
         int currentPoise = activeWeapon.GetCurrentPoise();
 
-        //need to add the actual hitbox
+        if(_activeHitbox != null)
+        {
+            _activeHitbox.EnableCollider(currentDamage, currentPoise);
+        }
     }
 
-    public void DeactivateHitbox()
+    public void DisarmTargetHitbox()
     {
-        //turn off collider TODO later
+        if(_activeHitbox != null)
+        {
+            _activeHitbox.DisableCollider();
+            _activeHitbox = null;
+        }
     }
 
     public void OpenComboWindow()
     {
         _canCombo = true;
+        _comboQueued = false;
     }
 
     public void EndAttack()
     {
+        if(_comboQueued) return;
         _currentAttackNode = null;
         _canCombo = false;
 
