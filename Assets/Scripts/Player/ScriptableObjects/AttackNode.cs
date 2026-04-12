@@ -18,4 +18,7 @@ public class AttackNode : ScriptableObject
     public AttackNode NextHeavyAttack;
 
     public StrikeHand StrikingHand;
+
+    [Header("Movement")]
+    public float LungeForce;
 }

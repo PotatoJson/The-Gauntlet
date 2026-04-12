@@ -47,6 +47,7 @@ public class PlayerCombat : MonoBehaviour
     private CombatInput _currentBuffer = CombatInput.None;
     private float BufferTimer = 0f;    
     #endregion
+
     #region Setup
     void Awake()
     {
@@ -75,6 +76,7 @@ public class PlayerCombat : MonoBehaviour
     void Update()
     {
         HandleInputBuffer();
+        _stateManager.HasBufferedAttack = (BufferTimer > 0);
         ProcessCombatLogic();
     }
     #endregion
@@ -112,7 +114,9 @@ public class PlayerCombat : MonoBehaviour
         if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
-        if(currentState == PlayerState.Idle || currentState == PlayerState.Moving)
+        if(currentState == PlayerState.Dodging || currentState == PlayerState.Airborne) return;
+
+        if(currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running)
         {
             AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) 
                 ? StartingLightAttack 
@@ -144,10 +148,18 @@ public class PlayerCombat : MonoBehaviour
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;
-        ConsumeBuffer();
+        
+
+        /*if (!_stateManager.IsLockedOn)
+        {
+            Vector3 snapDir = _stateManager.MoveDirectionIntent;
+            if(snapDir != Vector3.zero) transform.rotation = Quaternion.LookRotation(snapDir);
+        }*/
+        _stateManager.CurrentLungeSpeed = node.LungeForce;
 
         _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
+        ConsumeBuffer();
     }
 
     public void ArmTargetHitbox()
@@ -186,6 +198,8 @@ public class PlayerCombat : MonoBehaviour
     {
         _canCombo = true;
         _comboQueued = false;
+
+        _stateManager.CanCancelAttack = true;
     }
 
     public void EndAttack()
@@ -194,6 +208,7 @@ public class PlayerCombat : MonoBehaviour
         _currentAttackNode = null;
         _canCombo = false;
 
+        _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Idle);
     }
 }
