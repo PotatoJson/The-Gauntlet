@@ -113,6 +113,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnRollInput()
     {
+        if(_stateManager.CanCancelAttack && _stateManager.GetCurrentState() == PlayerState.Attacking)
+        {
+            AttemptRoll();
+            return;
+        }
         if (_isRolling || _rollCooldownTimer > 0)
         {
             _hasBufferedRoll = true;
@@ -141,7 +146,7 @@ public class PlayerMovement : MonoBehaviour
         //stop movement if attacking
         if(_stateManager.GetCurrentState() == PlayerState.Attacking)
         {
-            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 10f * Time.deltaTime);
+            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
             _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
@@ -234,20 +239,30 @@ public class PlayerMovement : MonoBehaviour
     {
         PlayerState currentState = _stateManager.GetCurrentState();
         
-        bool isAllowedToRoll = (currentState == PlayerState.Idle ||
-        currentState == PlayerState.Walking ||
-        currentState == PlayerState.Running);
+        bool isAllowedToRoll = (currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running);
         bool isCombatCancel = (currentState == PlayerState.Attacking && _stateManager.CanCancelAttack);
         
-        if(!isAllowedToRoll && !isCombatCancel) return;
-        if (_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
+        if(!isAllowedToRoll && !isCombatCancel) {
+            return;
+        }
+
+        if(isAllowedToRoll)
+        {
+            if(_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
+        }
+        else if(isCombatCancel)
+        {
+          if(!_controller.isGrounded) return;
+        } 
 
         _hasBufferedRoll = false;
         _isRolling = true;
         _rollTimer = 0f; 
         
         _stateManager.SetPlayerState(PlayerState.Dodging);
-        _rollCooldownTimer = rollDuration + rollCooldown; 
+        _rollCooldownTimer = rollDuration + rollCooldown;
+
+        if(isCombatCancel) _stateManager.RequestBufferClear = true;
 
         if (_moveInput.magnitude > 0.1f)
         {

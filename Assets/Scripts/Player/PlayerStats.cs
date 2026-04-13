@@ -26,7 +26,7 @@ public class PlayerStats : MonoBehaviour
 
     [Header("Poise")]
     public int StunMax;
-    public int CurrentPoise;
+    public float CurrentPoise;
     public Slider PoiseBar; //If we want to visualize the poise and stagger on the player
     public float PoiseDecayDelay;
     public int PoiseDecayRate;
@@ -44,7 +44,7 @@ public class PlayerStats : MonoBehaviour
         CurrentHealth = MaxHealth;
         CurrentStamina = MaxStamina;
         CurrentPoise = 0;
-        UpdateUI();
+        //UpdateUI();
     }
 
     void Update()
@@ -54,18 +54,18 @@ public class PlayerStats : MonoBehaviour
 
         if (_timeSinceLastHit >= PoiseDecayDelay && CurrentPoise > 0)
         {
-            CurrentPoise -= PoiseDecayRate * Time.deltaTime;
+            CurrentPoise -= (float)PoiseDecayRate * Time.deltaTime;
             CurrentPoise = Mathf.Max(CurrentPoise, 0);
         }
     }
 
 
-    public void UpdateUI()
+    /*public void UpdateUI()
     {
         if(HealthSlider != null) HealthSlider.value = CurrentHealth / MaxHealth;
         if(StaminaSlider != null) StaminaSlider.value = CurrentStamina / MaxStamina;
         //if(PoiseSlider != null) PoiseSlider.value = (float)CurrentPoiseHealth / StunMax;
-    }
+    }*/
 
     public void TakeDamage(int damage, int poiseDamage, int HitReactionType)
     {
@@ -82,7 +82,7 @@ public class PlayerStats : MonoBehaviour
         {
             TriggerSmallFlinch();
         }
-        UpdateUI();
+        //UpdateUI();
     }
 
     private void TriggerSmallFlinch()

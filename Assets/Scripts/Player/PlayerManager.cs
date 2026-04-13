@@ -22,7 +22,9 @@ public class PlayerManager : MonoBehaviour
     public bool IsLockedOn;
     public bool HasBufferedAttack;
     public bool CanCancelAttack;
+    public bool RequestBufferClear;
     public float CurrentLungeSpeed;
+    
 
     public PlayerState GetCurrentState()
     {

@@ -75,6 +75,11 @@ public class PlayerCombat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(_stateManager.RequestBufferClear)
+        {
+            ConsumeBuffer();
+            _stateManager.RequestBufferClear = false;
+        }
         HandleInputBuffer();
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
         ProcessCombatLogic();
@@ -156,7 +161,7 @@ public class PlayerCombat : MonoBehaviour
             if(snapDir != Vector3.zero) transform.rotation = Quaternion.LookRotation(snapDir);
         }*/
         _stateManager.CurrentLungeSpeed = node.LungeForce;
-
+        _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
         ConsumeBuffer();

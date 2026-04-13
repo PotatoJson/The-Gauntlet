@@ -9,7 +9,7 @@ public class HitboxController : MonoBehaviour
     private int _currentDamage;
     private int _currentPoiseDamage;
 
-    private List<Collider> _alreadyHit = new List<Collider>();
+    private HashSet<GameObject> _alreadyHit = new HashSet<GameObject>();
 
     private void Awake()
     {
@@ -20,9 +20,9 @@ public class HitboxController : MonoBehaviour
 
     public void EnableCollider(int damage, int poise)
     {
+        _alreadyHit.Clear();
         _currentDamage = damage;
         _currentPoiseDamage = poise;
-        _alreadyHit.Clear();
         _collider.enabled = true;
     }
 
@@ -31,14 +31,24 @@ public class HitboxController : MonoBehaviour
         _collider.enabled = false;
     }
 
-    /*private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("Enemy") && !_alreadyHit.Contains(other))
+        /*if(other.CompareTag("BasicEnemy") && !_alreadyHit.Contains(other))
         {
             _alreadyHit.Add(other);
             //TODO generate combatPacket
             //and actually make the enemy take damage
             Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+        }*/
+        if(other.transform.root == transform.root) return;
+        if(other.TryGetComponent<BaseEnemy>(out BaseEnemy enemyScript))
+        {
+            GameObject enemyRoot = other.transform.root.gameObject;
+            if(_alreadyHit.Add(enemyRoot))
+            {
+                enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
+            }
         }
-    }*/
+        Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+    }
 }
