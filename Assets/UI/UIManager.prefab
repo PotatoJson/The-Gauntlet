@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2698106107649792606
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7852949690097516148}
+  - component: {fileID: 4960480623053164022}
+  - component: {fileID: 8810771524486926887}
+  - component: {fileID: 6906267074808032801}
+  - component: {fileID: 1032976433708916688}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7852949690097516148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2698106107649792606}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 980.9845, y: -0.00001, z: -5589.1167}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4960480623053164022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2698106107649792606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4c65a8c41467ff4a95e22921e8f1585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GauntletMenu
+  gauntletImage: {fileID: 0}
+  menuCanvas: {fileID: 0}
+  slideDuration: 1
+  slideEase: 27
+  buttonTextRects:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  breathScale: 1.05
+  breathSpeed: 1.5
+  settingsPanel: {fileID: 0}
+  mainButtonsGroup: {fileID: 0}
+  transitionSpeed: 0.5
+--- !u!114 &8810771524486926887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2698106107649792606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b4efb4abd625cb44aeb564b3f9adf87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SettingsTabManager
+  allPanels:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  tabButtons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  activeColor: {r: 1, g: 1, b: 1, a: 1}
+  inactiveColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+--- !u!114 &6906267074808032801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2698106107649792606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0382de6e16cd5a4fb90d39c74c56680, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConflictManager
+  settingsPanel: {fileID: 0}
+  conflictPopup: {fileID: 0}
+  conflictText: {fileID: 0}
+--- !u!114 &1032976433708916688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2698106107649792606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81aec01df07f8214db649f9874849ac0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VideoSettingsManager
+  resolutionDropdown: {fileID: 0}
+  fpsDropdown: {fileID: 0}
+  fullscreenToggle: {fileID: 0}

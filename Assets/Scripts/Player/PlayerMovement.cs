@@ -79,6 +79,7 @@ public class PlayerMovement : MonoBehaviour
         _input.Player.LockOn.started += ctx => ToggleLockOn();
 
         _input.Player.Jump.started += ctx => OnJumpInput();
+
     }
 
     private void OnEnable() => _input.Enable();
@@ -164,6 +165,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+
 
         Vector3 camForward = _cameraTransform.forward;
         Vector3 camRight = _cameraTransform.right;
