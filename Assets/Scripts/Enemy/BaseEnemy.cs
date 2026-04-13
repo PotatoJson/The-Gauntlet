@@ -11,7 +11,6 @@ public abstract class BaseEnemy : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] protected float chaseSpeed = 4f;
-    [SerializeField] protected float circleSpeed = 2f;
     [SerializeField] protected float attackRange = 2f;
     [SerializeField] protected float chargeSpeed = 5f;
     [SerializeField] protected float chargeStopDistance = 2f;
@@ -118,6 +117,10 @@ public abstract class BaseEnemy : MonoBehaviour
         currentHealth = maxHealth;
         navAgent.speed = chaseSpeed;
         navAgent.isStopped = true;
+
+        // Stop NavMeshAgent from fighting your custom FacePlayer() rotation
+        navAgent.updateRotation = false;
+
         isAware = false;
         isEngaged = false;
         hasOpenedWithCharge = false;
@@ -128,19 +131,11 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             animator.applyRootMotion = false;
         }
-
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.RegisterEnemy(this);
-        }
     }
 
     protected virtual void OnDestroy()
     {
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.UnregisterEnemy(this);
-        }
+        // Cleanup if needed
     }
 
     protected virtual void Update()
@@ -189,14 +184,7 @@ public abstract class BaseEnemy : MonoBehaviour
         }
         else
         {
-            if (ShouldWaitForTurn())
-            {
-                CircleAroundPlayer();
-            }
-            else
-            {
-                ContinueCombat();
-            }
+            ContinueCombat();
         }
 
         if (isCharging)
@@ -204,30 +192,13 @@ public abstract class BaseEnemy : MonoBehaviour
             UpdateChargeAttack();
         }
 
-        if (isAware && !isStunned)
+        // PREVENT ROTATING DURING AN ATTACK: Added !isAttacking and !isInHitStun checks
+        if (isAware && !isStunned && !isAttacking && !isInHitStun)
         {
             FacePlayer();
         }
 
         UpdateAnimatorParameters();
-    }
-
-    protected bool ShouldWaitForTurn()
-    {
-        if (EnemyCombatManager.Instance == null) return false;
-        return EnemyCombatManager.Instance.ShouldWait(this);
-    }
-
-    protected virtual void CircleAroundPlayer()
-    {
-        if (isAttacking || isStunned || isCharging || isInHitStun) return;
-        if (EnemyCombatManager.Instance == null) return;
-
-        Vector3 targetPos = EnemyCombatManager.Instance.GetCirclePosition(this);
-
-        navAgent.speed = circleSpeed;
-        navAgent.isStopped = false;
-        navAgent.SetDestination(targetPos);
     }
 
     public bool IsBlockingOrStunned()
@@ -255,13 +226,23 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (isAttacking || isInHitStun)
         {
-            navAgent.updatePosition = false;
+            // Only set this to false if it is currently true
+            if (navAgent.updatePosition)
+            {
+                navAgent.updatePosition = false;
+            }
+            
             transform.position += animator.deltaPosition;
             navAgent.nextPosition = transform.position;
         }
         else
         {
-            navAgent.updatePosition = true;
+            // Only toggle this back on if it is currently false
+            if (!navAgent.updatePosition)
+            {
+                navAgent.nextPosition = transform.position; // Sync back up BEFORE turning on
+                navAgent.updatePosition = true;
+            }
         }
     }
 
@@ -273,12 +254,8 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (distance <= attackRange)
         {
-            if (EnemyCombatManager.Instance == null ||
-                EnemyCombatManager.Instance.RequestAttackPermission(this))
-            {
-                FacePlayer();
-                LightAttack();
-            }
+            FacePlayer();
+            LightAttack();
         }
         else
         {
@@ -297,16 +274,6 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             isAware = true;
             navAgent.isStopped = false;
-
-            //// AUDIO: Play Aggro sound when spotting the player
-            //if (gameObject.CompareTag("EliteEnemy"))
-            //{
-            //    AudioManager.Instance.Play("Elite_Enemy_Aggro");
-            //}
-            //else
-            //{
-            //    AudioManager.Instance.Play("Basic_Enemy_Aggro");
-            //}
         }
     }
 
@@ -325,17 +292,9 @@ public abstract class BaseEnemy : MonoBehaviour
             {
                 if (CanPerformAction())
                 {
-                    if (EnemyCombatManager.Instance == null ||
-                        EnemyCombatManager.Instance.RequestAttackPermission(this))
-                    {
-                        Debug.Log($"{gameObject.name}: OPENER CHARGE FIRED! Distance: {distance:F2}");
-                        ChargeAttack();
-                        hasOpenedWithCharge = true;
-                    }
-                    else
-                    {
-                        Debug.Log($"{gameObject.name}: Opener charge DENIED by CombatManager");
-                    }
+                    Debug.Log($"{gameObject.name}: OPENER CHARGE FIRED! Distance: {distance:F2}");
+                    ChargeAttack();
+                    hasOpenedWithCharge = true;
                 }
                 else
                 {
@@ -365,9 +324,19 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         if (isAttacking || isStunned || isCharging || isInHitStun || player == null) return;
 
-        navAgent.isStopped = false;
+        if (navAgent.isStopped) 
+        {
+            navAgent.isStopped = false;
+        }
+        
         navAgent.speed = chaseSpeed;
-        navAgent.SetDestination(player.position);
+
+        // Prevent stalling/stop-and-go by only recalculating the path if the target has 
+        // moved significantly away from the previous destination (1.5 meters squared distance)
+        if (Vector3.SqrMagnitude(navAgent.destination - player.position) > 1.5f)
+        {
+            navAgent.SetDestination(player.position);
+        }
     }
 
     protected float GetDistanceToPlayer()
@@ -401,7 +370,7 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        float randomIndex = Random.Range(0, 2);// Produces 0, 0.5, or 1
+        float randomIndex = Random.Range(0, 2);
         animator?.SetFloat(AnimLightRandom, randomIndex);
         animator?.SetTrigger(AnimLightAttack);
     }
@@ -510,16 +479,6 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             isAware = true;
             navAgent.isStopped = false;
-
-            //// AUDIO: Play Aggro sound if ambushed by the player!
-            //if (gameObject.CompareTag("EliteEnemy"))
-            //{
-            //    AudioManager.Instance.Play("Elite_Enemy_Aggro");
-            //}
-            //else
-            //{
-            //    AudioManager.Instance.Play("Basic_Enemy_Hit");
-            //}
         }
         if (!isEngaged)
         {
@@ -530,16 +489,6 @@ public abstract class BaseEnemy : MonoBehaviour
         // Take damage (always take damage)
         currentHealth -= damage;
         Debug.Log($"{gameObject.name}: Health now {currentHealth}/{maxHealth}");
-
-        // AUDIO: Enemy vocalization for taking damage
-        //if (gameObject.CompareTag("EliteEnemy"))
-        //{
-        //    AudioManager.Instance.Play("Elite_Enemy_Hit");
-        //}
-        //else
-        //{
-        //    AudioManager.Instance.Play("Basic_Enemy_Hit");
-        //}
 
         // Show health bar when damaged
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
@@ -564,12 +513,6 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        // Release attack permission
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.ReleaseAttackPermission(this);
-        }
-
         // Enter hit stun and play hit reaction
         Debug.Log($"{gameObject.name}: Hit! Entering hit stun");
         animator?.SetTrigger(AnimHitReaction);
@@ -579,17 +522,6 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void Die()
     {
-        //// AUDIO: Check the tag and play the correct death sound
-        //if (gameObject.CompareTag("EliteEnemy"))
-        //{
-        //    AudioManager.Instance.Play("Elite_Enemy_Death");
-        //}
-        //else
-        //{
-        //    // Defaults to the basic enemy death sound
-        //    AudioManager.Instance.Play("Basic_Enemy_Death");
-        //}
-
         // Stop all coroutines to prevent any ongoing routines
         StopAllCoroutines();
 
@@ -601,11 +533,6 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         navAgent.enabled = false;
-
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.ReleaseAttackPermission(this);
-        }
 
         animator?.SetTrigger(AnimDie);
 
@@ -646,11 +573,6 @@ public abstract class BaseEnemy : MonoBehaviour
 
         navAgent.updatePosition = true;
         navAgent.nextPosition = transform.position;
-
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.ReleaseAttackPermission(this);
-        }
 
         FacePlayerImmediate();
 
@@ -764,9 +686,6 @@ public abstract class BaseEnemy : MonoBehaviour
         timeSinceLastHit = 0f;
     }
 
-    /// <summary>
-    /// Exit hit stun and resume normal combat (immunity already granted on enter)
-    /// </summary>
     protected virtual void ExitHitStunWithImmunity()
     {
         isInHitStun = false;

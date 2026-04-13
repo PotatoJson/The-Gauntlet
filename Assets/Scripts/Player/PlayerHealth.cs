@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -30,11 +29,6 @@ public class PlayerHealth : MonoBehaviour
     private float invincibilityTimer;
     private bool isInvincible;
 
-    [Header("References")]
-    [SerializeField] private Slider _healthSlider;
-    [SerializeField] private Slider _stunSlider;
-    [SerializeField] private AnimationBridge _animationBridge;
-
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
     public event Action OnPlayerDeath;
@@ -46,17 +40,6 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-
-        if (_healthSlider != null)
-        {
-            _healthSlider.maxValue = maxHealth;
-            _healthSlider.value = maxHealth;
-        }
-        if (_stunSlider != null)
-        {
-            _stunSlider.maxValue = maxStunMeter;
-            _stunSlider.value = 0f;
-        }
     }
 
     private void Update()
@@ -83,7 +66,6 @@ public class PlayerHealth : MonoBehaviour
             {
                 currentStunMeter -= stunRecoveryRate * Time.deltaTime;
                 currentStunMeter = Mathf.Max(0, currentStunMeter);
-                if (_stunSlider != null) _stunSlider.value = currentStunMeter;
             }
         }
 
@@ -100,8 +82,7 @@ public class PlayerHealth : MonoBehaviour
                 currentHealth += healthRecoveryRate * Time.deltaTime;
                 currentHealth = Mathf.Min(currentHealth, maxHealth); // Don't heal past Max HP
 
-                // update ui and trigger events
-                if (_healthSlider != null) _healthSlider.value = currentHealth;
+                // trigger events
                 OnHealthChanged?.Invoke(currentHealth, maxHealth);
             }
         }
@@ -111,83 +92,10 @@ public class PlayerHealth : MonoBehaviour
     {
         if (IsDead || isInvincible) return;
 
-        //if (_movement != null && _movement.IsInvincibleViaDash)
-        //{
-        //    Debug.Log("Dodged damage via Dash I-Frames!");
-        //    return;
-        //}
-
-        //if (_combatSandBox.IsParrying)
-        //{
-        //    Debug.Log("Player successfully PARRIED the attack!");
-
-        //    // TODO: Play a cool Parry *CLANG* sound and VFX here
-
-        //    return; //Stops the damage AND stops standard hit I-frames
-        //}
-        //else if (_combatSandBox.IsBlocking)
-        //{
-        //    //_animationBridge.PlayAttack()
-
-        //    currentHealth -= (damage * 0.1f);
-        //    currentStunMeter += damage;
-
-        //    // reset the recovery delay timer everytime you get hit
-        //    stunRecoveryTimer = stunRecoveryDelay;
-        //    healthRecoveryTimer = healthRecoveryDelay;
-
-        //    // AUDIO LOGIC: Check the attacker's tag for the right block sound
-        //    if (attacker != null && !attacker.CompareTag("BasicEnemy"))
-        //    {
-        //        // If there is an attacker, and they are NOT a BasicEnemy (e.g., Elite or Boss)
-        //        AudioManager.Instance.Play("Player_Blocking_Sword");
-        //    }
-        //    else
-        //    {
-        //        // If it IS a BasicEnemy, or if the attacker is somehow null
-        //        AudioManager.Instance.Play("Player_Blocking_Punch");
-        //    }
-
-        //    Debug.Log($"Hit! Damage: {damage}. Stun Meter is now: {currentStunMeter} / {maxStunMeter}");
-
-        //    if (_stunSlider != null) _stunSlider.value = currentStunMeter;
-
-        //    if (currentStunMeter >= maxStunMeter)
-        //    {
-        //        BreakGuard();
-        //    }
-        //    else
-        //    {
-        //        Debug.Log($"Player BLOCKED. Posture: {currentStunMeter}/{maxStunMeter}");
-        //        if (_animationBridge != null) _animationBridge.PlayBlock(0.2f);
-        //    }
-        //    _animationBridge.PlayBlock(0.2f);
-        //}
-        //else
-        //{
-        //    currentHealth -= damage;
-        //    healthRecoveryTimer = healthRecoveryDelay;
-        //    stunRecoveryTimer = stunRecoveryDelay;
-
-        //    // AUDIO: Randomly pick between 0 and 1
-        //    int randomSound = UnityEngine.Random.Range(0, 2);
-
-        //    // So we don't have the same hit sound so it's not too repetitive.
-        //    if (randomSound == 0)
-        //    {
-        //        AudioManager.Instance.Play("Player_Hit");
-        //    }
-        //    else
-        //    {
-        //        AudioManager.Instance.Play("Player_Hit_1");
-        //    }
-
-        //    //invoke hit reaction animation here when we have them
-        //}
+        // ... Existing Parry/Block/Dodge logic would go here if uncommented ...
 
         currentHealth = Mathf.Max(currentHealth, 0);
-        _healthSlider.value = currentHealth;
-        //Debug.Log($"Player took {damage} damage! Health: {currentHealth}/{maxHealth}");
+
         // Brief invincibility to prevent multiple hits from same attack
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
@@ -204,20 +112,16 @@ public class PlayerHealth : MonoBehaviour
     //{
     //    Debug.Log("GUARD BROKEN! Player is stunned.");
     //    isStunned = true;
-
+    //
     //    // Reset the meter visually
     //    currentStunMeter = 0;
-    //    if (_stunSlider != null) _stunSlider.value = 0;
-
+    //
     //    // Tell CombatSandBox to lock inputs and force drop the shield
     //    float stunDuration = 2.0f; // 2 seconds of stun
     //    _combatSandBox.TriggerGuardBreak(stunDuration);
-
+    //
     //    // Tell PlayerHealth to unlock after the duration
     //    Invoke(nameof(RecoverFromStun), stunDuration);
-
-    //    // TODO: Play Guard Break / Stun Animation here
-    //    // _animationBridge.PlayStun();
     //}
 
     private void RecoverFromStun()
@@ -235,26 +139,4 @@ public class PlayerHealth : MonoBehaviour
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
-
-    //private void Die()
-    //{
-    //    Debug.Log("Player died!");
-
-    //    // AUDIO: Play the death sound
-    //    AudioManager.Instance.Play("Player_Death");
-
-    //    if (uiScript != null)
-    //    {
-    //        uiScript.onDeath();
-    //    }
-    //    // Destroy persistent singletons so scene loads fresh
-    //    /*if (GameManager.Instance != null) Destroy(GameManager.Instance.gameObject);
-    //    if (AudioManager.Instance != null) Destroy(AudioManager.Instance.gameObject);
-    //    EnemyCombatManager.Instance = null;
-
-    //    Time.timeScale = 1f;
-    //    //temp reset scene
-    //    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    //    */
-    //}
 }

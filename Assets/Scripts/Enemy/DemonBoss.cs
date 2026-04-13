@@ -33,6 +33,9 @@ public class DemonBoss : BaseEnemy
 
     private static readonly int AnimDodgeBackwards = Animator.StringToHash("DodgeBack");
 
+    // Debugging Throttle (prevents chat spam every single frame)
+    private float debugTimer = 0f;
+
     protected override void Start()
     {
         base.Start();
@@ -58,10 +61,43 @@ public class DemonBoss : BaseEnemy
         base.Update();
     }
 
-    /// <summary>
-    /// Overriding TakeDamage to intercept the hit reaction and check for phase transitions.
-    /// The DemonBoss does not stagger.
-    /// </summary>
+    // ============================================
+    // DEBUG: OVERRIDE CONTINUE COMBAT TO TRACK AI
+    // ============================================
+    protected override void ContinueCombat()
+    {
+        if (isAttacking || isCharging || isStunned || isInHitStun)
+        {
+            if (Time.time > debugTimer)
+            {
+                Debug.Log($"[DemonBoss DEBUG] Combat Halted. isAttacking:{isAttacking}, isCharging:{isCharging}, isStunned:{isStunned}, isInHitStun:{isInHitStun}");
+                debugTimer = Time.time + 1f; // Log once per second
+            }
+            return;
+        }
+
+        float distance = GetDistanceToPlayer();
+
+        if (Time.time > debugTimer)
+        {
+            Debug.Log($"[DemonBoss DEBUG] Distance to player: {distance:F2} | Required Attack Range: {attackRange:F2}");
+            debugTimer = Time.time + 1f;
+        }
+
+        // If distance is less than attack range, try to attack
+        if (distance <= attackRange)
+        {
+            Debug.Log($"[DemonBoss DEBUG] In range! Attempting to FacePlayer and LightAttack...");
+            FacePlayer();
+            LightAttack();
+        }
+        else
+        {
+            ChasePlayer();
+            FacePlayer();
+        }
+    }
+
     public override void TakeDamage(float damage)
     {
         if (IsDead()) return;
@@ -77,9 +113,6 @@ public class DemonBoss : BaseEnemy
         hasOpenedWithCharge = true;
 
         currentHealth -= damage;
-
-        //var healthBar = GetComponentInChildren<En>();
-        //healthBar?.ShowHealthBar();
 
         if (currentHealth <= 0)
         {
@@ -97,17 +130,11 @@ public class DemonBoss : BaseEnemy
         }
     }
 
-    /// <summary>
-    /// Overriding HitStun to ensure nothing externally can force a hit stun on the boss.
-    /// </summary>
     protected override void EnterHitStun()
     {
         // Do nothing. Bosses don't get staggered.
     }
 
-    /// <summary>
-    /// Replace default Engagement logic just in case to ensure charge isn't triggered.
-    /// </summary>
     protected override void CheckEngagement()
     {
         if (player == null || isIntermission) return;
@@ -125,36 +152,19 @@ public class DemonBoss : BaseEnemy
         }
     }
 
-    /// <summary>
-    /// Prevent Charge Attacks entirely.
-    /// </summary>
-    public override void ChargeAttack()
-    {
-        // Do nothing. Boss has no charge.
-    }
+    public override void ChargeAttack() { }
+    public override void HeavyAttack() { }
 
-    /// <summary>
-    /// Prevent Heavy Attacks entirely as the boss does not have any.
-    /// </summary>
-    public override void HeavyAttack()
-    {
-        // Do nothing. Boss has no heavy attack.
-    }
-
-    /// <summary>
-    /// Overriding the main attack routing. We manage Phase 1, Phase 2, and Dodging here.
-    /// </summary>
     public override void LightAttack()
     {
+        Debug.Log($"[DemonBoss DEBUG] LightAttack() triggered.");
+
         if (!CanPerformAction() || isIntermission || isDodging)
         {
-            // Optional: uncomment the line below if you want to see exactly what is blocking the attack, 
-            // but beware it might spam the console if called every frame.
-            // Debug.Log($"[DemonBoss] Cannot attack. CanPerformAction: {CanPerformAction()}, isIntermission: {isIntermission}, isDodging: {isDodging}");
+            Debug.LogWarning($"[DemonBoss DEBUG] LightAttack Blocked! CanPerformAction(): {CanPerformAction()}, isIntermission: {isIntermission}, isDodging: {isDodging}");
             return;
         }
 
-        // 10% chance to dodge when attempting to attack
         if (Random.Range(0f, 1f) <= dodgeChance)
         {
             Debug.Log("[DemonBoss] Dodging instead of attacking.");
@@ -170,30 +180,30 @@ public class DemonBoss : BaseEnemy
         if (!isPhase2)
         {
             float randomIndex = Random.Range(0, 3) / 2f;
-            Debug.Log($"[DemonBoss] Phase 1 Attack triggered. Blend value: {randomIndex}");
+            Debug.Log($"[DemonBoss] Phase 1 Attack executing. Blend value: {randomIndex}");
             animator?.SetFloat(AnimLightRand, randomIndex);
             animator?.SetTrigger(AnimMeleeAttack);
         }
         else
         {
             float dualRandomIndex = Random.Range(0, 4) / 3f;
-            Debug.Log($"[DemonBoss] Phase 2 Dual Wield Attack triggered. Blend value: {dualRandomIndex}");
+            Debug.Log($"[DemonBoss] Phase 2 Dual Wield Attack executing. Blend value: {dualRandomIndex}");
             animator?.SetFloat(AnimDualRand, dualRandomIndex);
             animator?.SetTrigger(AnimDualWieldAttack);
         }
+
+        // Safety reset to prevent the boss from getting permanently stuck if an animation event is missed
+        StartCoroutine(AttackResetFailsafe(2.5f));
     }
 
     private void StartIntermission()
     {
-        Debug.Log("[DemonBoss] StartIntermission() called. Halting boss and triggering 'Intermission' animation.");
         isIntermission = true;
         isPhase2 = true;
 
-        // Enable Phase 2 dual-wield weapons
         if (leftSword != null) leftSword.SetActive(true);
         if (rightSword != null) rightSword.SetActive(true);
 
-        // Interrupt current actions
         isAttacking = false;
         isDodging = false;
         navAgent.isStopped = true;
@@ -205,22 +215,29 @@ public class DemonBoss : BaseEnemy
         }
 
         animator?.SetTrigger(AnimIntermission);
-
-        // FAILSAFE: This bypasses the need for an Animation Event in Unity.
-        // It guarantees Phase 2 starts after `intermissionDuration` seconds.
         StartCoroutine(IntermissionTimer());
     }
 
     private IEnumerator IntermissionTimer()
     {
-        // Wait for the animation to play out
         yield return new WaitForSeconds(intermissionDuration);
-
-        // If we are still in intermission (event didn't fire), force it to end.
         if (isIntermission)
         {
-            Debug.LogWarning("[DemonBoss] Intermission Timer finished! Forcing OnIntermissionEnd() logic.");
             OnIntermissionEnd();
+        }
+    }
+
+    private IEnumerator AttackResetFailsafe(float timeout)
+    {
+        yield return new WaitForSeconds(timeout);
+        if (isAttacking)
+        {
+            Debug.LogError("[DemonBoss DEBUG] ATTACK RESET FAILSAFE TRIGGERED! isAttacking was never set to false by OnAttackEnd().");
+            isAttacking = false;
+            if (player != null && !isStunned && !IsDead())
+            {
+                navAgent.isStopped = false;
+            }
         }
     }
 
@@ -232,44 +249,32 @@ public class DemonBoss : BaseEnemy
         animator?.SetTrigger(AnimDodgeBackwards);
     }
 
-    #region Animation Events
-
-    /// <summary>
-    /// Ends the intermission gracefully. Automatically triggered by the Coroutine Failsafe now.
-    /// </summary>
     public void OnIntermissionEnd()
     {
-        Debug.Log("[DemonBoss] Boss Intermission Over! Resuming movement and Phase 2 attacks.");
         isIntermission = false;
-
-        // Reset attack state just to be safe
-        isAttacking = false; 
-
-        if (player != null && !isStunned && !IsDead())  
-        {
-            navAgent.isStopped = false;
-        }
-    }
-
-    /// <summary>
-    /// Place this Animation Event at the end of the 'Dodge_Backwards' Animation!
-    /// Alternatively, you can just use `OnAttackEnd` if you put it on the dodge too.
-    /// </summary>
-    public void OnDodgeEnd()
-    {
-        isDodging = false;
-
+        isAttacking = false;
         if (player != null && !isStunned && !IsDead())
         {
             navAgent.isStopped = false;
         }
     }
 
-    #endregion
+    public void OnDodgeEnd()
+    {
+        isDodging = false;
+        if (player != null && !isStunned && !IsDead())
+        {
+            navAgent.isStopped = false;
+        }
+    }
 
-    // Overriding CanPerformAction to include boss states
     protected override bool CanPerformAction()
     {
-        return base.CanPerformAction() && !isIntermission && !isDodging;
+        bool baseCheck = base.CanPerformAction();
+        if (!baseCheck)
+        {
+            Debug.LogWarning($"[DemonBoss DEBUG] Base CanPerformAction is false! isAttacking: {isAttacking}, isStunned: {isStunned}, isCharging: {isCharging}, isInHitStun: {isInHitStun}, cooldown: {attackCooldownTimer:F2}");
+        }
+        return baseCheck && !isIntermission && !isDodging;
     }
 }
