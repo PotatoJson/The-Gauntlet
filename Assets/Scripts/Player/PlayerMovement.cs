@@ -146,7 +146,7 @@ public class PlayerMovement : MonoBehaviour
         //stop movement if attacking
         if(_stateManager.GetCurrentState() == PlayerState.Attacking)
         {
-            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
+            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime); 
             _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
@@ -168,6 +168,16 @@ public class PlayerMovement : MonoBehaviour
         }
 
         ApplyGravity();
+
+        if(_stateManager.GetCurrentState() == PlayerState.Staggered)
+        {
+            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
+            _horizontalVelocity = -transform.forward * _stateManager.CurrentLungeSpeed;
+            ApplyGravity();
+            Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
+            _controller.Move(_horizontalVelocity * Time.deltaTime);
+            return;
+        }
 
         if (_isRolling)
         {
@@ -253,7 +263,7 @@ public class PlayerMovement : MonoBehaviour
         else if(isCombatCancel)
         {
           if(!_controller.isGrounded) return;
-        } 
+        }
 
         _hasBufferedRoll = false;
         _isRolling = true;
