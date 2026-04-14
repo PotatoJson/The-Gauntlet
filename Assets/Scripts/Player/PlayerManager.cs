@@ -25,6 +25,11 @@ public class PlayerManager : MonoBehaviour
     public bool RequestBufferClear;
     public float CurrentLungeSpeed;
     
+    public void Awake()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
     public PlayerState GetCurrentState()
     {
