@@ -6503,7 +6503,7 @@ GameObject:
   - component: {fileID: 153992756}
   - component: {fileID: 153992755}
   - component: {fileID: 153992754}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: floor.008
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11531,141 +11531,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8898767717318183677, guid: 49c2cebbf5034c443a65bd1855504cc3, type: 3}
   m_PrefabInstance: {fileID: 559225101}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &272548376
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 272548380}
-  - component: {fileID: 272548379}
-  - component: {fileID: 272548378}
-  - component: {fileID: 272548377}
-  - component: {fileID: 272548381}
-  m_Layer: 0
-  m_Name: Collision to leave
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!65 &272548377
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 272548376}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &272548378
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 272548376}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &272548379
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 272548376}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &272548380
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 272548376}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -41.79862, y: -10.576, z: 20.454605}
-  m_LocalScale: {x: 0.3246767, y: 3.2005858, z: 3.1387548}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1943595485}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &272548381
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 272548376}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4c38988136cf8b74096cc6fa5a892a8d, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &273378789
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15539,7 +15404,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 367533095}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: Wall w/ Gate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19006,7 +18871,7 @@ GameObject:
   - component: {fileID: 462658694}
   - component: {fileID: 462658693}
   - component: {fileID: 462658692}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: brick wall (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20057,7 +19922,7 @@ GameObject:
   - component: {fileID: 487120214}
   - component: {fileID: 487120213}
   - component: {fileID: 487120212}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ruined wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35444,7 +35309,7 @@ GameObject:
   - component: {fileID: 808338445}
   - component: {fileID: 808338444}
   - component: {fileID: 808338443}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: brick wall (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40669,7 +40534,7 @@ GameObject:
   - component: {fileID: 917635652}
   - component: {fileID: 917635651}
   - component: {fileID: 917635654}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: door.002
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44427,7 +44292,7 @@ GameObject:
   - component: {fileID: 993768050}
   - component: {fileID: 993768049}
   - component: {fileID: 993768048}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: stairs handhail big
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -46485,7 +46350,7 @@ GameObject:
   - component: {fileID: 1041297138}
   - component: {fileID: 1041297137}
   - component: {fileID: 1041297136}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: brick wall (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65253,13 +65118,13 @@ GameObject:
   - component: {fileID: 1427760538}
   - component: {fileID: 1427760541}
   - component: {fileID: 1427760542}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ruined wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &1427760538
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -70255,13 +70120,13 @@ GameObject:
   - component: {fileID: 1548101099}
   - component: {fileID: 1548101098}
   - component: {fileID: 1548101102}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: brick wall to leave
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1548101098
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -78839,7 +78704,7 @@ GameObject:
   - component: {fileID: 1744467861}
   - component: {fileID: 1744467860}
   - component: {fileID: 1744467859}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Temp Wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -79667,7 +79532,7 @@ GameObject:
   - component: {fileID: 1758892956}
   - component: {fileID: 1758892955}
   - component: {fileID: 1758892958}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: brick wall with door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -86115,7 +85980,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1894486251}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: Wall w/ Gate (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -88028,7 +87893,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1941458634}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Boss Chamber Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -88459,7 +88324,6 @@ Transform:
   - {fileID: 1976378605}
   - {fileID: 1427760540}
   - {fileID: 1548101101}
-  - {fileID: 272548380}
   - {fileID: 533503713}
   - {fileID: 1959454731}
   - {fileID: 1856721989}
