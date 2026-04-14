@@ -2190,6 +2190,7 @@ GameObject:
   - component: {fileID: 2286730938022986400}
   - component: {fileID: 7436312303470501633}
   - component: {fileID: 8642541566269393538}
+  - component: {fileID: 4480598693052480370}
   m_Layer: 5
   m_Name: Cube
   m_TagString: Untagged
@@ -2273,6 +2274,19 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4480598693052480370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2768855086151962686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40727dfa7b1c6bf4bbd6c11d74689818, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HighContrastTarget
+  type: 2
 --- !u!1 &3183000640706148904
 GameObject:
   m_ObjectHideFlags: 0
@@ -3651,6 +3665,7 @@ GameObject:
   - component: {fileID: 6932110309968086859}
   - component: {fileID: 3052444072791470925}
   - component: {fileID: 3423243994544313440}
+  - component: {fileID: 908533674455132659}
   m_Layer: 5
   m_Name: Accessible
   m_TagString: Untagged
@@ -3730,6 +3745,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocaleSelector
   localeDropdown: {fileID: 394714439736047953}
+--- !u!114 &908533674455132659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4765980352269219290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f96ade7889f1daa44a020d749b730e43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HighContrastManager
+  fcp: {fileID: 2502819175275223816}
+  hcMaterial: {fileID: 2100000, guid: f69f9d107f51eb148ad989bc50c9e533, type: 2}
+  hcToggle: {fileID: 8062254162147629327}
+  targetButtonParent: {fileID: 105814901932749265}
+  pickerAndPreviewGroup: {fileID: 8940531644276772524}
+  playerPreview: {fileID: 6643117405859015205}
+  enemyPreview: {fileID: 6643117405859015205}
+  structurePreview: {fileID: 4480598693052480370}
 --- !u!1 &4913412598431813758
 GameObject:
   m_ObjectHideFlags: 0
@@ -8133,8 +8168,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1076460926905791193, guid: 2e98ea0eaa3b807448a981ec351cbb95, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 630709926436077642}
   m_SourcePrefab: {fileID: 100100000, guid: 2e98ea0eaa3b807448a981ec351cbb95, type: 3}
+--- !u!1 &2351750790170381443 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1076460926905791193, guid: 2e98ea0eaa3b807448a981ec351cbb95, type: 3}
+  m_PrefabInstance: {fileID: 3338085829659016794}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &630709926436077642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2351750790170381443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40727dfa7b1c6bf4bbd6c11d74689818, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HighContrastTarget
+  type: 1
 --- !u!4 &3163998978428229177 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 413076824285702243, guid: 2e98ea0eaa3b807448a981ec351cbb95, type: 3}
@@ -8253,6 +8309,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4214b57e615806c448ba9d993d629531, type: 3}
+--- !u!114 &2502819175275223816 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2130943084915617136, guid: 4214b57e615806c448ba9d993d629531, type: 3}
+  m_PrefabInstance: {fileID: 4551289524934194808}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31629c56f6f83234a90f6296f902f9c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &2502819175275223817 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2130943084915617137, guid: 4214b57e615806c448ba9d993d629531, type: 3}
