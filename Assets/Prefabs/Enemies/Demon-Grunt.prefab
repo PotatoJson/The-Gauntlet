@@ -703,6 +703,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9099812824960674512}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2907255370100398785}
   m_SourcePrefab: {fileID: 100100000, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
 --- !u!4 &8328344247673724784 stripped
 Transform:
@@ -749,8 +752,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BasicEnemy
   maxHealth: 100
+  currentHealth: 0
   chaseSpeed: 4
-  circleSpeed: 2
   attackRange: 2
   chargeSpeed: 5
   chargeStopDistance: 2
@@ -771,7 +774,6 @@ MonoBehaviour:
   animator: {fileID: 0}
   attackDistance: 2.5
   chargeDistance: 8
-  blockChance: 0.25
   heavyAttackChance: 0.299
   chargeChance: 0.35
 --- !u!136 &4208100376101492253
@@ -812,3 +814,16 @@ MonoBehaviour:
   dissolveDuration: 2
   dissolveDelay: 0.5
   destroyOnComplete: 1
+--- !u!114 &-2907255370100398785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8709935683431744970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40727dfa7b1c6bf4bbd6c11d74689818, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HighContrastTarget
+  type: 1
