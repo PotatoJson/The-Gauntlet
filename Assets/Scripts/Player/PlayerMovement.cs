@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
+    #region Variables
     [Header("Movement Settings")]
     public float walkSpeed = 5f;
     public float sprintSpeed = 9f;
@@ -59,11 +60,18 @@ public class PlayerMovement : MonoBehaviour
     private float _rollTimer;
     private float _rollCooldownTimer;
     private Vector3 _rollDirection;
-
+    [SerializeField] private float _moveRollCancel;
+    [SerializeField] private float _combatRollCancel;
+ 
     public bool IsInvincibleViaRoll => _isRolling && _rollTimer >= iFrameStartTime && _rollTimer <= (iFrameStartTime + iFrameDuration);
+
+    //Player Manager
+    private PlayerManager _stateManager;
+    #endregion
 
     private void Awake()
     {
+        _stateManager = GetComponent<PlayerManager>();
         _controller = GetComponent<CharacterController>();
         
         if (Camera.main != null) _cameraTransform = Camera.main.transform;
@@ -105,6 +113,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnRollInput()
     {
+        if(_stateManager.CanCancelAttack && _stateManager.GetCurrentState() == PlayerState.Attacking)
+        {
+            AttemptRoll();
+            return;
+        }
         if (_isRolling || _rollCooldownTimer > 0)
         {
             _hasBufferedRoll = true;
@@ -118,6 +131,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        _stateManager.IsLockedOn = isTargetLocked;
+        _stateManager.MoveDirectionIntent = GetWorldSpaceMovementDirection();
+
         if (_isRollButtonHeld && !_isSprinting)
         {
             _rollButtonHoldTimer += Time.deltaTime;
@@ -125,6 +141,17 @@ public class PlayerMovement : MonoBehaviour
             {
                 _isSprinting = true;
             }
+        }
+
+        //stop movement if attacking
+        if(_stateManager.GetCurrentState() == PlayerState.Attacking)
+        {
+            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime); 
+            _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
+            ApplyGravity();
+            Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
+            _controller.Move(lastVelocity * Time.deltaTime);
+            return;
         }
 
         if (_rollCooldownTimer > 0) _rollCooldownTimer -= Time.deltaTime;
@@ -142,6 +169,16 @@ public class PlayerMovement : MonoBehaviour
 
         ApplyGravity();
 
+        if(_stateManager.GetCurrentState() == PlayerState.Staggered)
+        {
+            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
+            _horizontalVelocity = -transform.forward * _stateManager.CurrentLungeSpeed;
+            ApplyGravity();
+            Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
+            _controller.Move(_horizontalVelocity * Time.deltaTime);
+            return;
+        }
+
         if (_isRolling)
         {
             HandleRoll();
@@ -157,14 +194,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
+        if(!_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Airborne);
+
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
             _horizontalVelocity = Vector3.zero; // Stop horizontal movement
+            if(_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Idle);
             return;
         }
 
         bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+        if (_controller.isGrounded)
+        {
+            _stateManager.SetPlayerState(actualSprint ? PlayerState.Running : PlayerState.Walking);
+        }
 
 
         Vector3 camForward = _cameraTransform.forward;
@@ -200,15 +244,35 @@ public class PlayerMovement : MonoBehaviour
         _horizontalVelocity = moveDir * _smoothSpeed;
     }
 
+#region Rolling
     private void AttemptRoll()
     {
-        if (_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
+        PlayerState currentState = _stateManager.GetCurrentState();
         
+        bool isAllowedToRoll = (currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running);
+        bool isCombatCancel = (currentState == PlayerState.Attacking && _stateManager.CanCancelAttack);
+        
+        if(!isAllowedToRoll && !isCombatCancel) {
+            return;
+        }
+
+        if(isAllowedToRoll)
+        {
+            if(_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
+        }
+        else if(isCombatCancel)
+        {
+          if(!_controller.isGrounded) return;
+        }
+
         _hasBufferedRoll = false;
         _isRolling = true;
         _rollTimer = 0f; 
         
-        _rollCooldownTimer = rollDuration + rollCooldown; 
+        _stateManager.SetPlayerState(PlayerState.Dodging);
+        _rollCooldownTimer = rollDuration + rollCooldown;
+
+        if(isCombatCancel) _stateManager.RequestBufferClear = true;
 
         if (_moveInput.magnitude > 0.1f)
         {
@@ -245,29 +309,55 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(_rollDirection);
         }
 
-        // Early Roll Cancel for smooth running
-        float cancelThreshold = rollDuration * 0.8f; 
-        if (_rollTimer >= cancelThreshold && _moveInput.magnitude > 0.1f)
+        // Early Roll Cancel for smooth running / smooth attack
+
+        if (normalizedTime >= _combatRollCancel && _stateManager.HasBufferedAttack)
         {
-            _isRolling = false;
+            ExitRollEarly();
+            return;
+        }
+        if (normalizedTime >= _moveRollCancel && _moveInput.magnitude > 0.1f)
+        {
+            ExitRollEarly();
             _targetSpeed = _isSprinting ? sprintSpeed : walkSpeed;
             _smoothSpeed = _targetSpeed; 
-            
-            if (TryGetComponent<AnimationBridge>(out var animBridge))
-            {
-                animBridge.BackToLocomotion();
-            }
             return;
         }
 
         if (_rollTimer >= rollDuration)
         {
             _isRolling = false;
+            _stateManager.SetPlayerState(PlayerState.Idle);
             if (TryGetComponent<AnimationBridge>(out var animBridge))
             {
                 animBridge.BackToLocomotion();
             }
         }
+    }
+
+    private void ExitRollEarly()
+    {
+        _isRolling = false;
+        _stateManager.SetPlayerState(PlayerState.Idle); //
+        
+        if (TryGetComponent<AnimationBridge>(out var animBridge))
+        {
+            animBridge.BackToLocomotion();
+        }
+    }
+#endregion
+
+//combat Helper funciton
+    public Vector3 GetWorldSpaceMovementDirection()
+    {
+        if(_moveInput.magnitude < 0.1f) return Vector3.zero;
+
+        Vector3 camForward = _cameraTransform.forward;
+        Vector3 camRight = _cameraTransform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+
+        return (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
     }
 
     private void ApplyGravity()
@@ -289,10 +379,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnJumpInput()
     {
-        if (_controller.isGrounded && !_isRolling)
+        PlayerState currentState = _stateManager.GetCurrentState();
+
+        bool canJump = (currentState == PlayerState.Idle || 
+        currentState == PlayerState.Walking ||
+        currentState == PlayerState.Running);
+
+        if (_controller.isGrounded && canJump)
         {
             // Physics formula for jump height
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * gravityMultiplier);
+
+            _stateManager.SetPlayerState(PlayerState.Airborne);
 
             if (TryGetComponent<AnimationBridge>(out var animBridge))
             {

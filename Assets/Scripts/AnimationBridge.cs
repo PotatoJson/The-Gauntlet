@@ -5,12 +5,14 @@ public class AnimationBridge : MonoBehaviour
     private Animator _animator;
     private PlayerMovement _movement;
     private CharacterController _controller;
+    private PlayerManager _stateManager;
 
     void Start()
     {
         _animator = GetComponentInChildren<Animator>();
         _movement = GetComponent<PlayerMovement>();
         _controller = GetComponent<CharacterController>();
+        _stateManager = GetComponent<PlayerManager>();
     }
 
     void Update()
@@ -75,7 +77,7 @@ public class AnimationBridge : MonoBehaviour
     }
 
     public void TriggerJump()
-{
-    _animator.SetTrigger("Jump");
-}
+    {
+        _animator.SetTrigger("Jump");
+    }
 }
