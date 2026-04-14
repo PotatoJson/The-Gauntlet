@@ -580,15 +580,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -106.84057
+      value: -6.3692627
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.10767
+      value: -0.00000105301
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 42.63105
+      value: 136.5702
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -723,18 +723,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EliteEnemy
   maxHealth: 100
+  currentHealth: 0
   chaseSpeed: 4
-  circleSpeed: 2
   attackRange: 4
   chargeSpeed: 5
-  chargeStopDistance: 2
+  chargeStopDistance: 3
   awarenessRange: 15
   engagementRange: 10
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
   stunDuration: 2
-  attackCooldown: 1.5
+  attackCooldown: 0
   maxHitStunDuration: 5
   hitStunResetTime: 1
   hitImmunityDuration: 5
@@ -744,9 +744,8 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 0}
   swordSwingDamage: 35
-  legSweepDamage: 15
   swordSlamDamage: 50
-  attackDistance: 2
+  attackDistance: 3
   chargeDistance: 10
   chargeChance: 1
   swordHitbox: {fileID: 8807914873845759311}

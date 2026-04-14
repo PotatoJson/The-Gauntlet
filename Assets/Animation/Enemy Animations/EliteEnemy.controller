@@ -104,8 +104,7 @@ AnimatorStateMachine:
   - {fileID: -1580537679595512642}
   m_EntryTransitions: []
   m_StateMachineTransitions: {}
-  m_StateMachineBehaviours:
-  - {fileID: -1871215587093209106}
+  m_StateMachineBehaviours: []
   m_AnyStatePosition: {x: 400, y: 110, z: 0}
   m_EntryPosition: {x: 120, y: 190, z: 0}
   m_ExitPosition: {x: 580, y: 350, z: 0}
@@ -133,6 +132,18 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &-7676446066224724744
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6134368422cbd3247a9e13aeb8e22b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackEndBehaviour
 --- !u!114 &-6369874527217613134
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -257,7 +268,7 @@ AnimatorState:
   m_Transitions:
   - {fileID: -1688832355467002152}
   m_StateMachineBehaviours:
-  - {fileID: -1978079537470726340}
+  - {fileID: -7676446066224724744}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -533,6 +544,18 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &1577208873510034931
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6134368422cbd3247a9e13aeb8e22b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackEndBehaviour
 --- !u!206 &1914737223189478872
 BlendTree:
   m_ObjectHideFlags: 1
@@ -696,6 +719,18 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &4315022817169048838
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6134368422cbd3247a9e13aeb8e22b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackEndBehaviour
 --- !u!1102 &4319920350103147458
 AnimatorState:
   serializedVersion: 6
@@ -731,12 +766,12 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: SwordSlam
-  m_Speed: 1
+  m_Speed: 1.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -8396559458525697258}
   m_StateMachineBehaviours:
-  - {fileID: 2258047589702262598}
+  - {fileID: 4315022817169048838}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -786,7 +821,7 @@ AnimatorState:
   m_Transitions:
   - {fileID: -2296178913308285406}
   m_StateMachineBehaviours:
-  - {fileID: -6369874527217613134}
+  - {fileID: 1577208873510034931}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -814,7 +849,7 @@ AnimatorState:
   m_Transitions:
   - {fileID: 4443206250640400086}
   m_StateMachineBehaviours:
-  - {fileID: 8781528809407927424}
+  - {fileID: 6033944589662019341}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -881,6 +916,18 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &6033944589662019341
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6134368422cbd3247a9e13aeb8e22b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackEndBehaviour
 --- !u!1102 &6237462693656883658
 AnimatorState:
   serializedVersion: 6
