@@ -29,12 +29,22 @@ public class PlayerHealth : MonoBehaviour
     private float invincibilityTimer;
     private bool isInvincible;
 
+    [Header("References")]
+    private PlayerManager _stateManager;
+    private Animator _animator;
+
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
     public event Action OnPlayerDeath;
 
     public bool IsDead => currentHealth <= 0;
     public float HealthPercentage => currentHealth / maxHealth;
+
+    private void Awake()
+    {
+        _stateManager = GetComponent<PlayerManager>();
+        _animator = GetComponentInChildren<Animator>();
+    }
 
     private void Start()
     {
@@ -97,17 +107,24 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Max(currentHealth, 0);
 
         // Brief invincibility to prevent multiple hits from same attack
+        
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-
+        TriggerLargeStumble();
         //if (currentHealth <= 0)
         //{
         //    Die();
         //}
     }
 
+    private void TriggerLargeStumble()
+        {
+            _stateManager.SetPlayerState(PlayerState.Staggered);
+            _animator.SetTrigger("LargeStumble");
+            _stateManager.CurrentLungeSpeed = -4f;
+        }
     //private void BreakGuard()
     //{
     //    Debug.Log("GUARD BROKEN! Player is stunned.");

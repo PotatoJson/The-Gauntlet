@@ -33,13 +33,6 @@ public class HitboxController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        /*if(other.CompareTag("BasicEnemy") && !_alreadyHit.Contains(other))
-        {
-            _alreadyHit.Add(other);
-            //TODO generate combatPacket
-            //and actually make the enemy take damage
-            Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
-        }*/
         if(other.transform.root == transform.root) return;
         if(other.TryGetComponent<BaseEnemy>(out BaseEnemy enemyScript))
         {

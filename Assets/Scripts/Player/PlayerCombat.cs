@@ -41,6 +41,7 @@ public class PlayerCombat : MonoBehaviour
     [Header("Player Stats")]
     public int CurrentStamina = 100;
     public int MaxStamina = 100;
+    private bool _isRotationLocked = false;
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
@@ -75,13 +76,19 @@ public class PlayerCombat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if(_stateManager.RequestBufferClear)
         {
             ConsumeBuffer();
             _stateManager.RequestBufferClear = false;
         }
+        if(_stateManager.GetCurrentState() == PlayerState.Staggered)
+        {
+            ConsumeBuffer();
+        }
         HandleInputBuffer();
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
+        ProcessAttackRotation();
         ProcessCombatLogic();
     }
     #endregion
@@ -119,7 +126,7 @@ public class PlayerCombat : MonoBehaviour
         if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
-        if(currentState == PlayerState.Dodging || currentState == PlayerState.Airborne) return;
+        if(currentState == PlayerState.Dodging || currentState == PlayerState.Airborne || currentState == PlayerState.Staggered) return;
 
         if(currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running)
         {
@@ -149,17 +156,13 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
+        _isRotationLocked = false;
+
         CurrentStamina -= node.StaminaCost;
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;
         
-
-        /*if (!_stateManager.IsLockedOn)
-        {
-            Vector3 snapDir = _stateManager.MoveDirectionIntent;
-            if(snapDir != Vector3.zero) transform.rotation = Quaternion.LookRotation(snapDir);
-        }*/
         _stateManager.CurrentLungeSpeed = node.LungeForce;
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Attacking);
@@ -167,8 +170,21 @@ public class PlayerCombat : MonoBehaviour
         ConsumeBuffer();
     }
 
+    private void ProcessAttackRotation()
+    {
+        if(_stateManager.IsLockedOn || _isRotationLocked || _stateManager.GetCurrentState() != PlayerState.Attacking) return;
+
+        Vector3 snapDir = _stateManager.MoveDirectionIntent;
+        if(snapDir != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(snapDir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
+        }
+    }
+
     public void ArmTargetHitbox()
     {
+        _isRotationLocked = true;
         RunTimeGauntlet activeWeapon = _leftGauntlet;
         _activeHitbox = _leftHitbox;
 
