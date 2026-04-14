@@ -2,6 +2,7 @@ using DG.Tweening;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement; // Added for scene loading
 
 public class GauntletMenu : MonoBehaviour
 {
@@ -27,7 +28,6 @@ public class GauntletMenu : MonoBehaviour
     private Vector2 _centerPosition = Vector2.zero;
     private float _offscreenPosX;
 
-    // --- NEW: Scale and Rotation Variables ---
     private Vector3 _originalGauntletScale;
     private Dictionary<RectTransform, Vector3> _originalButtonScales = new Dictionary<RectTransform, Vector3>();
 
@@ -37,11 +37,8 @@ public class GauntletMenu : MonoBehaviour
     private void Awake()
     {
         _offscreenPosX = -Screen.width;
-
-        // 1. Record the scale you set in the Inspector (the 1.5 scale)
         _originalGauntletScale = gauntletImage.localScale;
 
-        // 2. Record the original scale of your buttons/words
         foreach (var rect in buttonTextRects)
         {
             if (rect != null) _originalButtonScales[rect] = rect.localScale;
@@ -63,6 +60,34 @@ public class GauntletMenu : MonoBehaviour
         }
     }
 
+    // --- NEW: MENU FUNCTIONALITY ---
+
+    public void RestartGame()
+    {
+        // Must reset time scale or the game will be frozen when the scene reloads
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+        // Make sure your main menu scene is named exactly "MainMenu" in Build Settings
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void QuitGame()
+    {
+        Debug.Log("Quitting Game...");
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
+
+    // --- EXISTING ANIMATION LOGIC ---
+
     public void PauseGame()
     {
         _isPaused = true;
@@ -72,7 +97,6 @@ public class GauntletMenu : MonoBehaviour
         gauntletImage.DOKill();
         foreach (var rect in buttonTextRects) rect.DOKill();
 
-        // --- FIXED: Resetting to your original 1.5 scale instead of 1.0 ---
         gauntletImage.localScale = _originalGauntletScale;
         gauntletImage.localEulerAngles = Vector3.zero;
 
@@ -101,11 +125,8 @@ public class GauntletMenu : MonoBehaviour
         gauntletImage.DOKill();
 
         Sequence exitSequence = DOTween.Sequence();
-
         exitSequence.Join(gauntletImage.DOAnchorPos(new Vector2(_offscreenPosX, 0), slideDuration * 0.8f).SetEase(Ease.InBack));
         exitSequence.Join(gauntletImage.DORotate(Vector3.zero, slideDuration * 0.8f).SetEase(Ease.InBack));
-
-        // Ensure it stays at your 1.5 scale while sliding away
         exitSequence.Join(gauntletImage.DOScale(_originalGauntletScale, 0.2f));
 
         exitSequence.SetUpdate(true);
@@ -121,8 +142,6 @@ public class GauntletMenu : MonoBehaviour
         foreach (var rect in buttonTextRects)
         {
             if (rect == null) continue;
-
-            // Breath relative to its own original scale
             Vector3 targetScale = _originalButtonScales[rect] * breathScale;
 
             rect.DOScale(targetScale, breathSpeed)
@@ -152,7 +171,6 @@ public class GauntletMenu : MonoBehaviour
     private void ShowSettingsPanel()
     {
         settingsPanel.gameObject.SetActive(true);
-
         float panelWidth = settingsPanel.rect.width;
         settingsPanel.anchoredPosition = new Vector2(-panelWidth, 0);
 
