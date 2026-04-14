@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1060210553458084459}
   - component: {fileID: 7857940026717633371}
   - component: {fileID: 873737875633835530}
+  - component: {fileID: 6282279480361671321}
   m_Layer: 6
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -170,6 +171,23 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+--- !u!114 &6282279480361671321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 162135956342963021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1690628edc7abe94ca2ecbcaef682f2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HideObscuringWalls
+  playerTarget: {fileID: 8760963343898537160}
+  wallLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
+  ghostMaterial: {fileID: 2100000, guid: bc504ddcd894ed54995aac136469984d, type: 2}
 --- !u!1 &1451677164846303765
 GameObject:
   m_ObjectHideFlags: 0
@@ -977,7 +995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDeoccluder
   CollideAgainst:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 256
   IgnoreTag: 
   TransparentLayers:
     serializedVersion: 2
