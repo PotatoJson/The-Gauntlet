@@ -21082,7 +21082,7 @@ GameObject:
   m_Component:
   - component: {fileID: 515475964}
   m_Layer: 0
-  m_Name: G
+  m_Name: GruntSpawns
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24575,7 +24575,7 @@ GameObject:
   m_Component:
   - component: {fileID: 592117252}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: GruntSpawns
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43575,7 +43575,7 @@ GameObject:
   m_Component:
   - component: {fileID: 980485859}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: EliteSpawns
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67210,6 +67210,7 @@ MonoBehaviour:
   gruntPrefab: {fileID: 8709935683431744970, guid: 3a263926772f426428d99aef77e3d1dc, type: 3}
   elitePrefab: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
   peeperPrefab: {fileID: 792376453681616294, guid: f26e868d215aecb4298646349cb9ce29, type: 3}
+  bossPrefab: {fileID: 0}
   chambers:
   - chamberName: SpawnChamber
     spawnOnStart: 1
@@ -67217,6 +67218,7 @@ MonoBehaviour:
     gruntSpawnPoints: {fileID: 515475964}
     eliteSpawnPoints: {fileID: 0}
     peeperSpawnPoints: {fileID: 0}
+    bossSpawnPoint: {fileID: 0}
     chamberDoorAnimator: {fileID: 1166012654}
     doorOpenTrigger: Trigger
     hasSpawned: 0
@@ -67228,6 +67230,7 @@ MonoBehaviour:
     gruntSpawnPoints: {fileID: 592117252}
     eliteSpawnPoints: {fileID: 980485859}
     peeperSpawnPoints: {fileID: 0}
+    bossSpawnPoint: {fileID: 0}
     chamberDoorAnimator: {fileID: 0}
     doorOpenTrigger: 
     hasSpawned: 0

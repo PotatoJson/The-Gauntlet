@@ -20,6 +20,10 @@ public class ChamberData
     [Tooltip("Parent GameObject containing all Peeper spawn points. Leave empty if none.")]
     public Transform peeperSpawnPoints;
 
+    [Header("Boss Spawn (Single Point)")]
+    [Tooltip("A single Transform for the Boss spawn point. Not a container. Leave empty if no boss in this chamber.")]
+    public Transform bossSpawnPoint;
+
     [Header("Door Settings")]
     [Tooltip("The Animator for the door that opens when this chamber is cleared.")]
     public Animator chamberDoorAnimator;
@@ -37,6 +41,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject gruntPrefab;
     public GameObject elitePrefab;
     public GameObject peeperPrefab;
+    public GameObject bossPrefab;
 
     [Header("Chambers Configuration")]
     [Tooltip("Add and configure your individual chambers here.")]
@@ -87,10 +92,17 @@ public class EnemySpawner : MonoBehaviour
     {
         chamber.hasSpawned = true;
 
-        // Spawn all 3 types (if a container is left blank, the method just skips it)
+        // Spawn standard enemy types from their containers
         SpawnEnemyType(gruntPrefab, chamber.gruntSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(peeperPrefab, chamber.peeperSpawnPoints, chamber.activeEnemies);
+
+        // Spawn Boss explicitly at its single spawn point
+        if (bossPrefab != null && chamber.bossSpawnPoint != null)
+        {
+            GameObject spawnedBoss = Instantiate(bossPrefab, chamber.bossSpawnPoint.position, chamber.bossSpawnPoint.rotation);
+            chamber.activeEnemies.Add(spawnedBoss);
+        }
     }
 
     private void SpawnEnemyType(GameObject prefab, Transform container, List<GameObject> enemyList)
@@ -98,10 +110,20 @@ public class EnemySpawner : MonoBehaviour
         // If there's no prefab assigned or the chamber doesn't use this enemy type, skip
         if (prefab == null || container == null) return;
 
-        foreach (Transform spawnPoint in container)
+        // If the container has no children, use the container itself as a single spawn point
+        if (container.childCount == 0)
         {
-            GameObject spawnedEnemy = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+            GameObject spawnedEnemy = Instantiate(prefab, container.position, container.rotation);
             enemyList.Add(spawnedEnemy);
+        }
+        else
+        {
+            // If it has children, iterate through them and spawn at each child's location
+            foreach (Transform spawnPoint in container)
+            {
+                GameObject spawnedEnemy = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+                enemyList.Add(spawnedEnemy);
+            }
         }
     }
 
