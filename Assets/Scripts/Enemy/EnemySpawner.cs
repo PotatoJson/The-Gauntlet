@@ -10,7 +10,7 @@ public class ChamberData
     public bool spawnOnStart = false;
 
     [Tooltip("The trigger collider that the player walks into to start the spawn. Leave blank if Spawn On Start is true.")]
-    public Collider chamberTrigger;
+    public List<Collider> chamberTriggers = new List<Collider>();
 
     [Header("Spawn Point Containers")]
     [Tooltip("Parent GameObject containing all Grunt spawn points. Leave empty if none.")]
@@ -26,7 +26,7 @@ public class ChamberData
 
     [Header("Door Settings")]
     [Tooltip("The Animator for the door that opens when this chamber is cleared.")]
-    public Animator chamberDoorAnimator;
+    public List<Animator> chamberDoorAnimators = new List<Animator>();
     public string doorOpenTrigger = "OpenDoor";
 
     // Internal State Tracking
@@ -59,14 +59,21 @@ public class EnemySpawner : MonoBehaviour
                 // Spawn immediately without waiting for a trigger
                 SpawnChamberEnemies(chamber);
             }
-            else if (chamber.chamberTrigger != null)
+            else if (chamber.chamberTriggers.Count > 0)
             {
-                // Ensure it's correctly marked as a trigger
-                chamber.chamberTrigger.isTrigger = true;
+                // Loop through every trigger assigned to this chamber
+                foreach (Collider trigger in chamber.chamberTriggers)
+                {
+                    if (trigger != null)
+                    {
+                        // Ensure it's correctly marked as a trigger
+                        trigger.isTrigger = true;
 
-                // Attach a helper component directly to the trigger object so it can detect player collision
-                ChamberTriggerListener listener = chamber.chamberTrigger.gameObject.AddComponent<ChamberTriggerListener>();
-                listener.Setup(this, i);
+                        // Attach a helper component directly to the trigger object so it can detect player collision
+                        ChamberTriggerListener listener = trigger.gameObject.AddComponent<ChamberTriggerListener>();
+                        listener.Setup(this, i);
+                    }
+                }
             }
             else
             {
@@ -150,9 +157,16 @@ public class EnemySpawner : MonoBehaviour
     {
         chamber.isCleared = true;
 
-        if (chamber.chamberDoorAnimator != null)
+        //Made changes for multiple gates to open.
+        if (chamber.chamberDoorAnimators.Count > 0)
         {
-            chamber.chamberDoorAnimator.SetTrigger(chamber.doorOpenTrigger);
+            foreach (Animator doorAnim in chamber.chamberDoorAnimators)
+            {
+                if (doorAnim != null)
+                {
+                    doorAnim.SetTrigger(chamber.doorOpenTrigger);
+                }
+            }
         }
         else
         {

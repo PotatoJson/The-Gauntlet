@@ -67513,84 +67513,105 @@ MonoBehaviour:
   chambers:
   - chamberName: SpawnChamber
     spawnOnStart: 1
-    chamberTrigger: {fileID: 0}
+    chamberTriggers: []
     gruntSpawnPoints: {fileID: 515475964}
     eliteSpawnPoints: {fileID: 0}
     peeperSpawnPoints: {fileID: 0}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 1166012654}
-    doorOpenTrigger: trigger
+    chamberDoorAnimators:
+    - {fileID: 1166012654}
+    doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: Chamber1
     spawnOnStart: 0
-    chamberTrigger: {fileID: 769259452}
+    chamberTriggers:
+    - {fileID: 769259452}
     gruntSpawnPoints: {fileID: 592117252}
     eliteSpawnPoints: {fileID: 980485859}
     peeperSpawnPoints: {fileID: 0}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 1923974481}
+    chamberDoorAnimators:
+    - {fileID: 1923974481}
+    - {fileID: 1715511263}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: Chamber2
     spawnOnStart: 0
-    chamberTrigger: {fileID: 450977045}
+    chamberTriggers:
+    - {fileID: 450977045}
     gruntSpawnPoints: {fileID: 1538237664}
     eliteSpawnPoints: {fileID: 1408381254}
     peeperSpawnPoints: {fileID: 1852376761}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 4270581609977715068}
+    chamberDoorAnimators:
+    - {fileID: 4270581609977715068}
+    - {fileID: 1159265945}
+    - {fileID: 1854358374}
+    - {fileID: 991794547}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: Chamber3
     spawnOnStart: 0
-    chamberTrigger: {fileID: 1543264040}
+    chamberTriggers:
+    - {fileID: 1543264040}
     gruntSpawnPoints: {fileID: 245048024}
     eliteSpawnPoints: {fileID: 151009967}
     peeperSpawnPoints: {fileID: 38267965}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 1168383501}
+    chamberDoorAnimators:
+    - {fileID: 1168383501}
+    - {fileID: 1881204392}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: Chamber4
     spawnOnStart: 0
-    chamberTrigger: {fileID: 1139615548}
+    chamberTriggers:
+    - {fileID: 1139615548}
     gruntSpawnPoints: {fileID: 326004620}
     eliteSpawnPoints: {fileID: 884372813}
     peeperSpawnPoints: {fileID: 2065566289}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 738684311}
+    chamberDoorAnimators:
+    - {fileID: 738684311}
+    - {fileID: 7020446}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: Chamber5
     spawnOnStart: 0
-    chamberTrigger: {fileID: 893658005}
+    chamberTriggers:
+    - {fileID: 1757975064}
+    - {fileID: 893658005}
     gruntSpawnPoints: {fileID: 145961332}
     eliteSpawnPoints: {fileID: 283570995}
     peeperSpawnPoints: {fileID: 693946233}
     bossSpawnPoint: {fileID: 0}
-    chamberDoorAnimator: {fileID: 100866536}
+    chamberDoorAnimators:
+    - {fileID: 100866536}
+    - {fileID: 1714573770}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
     activeEnemies: []
   - chamberName: BossChamber
     spawnOnStart: 0
-    chamberTrigger: {fileID: 866032532}
+    chamberTriggers:
+    - {fileID: 866032532}
     gruntSpawnPoints: {fileID: 0}
     eliteSpawnPoints: {fileID: 0}
     peeperSpawnPoints: {fileID: 0}
     bossSpawnPoint: {fileID: 1258212138}
-    chamberDoorAnimator: {fileID: 884951806}
+    chamberDoorAnimators:
+    - {fileID: 884951806}
     doorOpenTrigger: Trigger
     hasSpawned: 0
     isCleared: 0
