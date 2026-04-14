@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 394464950923800905}
   - component: {fileID: 1366680132781492588}
   - component: {fileID: 5008379856638382463}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: pillar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 528146205740229971}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -4, y: 0.04, z: 8}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
@@ -35,7 +35,7 @@ Transform:
   - {fileID: 2277540509958358354}
   - {fileID: 3737727362812806976}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!33 &394464950923800905
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -122,6 +122,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1197348807929088204}
     m_Modifications:
+    - target: {fileID: 733327502048281822, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4154271621221507145, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.0071008997
@@ -178,6 +182,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Torch (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 6659076255334505960, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587308550316147953, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -196,6 +208,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1197348807929088204}
     m_Modifications:
+    - target: {fileID: 733327502048281822, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4154271621221507145, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.0071008997
@@ -251,6 +267,14 @@ PrefabInstance:
     - target: {fileID: 6659076255334505960, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
       propertyPath: m_Name
       value: Torch
+      objectReference: {fileID: 0}
+    - target: {fileID: 6659076255334505960, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7587308550316147953, guid: cfc81b2fb71cd434da794b111db78a6c, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
