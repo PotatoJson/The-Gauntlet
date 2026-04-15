@@ -36,6 +36,8 @@ public class GauntletMenu : MonoBehaviour
 
     private void Awake()
     {
+        Cursor.visible = true;
+
         _offscreenPosX = -Screen.width;
         _originalGauntletScale = gauntletImage.localScale;
 
@@ -86,8 +88,6 @@ public class GauntletMenu : MonoBehaviour
 #endif
     }
 
-    // --- EXISTING ANIMATION LOGIC ---
-
     public void PauseGame()
     {
         _isPaused = true;
@@ -96,6 +96,9 @@ public class GauntletMenu : MonoBehaviour
 
         gauntletImage.DOKill();
         foreach (var rect in buttonTextRects) rect.DOKill();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         gauntletImage.localScale = _originalGauntletScale;
         gauntletImage.localEulerAngles = Vector3.zero;
@@ -123,6 +126,9 @@ public class GauntletMenu : MonoBehaviour
 
         foreach (var rect in buttonTextRects) rect.DOKill();
         gauntletImage.DOKill();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         Sequence exitSequence = DOTween.Sequence();
         exitSequence.Join(gauntletImage.DOAnchorPos(new Vector2(_offscreenPosX, 0), slideDuration * 0.8f).SetEase(Ease.InBack));
