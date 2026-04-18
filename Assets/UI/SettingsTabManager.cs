@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem; // Use New Input System as requested
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems; // Required for selection logic
+using TMPro;
 
 public class SettingsTabManager : MonoBehaviour
 {
@@ -9,49 +11,78 @@ public class SettingsTabManager : MonoBehaviour
     [SerializeField] private List<GameObject> allPanels;
     [SerializeField] private List<Button> tabButtons;
 
+    [Header("Panel Navigation")]
+    [Tooltip("Assign the first item (Dropdown/Toggle) of each panel here in order.")]
+    [SerializeField] private List<Selectable> firstItemsInPanels;
+
+    [Header("Controller Prompts")]
+    [SerializeField] private TextMeshProUGUI leftPromptText;
+    [SerializeField] private TextMeshProUGUI rightPromptText;
+
     [Header("Visual Feedback")]
     [SerializeField] private Color activeColor = Color.white;
     [SerializeField] private Color inactiveColor = Color.gray;
 
     private int _currentTabIndex = 0;
+    private bool _isUsingGamepad = false;
 
     private void Start()
     {
-        // Default to the first tab (Video) on start
         OpenTab(0);
     }
 
     private void Update()
     {
-        // Only listen for keys if the settings menu is currently active
-        if (Keyboard.current == null) return;
-
-        // E key moves to the next tab (Right)
-        if (Keyboard.current.eKey.wasPressedThisFrame)
-        {
-            CycleTab(1);
-        }
-        // Q key moves to the previous tab (Left)
-        else if (Keyboard.current.qKey.wasPressedThisFrame)
-        {
-            CycleTab(-1);
-        }
+        HandleInputDetection();
+        HandleTabSwitching();
     }
 
-    public void QPress()
+    private void HandleInputDetection()
     {
-        CycleTab(-1);
+        if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
+        {
+            if (!_isUsingGamepad)
+            {
+                _isUsingGamepad = true;
+                UpdatePromptVisuals("LT", "RT");
+            }
+        }
+        else if (Keyboard.current != null && Keyboard.current.wasUpdatedThisFrame)
+        {
+            if (_isUsingGamepad)
+            {
+                _isUsingGamepad = false;
+                UpdatePromptVisuals("Q", "E");
+            }
+        }
     }
 
-    public void EPress()
+    private void UpdatePromptVisuals(string left, string right)
     {
-        CycleTab(1);
+        if (leftPromptText != null) leftPromptText.text = left;
+        if (rightPromptText != null) rightPromptText.text = right;
     }
-    private void CycleTab(int direction)
+
+    private void HandleTabSwitching()
+    {
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.qKey.wasPressedThisFrame) CycleTab(-1);
+            if (Keyboard.current.eKey.wasPressedThisFrame) CycleTab(1);
+        }
+
+        if (Gamepad.current != null)
+        {
+            if (Gamepad.current.leftTrigger.wasPressedThisFrame || Gamepad.current.leftShoulder.wasPressedThisFrame)
+                CycleTab(-1);
+            if (Gamepad.current.rightTrigger.wasPressedThisFrame || Gamepad.current.rightShoulder.wasPressedThisFrame)
+                CycleTab(1);
+        }
+    }
+
+    public void CycleTab(int direction)
     {
         _currentTabIndex += direction;
-
-        // Loop back to start if we go past the end, and vice versa
         if (_currentTabIndex >= allPanels.Count) _currentTabIndex = 0;
         if (_currentTabIndex < 0) _currentTabIndex = allPanels.Count - 1;
 
@@ -60,20 +91,29 @@ public class SettingsTabManager : MonoBehaviour
 
     public void OpenTab(int tabIndex)
     {
-        _currentTabIndex = tabIndex; // Keep index in sync if user clicks a button manually
+        _currentTabIndex = tabIndex;
 
         for (int i = 0; i < allPanels.Count; i++)
         {
             bool isActive = (i == tabIndex);
 
-            // Show/Hide the panel
             if (allPanels[i] != null)
                 allPanels[i].SetActive(isActive);
 
-            // Update button visual state
             if (tabButtons.Count > i && tabButtons[i] != null)
             {
                 tabButtons[i].image.color = isActive ? activeColor : inactiveColor;
+            }
+
+            // --- NEW: AUTO-SELECT FIRST ITEM ---
+            if (isActive && firstItemsInPanels.Count > i && firstItemsInPanels[i] != null)
+            {
+                // We only auto-select if the user is using a controller or keyboard to switch tabs
+                if (_isUsingGamepad || (Keyboard.current != null && (Keyboard.current.qKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+                {
+                    EventSystem.current.SetSelectedGameObject(null);
+                    EventSystem.current.SetSelectedGameObject(firstItemsInPanels[i].gameObject);
+                }
             }
         }
     }

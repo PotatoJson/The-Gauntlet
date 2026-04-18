@@ -9,6 +9,11 @@ public class HUD : MonoBehaviour
         HUD_Object.SetActive(true);
     }
 
+    void Start()
+    {
+        HUD_Object.SetActive(true);
+
+    }
     // Update is called once per frame
     void Update()
     {
