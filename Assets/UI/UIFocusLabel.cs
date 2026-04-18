@@ -18,4 +18,13 @@ public class UIFocusLabel : MonoBehaviour, ISelectHandler, IDeselectHandler
     {
         if (labelText != null) labelText.color = normalColor;
     }
+    private void OnDisable()
+    {
+        ResetColor();
+    }
+
+    private void ResetColor()
+    {
+        if (labelText != null) labelText.color = normalColor;
+    }
 }

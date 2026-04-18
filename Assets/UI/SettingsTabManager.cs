@@ -37,6 +37,15 @@ public class SettingsTabManager : MonoBehaviour
         HandleTabSwitching();
     }
 
+    public void FocusCurrentTab()
+{
+    if (firstItemsInPanels.Count > _currentTabIndex && firstItemsInPanels[_currentTabIndex] != null)
+    {
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(firstItemsInPanels[_currentTabIndex].gameObject);
+    }
+}
+
     private void HandleInputDetection()
     {
         if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
@@ -93,26 +102,29 @@ public class SettingsTabManager : MonoBehaviour
     {
         _currentTabIndex = tabIndex;
 
+        // Ensure we have the latest input state before deciding to highlight
+        _isUsingGamepad = Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame;
+
         for (int i = 0; i < allPanels.Count; i++)
         {
             bool isActive = (i == tabIndex);
-
-            if (allPanels[i] != null)
-                allPanels[i].SetActive(isActive);
+            if (allPanels[i] != null) allPanels[i].SetActive(isActive);
 
             if (tabButtons.Count > i && tabButtons[i] != null)
-            {
                 tabButtons[i].image.color = isActive ? activeColor : inactiveColor;
-            }
 
-            // --- NEW: AUTO-SELECT FIRST ITEM ---
             if (isActive && firstItemsInPanels.Count > i && firstItemsInPanels[i] != null)
             {
-                // We only auto-select if the user is using a controller or keyboard to switch tabs
-                if (_isUsingGamepad || (Keyboard.current != null && (Keyboard.current.qKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+                // ONLY highlight if we are explicitly on a controller
+                if (_isUsingGamepad)
                 {
-                    EventSystem.current.SetSelectedGameObject(null);
+                    EventSystem.current.SetSelectedGameObject(null); 
                     EventSystem.current.SetSelectedGameObject(firstItemsInPanels[i].gameObject);
+                }
+                else
+                {
+                    // Ensure selection is cleared for Mouse users
+                    EventSystem.current.SetSelectedGameObject(null);
                 }
             }
         }

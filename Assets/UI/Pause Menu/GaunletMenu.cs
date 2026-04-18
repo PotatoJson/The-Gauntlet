@@ -13,6 +13,7 @@ public class GauntletMenu : MonoBehaviour
     [SerializeField] private GameObject menuCanvas;
     [SerializeField] private Button firstSelectedButton;
     [SerializeField] private Button restartButton; // Separate slot for the finger button
+    [SerializeField] private SettingsTabManager settingsTabManager;
 
     [Header("Buttons for Navigation")]
     [Tooltip("Order: Resume, Setting, Main Menu, Quit")]
@@ -111,23 +112,59 @@ public class GauntletMenu : MonoBehaviour
     {
         if (!_isPaused) return;
 
-        // Only clear selection if the mouse actually moves
-        if (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f)
+        // 1. Detect Mouse or Keyboard (Show Cursor, Clear Highlights)
+        bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
+        bool keyboardPressed = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
+
+        if (mouseMoved || keyboardPressed)
         {
+            ShowCursor();
+            
+            // Clear selection so the "Red Highlight" vanishes for M&K
             if (EventSystem.current.currentSelectedGameObject != null)
             {
                 EventSystem.current.SetSelectedGameObject(null);
             }
         }
 
-        // Re-select if any controller input is detected
-        if (Gamepad.current != null && (Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f || Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.1f))
+        // 2. Detect Controller (Hide Cursor, Enable Highlights)
+        if (Gamepad.current != null)
         {
-            if (EventSystem.current.currentSelectedGameObject == null && firstSelectedButton != null)
+            bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.1f;
+            bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
+
+            if (stickMoved || dpadPressed)
             {
-                EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
+                HideCursor();
+
+                // Re-select based on which menu is currently visible
+                if (EventSystem.current.currentSelectedGameObject == null)
+                {
+                    if (settingsPanel != null && settingsPanel.gameObject.activeSelf)
+                    {
+                        // Focus the current tab's first item
+                        settingsTabManager.FocusCurrentTab();
+                    }
+                    else if (firstSelectedButton != null)
+                    {
+                        // Focus the gauntlet's Resume button
+                        EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
+                    }
+                }
             }
         }
+    }
+
+    private void ShowCursor()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None; // Allows mouse to move freely
+    }
+
+    private void HideCursor()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked; // Centers and hides the cursor to avoid accidental hovers
     }
 
     private void OnPausePerformed(InputAction.CallbackContext context)
@@ -226,9 +263,10 @@ public class GauntletMenu : MonoBehaviour
         }
     }
 
-    // ... [OpenSettings, CloseSettings, RestartGame, etc. remain unchanged] ...
     public void OpenSettings()
     {
+        EventSystem.current.SetSelectedGameObject(null);
+
         mainButtonsGroup.DOFade(0, 0.2f).SetUpdate(true);
         mainButtonsGroup.interactable = false;
         mainButtonsGroup.blocksRaycasts = false;
@@ -237,7 +275,13 @@ public class GauntletMenu : MonoBehaviour
         settingsSequence.Join(gauntletImage.DOAnchorPos(_leftPosition, transitionSpeed).SetEase(Ease.InOutQuad));
         settingsSequence.Join(gauntletImage.DORotate(_settingsRotation, transitionSpeed).SetEase(Ease.InOutQuad));
 
-        settingsSequence.OnComplete(ShowSettingsPanel);
+        settingsSequence.OnComplete(() => {
+            ShowSettingsPanel();
+            if (Gamepad.current != null && settingsTabManager != null)
+            {
+                settingsTabManager.FocusCurrentTab();
+            }
+        });
         settingsSequence.SetUpdate(true);
     }
 
