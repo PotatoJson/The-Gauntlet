@@ -40,6 +40,8 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => currentHealth <= 0;
     public float HealthPercentage => currentHealth / maxHealth;
 
+    public GameObject LastCheckPoint;
+
     private void Awake()
     {
         _stateManager = GetComponent<PlayerManager>();
@@ -155,5 +157,15 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Min(currentHealth, maxHealth);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    public void PlayerRespawnSpikes()
+    {
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false; // Turn it off so it stops "holding" the position
+
+        transform.position = LastCheckPoint.transform.position;
+
+        if (cc != null) cc.enabled = true; // Turn it back on
     }
 }
