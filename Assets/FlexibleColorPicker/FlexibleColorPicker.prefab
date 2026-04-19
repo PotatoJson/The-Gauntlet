@@ -3919,7 +3919,7 @@ GameObject:
   - component: {fileID: 2130943085611863864}
   - component: {fileID: 2130943085611863869}
   - component: {fileID: 2130943085611863870}
-  - component: {fileID: 2130943085611863871}
+  - component: {fileID: 9156060794978557720}
   m_Layer: 5
   m_Name: ModeDropdown
   m_TagString: Untagged
@@ -3987,7 +3987,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2130943085611863871
+--- !u!114 &9156060794978557720
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3996,9 +3996,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2130943085611863865}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d0b652f32a2cc243917e4028fa0f046, type: 3}
+  m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Dropdown
   m_Navigation:
     m_Mode: 3
     m_WrapAround: 0
@@ -4024,35 +4024,43 @@ MonoBehaviour:
     m_NormalTrigger: Normal
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
-    m_SelectedTrigger: Highlighted
+    m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 2130943085611863870}
   m_Template: {fileID: 2130943085553361917}
   m_CaptionText: {fileID: 0}
   m_CaptionImage: {fileID: 0}
+  m_Placeholder: {fileID: 0}
   m_ItemText: {fileID: 0}
   m_ItemImage: {fileID: 0}
   m_Value: 0
+  m_MultiSelect: 0
   m_Options:
     m_Options:
     - m_Text: HS
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: HV
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: SH
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: SV
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: VH
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
     - m_Text: VS
       m_Image: {fileID: 0}
+      m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2130943084915617136}
-        m_TargetAssemblyTypeName: 
+        m_TargetAssemblyTypeName: FlexibleColorPicker, Assembly-CSharp
         m_MethodName: ChangeMode
         m_Mode: 0
         m_Arguments:
