@@ -39,11 +39,17 @@ public class PlayerCombat : MonoBehaviour
     private bool _comboQueued = false;
     private bool _isHoldingHeavy = false;
     private bool _isCharging = false;
+    private bool _isRotationLocked = true;
+
+    [Header("ChargeSettings")]
+    [SerializeField] private float _pullBackSpeed;
+    [SerializeField] private float _normHeavyWindUp;
+    public float MaxChargeDuration;
+    private float _chargeTimer = 0f;
 
     [Header("Player Stats")]
     public int CurrentStamina = 100;
     public int MaxStamina = 100;
-    private bool _isRotationLocked = false;
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
@@ -60,7 +66,12 @@ public class PlayerCombat : MonoBehaviour
         _input = new PlayerControls();
 
         _input.Player.LightAttack.started += ctx => OnLightAttackInput();
-        _input.Player.HeavyAttack.started += ctx => OnHeavyAttackInput();
+        _input.Player.HeavyAttack.started += ctx => 
+        {
+            _isHoldingHeavy = true;
+            OnHeavyAttackInput();
+        };
+        _input.Player.HeavyAttack.canceled += ctx => OnHeavyAttackReleased();
     }
 
     private void OnEnable() => _input.Enable();
@@ -90,6 +101,8 @@ public class PlayerCombat : MonoBehaviour
         }
         HandleInputBuffer();
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
+
+        HandleHeavyChargeTimer();
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
@@ -112,8 +125,7 @@ public class PlayerCombat : MonoBehaviour
         _isHoldingHeavy = false;
         if (_isCharging)
         {
-            _animator.speed = 1f;
-            _isCharging = false;
+            HeavyAttackSwing();
         }
     }
 
@@ -168,7 +180,7 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        _isRotationLocked = false;
+        _isRotationLocked = true;
 
         CurrentStamina -= node.StaminaCost;
         _currentAttackNode = node;
@@ -194,9 +206,20 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    private void HandleHeavyChargeTimer()
+    {
+        if(!_isCharging) return;
+        _chargeTimer = Time.deltaTime;
+        if(_chargeTimer >= MaxChargeDuration)
+        {
+            HeavyAttackSwing();
+        }
+    }
+
+#region AnimationEvents
     public void ArmTargetHitbox()
     {
-        _isRotationLocked = true;
+        _isRotationLocked = false;
         RunTimeGauntlet activeWeapon = _leftGauntlet;
         _activeHitbox = _leftHitbox;
 
@@ -240,7 +263,6 @@ public class PlayerCombat : MonoBehaviour
         if(_comboQueued) return;
         _currentAttackNode = null;
         _canCombo = false;
-
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Idle);
     }
@@ -250,7 +272,23 @@ public class PlayerCombat : MonoBehaviour
         if (_isHoldingHeavy)
         {
             _isCharging = true;
-            _animator.speed = 0f;
+            _animator.speed = _pullBackSpeed;
         }
     }
+
+    public void HeavyAttackWindUp()
+    {
+        if (!_isCharging)
+        {
+            _animator.speed = _normHeavyWindUp;
+        }
+    }
+
+    public void HeavyAttackSwing()
+    {
+        _animator.speed = 1f;
+        _isCharging = false;
+        _chargeTimer = 0f;
+    }
+#endregion
 }

@@ -48,4 +48,13 @@ public class AnimationEventRelay : MonoBehaviour
     {
         _playerCombat.AttemptHeavyChargePause();
     }
+
+    public void HeavyWindUp()
+    {
+        _playerCombat.HeavyAttackWindUp();
+    }
+    public void HeavySwing()
+    {
+        _playerCombat.HeavyAttackSwing();
+    }
 }
