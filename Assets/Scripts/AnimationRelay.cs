@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class AnimationEventRelay : MonoBehaviour
 {
+    /* --- used for animations events --- */
     private PlayerCombat _playerCombat;
     private PlayerManager _stateManager;
 
@@ -41,5 +42,10 @@ public class AnimationEventRelay : MonoBehaviour
     {
         Debug.Log("Resetting from stagger");
         _stateManager.SetPlayerState(PlayerState.Idle);
+    }
+
+    public void CheckHeavyCharge()
+    {
+        _playerCombat.AttemptHeavyChargePause();
     }
 }

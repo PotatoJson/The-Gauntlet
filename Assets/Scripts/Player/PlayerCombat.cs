@@ -37,6 +37,8 @@ public class PlayerCombat : MonoBehaviour
     private AttackNode _currentAttackNode;
     private bool _canCombo = false;
     private bool _comboQueued = false;
+    private bool _isHoldingHeavy = false;
+    private bool _isCharging = false;
 
     [Header("Player Stats")]
     public int CurrentStamina = 100;
@@ -103,6 +105,16 @@ public class PlayerCombat : MonoBehaviour
     {
         _currentBuffer = CombatInput.Heavy;
         BufferTimer = BufferDuration;
+    }
+
+    private void OnHeavyAttackReleased()
+    {
+        _isHoldingHeavy = false;
+        if (_isCharging)
+        {
+            _animator.speed = 1f;
+            _isCharging = false;
+        }
     }
 
     private void HandleInputBuffer()
@@ -231,5 +243,14 @@ public class PlayerCombat : MonoBehaviour
 
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Idle);
+    }
+
+    public void AttemptHeavyChargePause()
+    {
+        if (_isHoldingHeavy)
+        {
+            _isCharging = true;
+            _animator.speed = 0f;
+        }
     }
 }
