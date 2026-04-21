@@ -535,6 +535,8 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.enabled = false;
 
         animator?.SetTrigger(AnimDie);
+        // turn off the lock-on
+        gameObject.layer = LayerMask.NameToLayer("Default");
 
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;

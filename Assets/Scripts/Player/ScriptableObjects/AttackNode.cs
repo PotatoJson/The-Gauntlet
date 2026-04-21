@@ -21,4 +21,6 @@ public class AttackNode : ScriptableObject
 
     [Header("Movement")]
     public float LungeForce;
+
+    public float DamageMult;
 }

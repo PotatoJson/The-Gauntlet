@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class AnimationEventRelay : MonoBehaviour
 {
+    /* --- used for animations events --- */
     private PlayerCombat _playerCombat;
     private PlayerManager _stateManager;
 
@@ -34,6 +35,7 @@ public class AnimationEventRelay : MonoBehaviour
 
     public void EndAttack()
     {
+        Debug.Log("Test");
         if (_playerCombat != null) _playerCombat.EndAttack();
     }
     
@@ -41,5 +43,19 @@ public class AnimationEventRelay : MonoBehaviour
     {
         Debug.Log("Resetting from stagger");
         _stateManager.SetPlayerState(PlayerState.Idle);
+    }
+
+    public void CheckHeavyCharge()
+    {
+        _playerCombat.AttemptHeavyChargePause();
+    }
+
+    public void HeavyWindUp()
+    {
+        _playerCombat.HeavyAttackWindUp();
+    }
+    public void HeavySwing()
+    {
+        _playerCombat.HeavyAttackSwing();
     }
 }
