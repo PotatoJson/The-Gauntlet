@@ -14,6 +14,7 @@ public class PlayerCombat : MonoBehaviour
     [Header("Universal Combo Tree")]
     public AttackNode StartingLightAttack;
     public AttackNode StartingHeavyAttack;
+    public AttackNode JumpAttack;
 
     [Header("References")]
     public GauntletData LeftGauntletData;
@@ -150,8 +151,15 @@ public class PlayerCombat : MonoBehaviour
         if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
-        if(currentState == PlayerState.Dodging || currentState == PlayerState.Airborne || currentState == PlayerState.Staggered) return;
+        if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
 
+        if(currentState == PlayerState.Airborne)
+        {
+            AttemptAttack(JumpAttack);
+            ConsumeBuffer();
+            return;
+        }
+        
         if(currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running)
         {
             AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) 
@@ -209,7 +217,7 @@ public class PlayerCombat : MonoBehaviour
     private void HandleHeavyChargeTimer()
     {
         if(!_isCharging) return;
-        _chargeTimer = Time.deltaTime;
+        _chargeTimer += Time.deltaTime;
         if(_chargeTimer >= MaxChargeDuration)
         {
             HeavyAttackSwing();
@@ -235,9 +243,19 @@ public class PlayerCombat : MonoBehaviour
         int currentDamage = activeWeapon.GetCurrentDamage();
         int currentPoise = activeWeapon.GetCurrentPoise();
 
+        float chargeBonus = 1.0f;
+
+        if(_isCharging && _chargeTimer > 0)
+        {
+            chargeBonus += (_chargeTimer / MaxChargeDuration) * 0.5f;
+        }
+
+        int finalDamage = Mathf.RoundToInt(currentDamage * _currentAttackNode.DamageMult * chargeBonus);
+        int finalPoise = Mathf.RoundToInt(currentPoise * _currentAttackNode.DamageMult * chargeBonus);
+
         if(_activeHitbox != null)
         {
-            _activeHitbox.EnableCollider(currentDamage, currentPoise);
+            _activeHitbox.EnableCollider(finalDamage, finalPoise);
         }
     }
 
@@ -260,9 +278,12 @@ public class PlayerCombat : MonoBehaviour
 
     public void EndAttack()
     {
+        Debug.Log(_comboQueued);
         if(_comboQueued) return;
+        Debug.Log("Test 2");
         _currentAttackNode = null;
         _canCombo = false;
+        _comboQueued = false;
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Idle);
     }

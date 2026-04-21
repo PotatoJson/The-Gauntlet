@@ -35,6 +35,7 @@ public class AnimationEventRelay : MonoBehaviour
 
     public void EndAttack()
     {
+        Debug.Log("Test");
         if (_playerCombat != null) _playerCombat.EndAttack();
     }
     
