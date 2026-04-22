@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 public class HitboxController : MonoBehaviour
 {
+    public GameObject bloodEffectPrefab;
     private Collider _collider;
+
 
     //states passed from combat manager
     private int _currentDamage;
@@ -13,6 +15,10 @@ public class HitboxController : MonoBehaviour
 
     private void Awake()
     {
+        if(bloodEffectPrefab == null)
+        {
+            Debug.LogError("Blood effect prefab not assigned in HitboxController.");
+        }
         _collider = GetComponent<Collider>();
         _collider.isTrigger = true;
         _collider.enabled = false;
@@ -43,5 +49,17 @@ public class HitboxController : MonoBehaviour
             }
         }
         Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+    }
+
+    private void SpawnBlood(Collider target)
+    {
+        Vector3 spawnPosition = transform.position;
+        
+        Vector3 direction = (transform.position - target.transform.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+
+        GameObject bloodEffect = Instantiate(bloodEffectPrefab, spawnPosition, rotation);
+
+        Destroy(bloodEffect, 3f);
     }
 }
