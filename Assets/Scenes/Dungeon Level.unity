@@ -601,7 +601,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 820634169}
     m_Modifications:
     - target: {fileID: 1936499871199011207, guid: 618e3fc4d1edf44478e4b57037ea85de, type: 3}
       propertyPath: m_Name
@@ -100933,6 +100933,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b4e36a0bebc0cfd4c8b8a439bef6a15d, type: 3}
+--- !u!1 &1709236950 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 925060732026147691, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+  m_PrefabInstance: {fileID: 1831292370}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1709978588
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -108208,9 +108213,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 820634169}
     m_Modifications:
+    - target: {fileID: -7248633605103728579, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: fractureOptions.insideMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 4476986c9df060f4891762d31ca010e1, type: 2}
     - target: {fileID: 925060732026147691, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
       propertyPath: m_Name
       value: wooden box (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3743866269216485389, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7356368487240716255, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
       propertyPath: m_LocalScale.y
@@ -108260,16 +108273,42 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 925060732026147691, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1831292377}
   m_SourcePrefab: {fileID: 100100000, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
 --- !u!4 &1831292371 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7356368487240716255, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
   m_PrefabInstance: {fileID: 1831292370}
   m_PrefabAsset: {fileID: 0}
+--- !u!64 &1831292377
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709236950}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 8604760475336745281, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
 --- !u!1001 &1834048232
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -112454,6 +112493,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 820634169}
     m_Modifications:
+    - target: {fileID: -7248633605103728579, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: triggerOptions.filterCollisionsByTag
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248633605103728579, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: triggerOptions.minimumCollisionForce
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248633605103728579, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: triggerOptions.triggerAllowedTags.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248633605103728579, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
+      propertyPath: 'triggerOptions.triggerAllowedTags.Array.data[0]'
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 925060732026147691, guid: fbaec4aef6a39b44ebeffd839e02604e, type: 3}
       propertyPath: m_Name
       value: wooden box
