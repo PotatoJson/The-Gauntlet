@@ -112,44 +112,37 @@ public class GauntletMenu : MonoBehaviour
     {
         if (!_isPaused) return;
 
-        // 1. Detect Mouse or Keyboard (Show Cursor, Clear Highlights)
+        // REMOVE the settingsPanel check so mouse detection works in all menus
+
         bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
         bool keyboardPressed = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
 
         if (mouseMoved || keyboardPressed)
         {
             ShowCursor();
-            
-            // Clear selection so the "Red Highlight" vanishes for M&K
+
             if (EventSystem.current.currentSelectedGameObject != null)
             {
                 EventSystem.current.SetSelectedGameObject(null);
             }
         }
 
-        // 2. Detect Controller (Hide Cursor, Enable Highlights)
         if (Gamepad.current != null)
         {
-            bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.1f;
-            bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
+            bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.5f;
+            bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.5f;
 
             if (stickMoved || dpadPressed)
             {
                 HideCursor();
 
-                // Re-select based on which menu is currently visible
                 if (EventSystem.current.currentSelectedGameObject == null)
                 {
-                    if (settingsPanel != null && settingsPanel.gameObject.activeSelf)
-                    {
-                        // Focus the current tab's first item
+                    // Context-aware selection
+                    if (settingsPanel.gameObject.activeSelf)
                         settingsTabManager.FocusCurrentTab();
-                    }
                     else if (firstSelectedButton != null)
-                    {
-                        // Focus the gauntlet's Resume button
                         EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
-                    }
                 }
             }
         }

@@ -20,11 +20,11 @@ public class PlayerCamera : MonoBehaviour
     [Header("Device Sensitivity")]
     [Tooltip("Scales down the raw, high-number mouse delta to match controller speeds.")]
     [Range(0.001f, 0.1f)] 
-    [SerializeField] private float mouseSensitivityMultiplier = 0.02f;
+    [SerializeField] public float mouseSensitivityMultiplier = 0.02f;
     
     [Tooltip("Multiplier for the controller right stick. Leave at 1 for default.")]
     [Range(0.1f, 5f)]
-    [SerializeField] private float controllerSensitivityMultiplier = 1f;
+    [SerializeField] public float controllerSensitivityMultiplier = 1f;
 
     [Header("Camera Values")]
     private Vector3 cameraVelocity;
@@ -72,6 +72,8 @@ public class PlayerCamera : MonoBehaviour
 
     public void HandleAllCameraActions(Vector2 input, bool isMouseInput = false)
     {
+        if (Time.timeScale == 0) return;
+
         cameraInput = input;
 
         if (playerTarget != null)
