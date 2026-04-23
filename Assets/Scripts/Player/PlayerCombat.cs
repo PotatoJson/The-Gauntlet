@@ -16,6 +16,9 @@ public class PlayerCombat : MonoBehaviour
     public AttackNode StartingHeavyAttack;
     public AttackNode JumpAttack;
 
+    [Header("External Links")]
+    [SerializeField] private PlayerHealth _healthScript;
+
     [Header("References")]
     public GauntletData LeftGauntletData;
     public GauntletData RightGauntletData;
@@ -48,8 +51,13 @@ public class PlayerCombat : MonoBehaviour
     public float MaxChargeDuration;
     private float _chargeTimer = 0f;
 
-    [Header("Player Stats")]
-    public int CurrentStamina = 100;
+    [Header("Stamina Settings")]
+    [SerializeField] private StaminaBar _staminaBar;
+    public float RegenRate = 60f;
+    public float RegenDelay = 3f;
+    private float _staminaRegenTimer = 0f;
+    private float _internalStamina;
+    private int CurrentStamina;
     public int MaxStamina = 100;
     
     [Header("Input Buffer Things")]
@@ -73,6 +81,8 @@ public class PlayerCombat : MonoBehaviour
             OnHeavyAttackInput();
         };
         _input.Player.HeavyAttack.canceled += ctx => OnHeavyAttackReleased();
+        _input.Player.Heal.started += ctx => UsePotion();
+        _input.Player.DebugTeleport.started += ctx => _stateManager.DebugTeleport();
     }
 
     private void OnEnable() => _input.Enable();
@@ -85,6 +95,8 @@ public class PlayerCombat : MonoBehaviour
         if(LeftGauntletData != null) _leftGauntlet = new RunTimeGauntlet(LeftGauntletData);
         if(RightGauntletData != null) _rightGauntlet = new RunTimeGauntlet(RightGauntletData);
         CurrentStamina = MaxStamina;
+        _internalStamina = MaxStamina;
+        UpdateStaminaUI();
     }
 
     // Update is called once per frame
@@ -104,6 +116,7 @@ public class PlayerCombat : MonoBehaviour
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
 
         HandleHeavyChargeTimer();
+        HandleStaminaRegen();
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
@@ -145,6 +158,45 @@ public class PlayerCombat : MonoBehaviour
         BufferTimer = 0;
     }
     #endregion
+
+    //stamina stuff
+    private void HandleStaminaRegen()
+    {
+        if(_internalStamina < MaxStamina)
+        {
+            if (_staminaRegenTimer > 0)
+            {
+                _staminaRegenTimer -= Time.deltaTime;
+            }
+            else
+            {
+                // Rapidly refill once timer hits zero
+                _internalStamina += RegenRate * Time.deltaTime;
+                _internalStamina = Mathf.Min(_internalStamina, MaxStamina);
+                
+                CurrentStamina = Mathf.RoundToInt(_internalStamina);
+                UpdateStaminaUI();
+            }
+        }
+    }
+
+    private void UpdateStaminaUI()
+    {
+        if(_staminaBar != null)
+        {
+            _staminaBar.SetStamina(Mathf.RoundToInt(_internalStamina), MaxStamina);
+        }
+    }
+
+    //Temp Potion logic
+    private void UsePotion()
+    {
+        if(_healthScript != null)
+        {
+            _healthScript.Heal(25f);
+            Debug.Log("Used Potion");
+        }
+    }
 
     private void ProcessCombatLogic()
     {
@@ -190,7 +242,9 @@ public class PlayerCombat : MonoBehaviour
 
         _isRotationLocked = true;
 
-        CurrentStamina -= node.StaminaCost;
+        _internalStamina -= node.StaminaCost;
+        _staminaRegenTimer = RegenDelay;
+        UpdateStaminaUI();
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;

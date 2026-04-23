@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class HitboxController : MonoBehaviour
 {
-    public GameObject bloodEffectPrefab;
+    //public GameObject bloodEffectPrefab;
     private Collider _collider;
 
 
@@ -15,10 +15,10 @@ public class HitboxController : MonoBehaviour
 
     private void Awake()
     {
-        if(bloodEffectPrefab == null)
+        /*if(bloodEffectPrefab == null)
         {
             Debug.LogError("Blood effect prefab not assigned in HitboxController.");
-        }
+        }*/
         _collider = GetComponent<Collider>();
         _collider.isTrigger = true;
         _collider.enabled = false;
@@ -48,10 +48,10 @@ public class HitboxController : MonoBehaviour
                 enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
             }
         }
-        Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+        //Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
     }
 
-    private void SpawnBlood(Collider target)
+    /*private void SpawnBlood(Collider target)
     {
         Vector3 spawnPosition = transform.position;
         
@@ -61,5 +61,5 @@ public class HitboxController : MonoBehaviour
         GameObject bloodEffect = Instantiate(bloodEffectPrefab, spawnPosition, rotation);
 
         Destroy(bloodEffect, 3f);
-    }
+    }*/
 }
