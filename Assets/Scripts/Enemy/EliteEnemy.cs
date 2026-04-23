@@ -15,7 +15,7 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private SwordHitbox swordHitbox;
 
     // Animation hashes for elite attacks
-    protected static readonly int AnimSwordSwing = Animator.StringToHash("SwordSwing");
+    protected static readonly int AnimSwordSwing = Animator.StringToHash("LightAttack");
     protected static readonly int AnimSwordSlam = Animator.StringToHash("SwordSlam");
 
     private float aiDecisionTimer;
@@ -65,12 +65,6 @@ public class EliteEnemy : BaseEnemy
     {
         if (isAttacking || isStunned) return;
 
-        // Must have attack permission from the combat manager
-        if (EnemyCombatManager.Instance != null &&
-            !EnemyCombatManager.Instance.RequestAttackPermission(this))
-        {
-            return;
-        }
 
         float distance = GetDistanceToPlayer();
 
@@ -155,6 +149,18 @@ public class EliteEnemy : BaseEnemy
         navAgent.isStopped = true;
 
         animator?.SetTrigger(AnimSwordSlam);
+    }
+
+    public override void LightAttack()
+    {
+        if (!CanPerformAction()) return;
+
+        isAttacking = true;
+        attackCooldownTimer = attackCooldown;
+        navAgent.isStopped = true;
+        navAgent.velocity = Vector3.zero;
+
+        animator?.SetTrigger(AnimSwordSwing);
     }
     #endregion
 

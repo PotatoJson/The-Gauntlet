@@ -55,14 +55,17 @@ public class SpinningEnemy : BaseEnemy
             damageTimer -= Time.deltaTime;
             if (damageTimer <= 0f)
             {
-                // TryDamagePlayer is a base class method that handles distance checks and player health mapping
-                TryDamagePlayer(spinDamage, damageRange + 0.5f);
-                damageTimer = damageTickRate; // Reset timer for the next damage tick
+                // Use BaseEnemy's existing hitbox-based damage helper.
+                TryDamagePlayerHitbox(
+                    spinDamage,
+                    new Vector3(0f, 1f, damageRange * 0.5f),
+                    new Vector3(damageRange * 2f, 2f, damageRange * 2f));
+
+                damageTimer = damageTickRate;
             }
         }
         else
         {
-            // Reset the timer so it damages immediately upon touching the player again
             damageTimer = 0f;
         }
     }

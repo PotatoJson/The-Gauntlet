@@ -127,6 +127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1053518372535485829, guid: 3a263926772f426428d99aef77e3d1dc, type: 3}
+      propertyPath: awarenessRange
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 2244605879395983623, guid: 3a263926772f426428d99aef77e3d1dc, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -199,6 +203,10 @@ PrefabInstance:
     - target: {fileID: 1061193783291791312, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6355393716881731224, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
+      propertyPath: awarenessRange
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
       propertyPath: m_Name
@@ -338,6 +346,15 @@ MonoBehaviour:
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
+  playerLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  lightAttackHitboxOffset: {x: 0, y: 1, z: 1}
+  lightAttackHitboxSize: {x: 2, y: 2, z: 2}
+  heavyAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
+  heavyAttackHitboxSize: {x: 2.5, y: 2, z: 3}
+  chargeAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
+  chargeAttackHitboxSize: {x: 3, y: 2, z: 3}
   stunDuration: 2
   attackCooldown: 1.5
   maxHitStunDuration: 5
@@ -840,6 +857,15 @@ MonoBehaviour:
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
+  playerLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  lightAttackHitboxOffset: {x: 0, y: 1, z: 1}
+  lightAttackHitboxSize: {x: 2, y: 2, z: 2}
+  heavyAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
+  heavyAttackHitboxSize: {x: 2.5, y: 2, z: 3}
+  chargeAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
+  chargeAttackHitboxSize: {x: 3, y: 2, z: 3}
   stunDuration: 2
   attackCooldown: 1.5
   maxHitStunDuration: 5
@@ -956,6 +982,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 661372271462595348, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2850074755327657584, guid: f465d8c03f958c04a96c8af5f00c05b5, type: 3}
+    - target: {fileID: 1452448440608240902, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 47e0a031a6318e14c8110236ae1260f9, type: 2}
+    - target: {fileID: 1856232922328083510, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 47e0a031a6318e14c8110236ae1260f9, type: 2}
     - target: {fileID: 4805591952013779706, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
       propertyPath: m_Name
       value: Demon-Boss
@@ -999,6 +1037,34 @@ PrefabInstance:
     - target: {fileID: 5330912616614312000, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: maxHealth
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: currentHealth
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: playerLayerMask.m_Bits
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: lightAttackHitboxSize.x
+      value: 4.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: lightAttackHitboxSize.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: lightAttackHitboxSize.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138769242846664016, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+      propertyPath: lightAttackHitboxOffset.z
+      value: 2.34
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1150,7 +1216,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 63.79
+      value: 20.87
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1158,7 +1224,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 102.04
+      value: 138.04
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1514,6 +1580,10 @@ PrefabInstance:
     - target: {fileID: 792376453681616294, guid: f26e868d215aecb4298646349cb9ce29, type: 3}
       propertyPath: m_Name
       value: Eyeball-Idle(4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7185312723448199347, guid: f26e868d215aecb4298646349cb9ce29, type: 3}
+      propertyPath: playerLayerMask.m_Bits
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8064141765128145776, guid: f26e868d215aecb4298646349cb9ce29, type: 3}
       propertyPath: m_AnchorMax.x
