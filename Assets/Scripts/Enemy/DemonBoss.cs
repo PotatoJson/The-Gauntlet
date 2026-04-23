@@ -209,11 +209,6 @@ public class DemonBoss : BaseEnemy
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        if (EnemyCombatManager.Instance != null)
-        {
-            EnemyCombatManager.Instance.ReleaseAttackPermission(this);
-        }
-
         animator?.SetTrigger(AnimIntermission);
         StartCoroutine(IntermissionTimer());
     }

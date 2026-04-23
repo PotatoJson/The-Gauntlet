@@ -22,20 +22,17 @@ public class EnemyProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Check if we hit the player
-        if (other.CompareTag("Player"))
+        // Check if we hit the player (supports child colliders)
+        PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();
+        if (playerHealth != null)
         {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
-            }
-
-            // Destroy the fireball after damaging the player
+            playerHealth.TakeDamage(damage);
             Destroy(gameObject);
+            return;
         }
-        // Destroy if it hits environment like a wall or floor (ignores other enemies and other triggers)
-        else if (!other.CompareTag("Enemy") && !other.CompareTag("EliteEnemy") && !other.isTrigger)
+
+        // Destroy if it hits environment like a wall or floor (ignores enemies and other triggers)
+        if (!other.CompareTag("Enemy") && !other.CompareTag("EliteEnemy") && !other.isTrigger)
         {
             Destroy(gameObject);
         }
