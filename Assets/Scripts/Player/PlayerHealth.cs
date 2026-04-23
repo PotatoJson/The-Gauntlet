@@ -102,11 +102,15 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage, GameObject attacker = null)
     {
+        Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
 
         // ... Existing Parry/Block/Dodge logic would go here if uncommented ...
-
+        currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
+
+        healthRecoveryTimer = healthRecoveryDelay;
+        stunRecoveryTimer = stunRecoveryDelay;
 
         // Brief invincibility to prevent multiple hits from same attack
         
@@ -114,6 +118,7 @@ public class PlayerHealth : MonoBehaviour
         invincibilityTimer = invincibilityDuration;
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        Debug.Log("TakeDamage Test " + currentHealth);
         TriggerLargeStumble();
         //if (currentHealth <= 0)
         //{
