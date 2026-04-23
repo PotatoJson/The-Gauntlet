@@ -234,7 +234,7 @@ public class PlayerCombat : MonoBehaviour
     {
         if(node == null) return;
 
-        if(CurrentStamina < node.StaminaCost)
+        if(_internalStamina < node.StaminaCost)
         {
             ConsumeBuffer();
             return;

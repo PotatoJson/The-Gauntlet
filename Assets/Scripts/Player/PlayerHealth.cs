@@ -41,6 +41,7 @@ public class PlayerHealth : MonoBehaviour
     public float HealthPercentage => currentHealth / maxHealth;
 
     public GameObject LastCheckPoint;
+    public GameObject PlayerSpawn;
 
     private void Awake()
     {
@@ -120,10 +121,13 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + currentHealth);
         TriggerLargeStumble();
-        //if (currentHealth <= 0)
-        //{
-        //    Die();
-        //}
+        if (currentHealth <= 0)
+        {
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false; // Disable CharacterController to prevent movement
+            transform.position = PlayerSpawn.transform.position;
+            if (cc != null) cc.enabled = true; // Re-enable CharacterController after repositioning
+        }
     }
 
     private void TriggerLargeStumble()
@@ -156,7 +160,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void Heal(float amount)
     {
-        if (IsDead) return;
+        //if (IsDead) return;
 
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth);
