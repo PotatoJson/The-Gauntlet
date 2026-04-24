@@ -317,7 +317,27 @@ public class GauntletMenu : MonoBehaviour
             });
     }
 
-    public void RestartGame() { Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
-    public void ReturnToMainMenu() { Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); }
+    public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
+    public void ReturnToMainMenu() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); ShowCursor(); }
     public void QuitGame() { Application.Quit(); }
+
+    private void OnDestroy() { CleanupTweens(); }
+    private void CleanupTweens()
+    {
+        // Kill the infinite breathing loops
+        StopAllBreathingAnimations();
+
+        // Kill any movement or rotation on the gauntlet image
+        if (gauntletImage != null)
+        {
+            gauntletImage.DOKill();
+        }
+
+        // Kill any panel transitions
+        if (settingsPanel != null)
+        {
+            settingsPanel.DOKill();
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 
 public class HighContrastTarget : MonoBehaviour
 {
@@ -36,6 +36,15 @@ public class HighContrastTarget : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Check if the manager exists and apply high contrast if enabled
+        if (HighContrastManager.Instance != null)
+        {
+            HighContrastManager.Instance.InitializeTarget(this);
+        }
+    }
+
     public void ApplyColor(Material highContrastMat, Color color)
     {
         if (_renderer == null || highContrastMat == null) return;
@@ -57,4 +66,4 @@ public class HighContrastTarget : MonoBehaviour
             _renderer.materials = _originalMaterials;
         }
     }
-}
+}*/
