@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class HitboxController : MonoBehaviour
 {
-    //public GameObject bloodEffectPrefab;
+    public GameObject bloodEffectPrefab;
     private Collider _collider;
 
 
@@ -46,20 +46,22 @@ public class HitboxController : MonoBehaviour
             if(_alreadyHit.Add(enemyRoot))
             {
                 enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
+                SpawnBlood(other);
             }
         }
         //Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
     }
 
-    /*private void SpawnBlood(Collider target)
+    private void SpawnBlood(Collider target)
     {
-        Vector3 spawnPosition = transform.position;
+        Vector3 spawnPosition = target.ClosestPoint(transform.position);
         
-        Vector3 direction = (transform.position - target.transform.position).normalized;
-        Quaternion rotation = Quaternion.LookRotation(direction);
+        Vector3 punchDirection = (target.transform.position - transform.position).normalized;
+        punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));
+        Quaternion rotation = Quaternion.LookRotation(punchDirection);
 
         GameObject bloodEffect = Instantiate(bloodEffectPrefab, spawnPosition, rotation);
 
         Destroy(bloodEffect, 3f);
-    }*/
+    }
 }
