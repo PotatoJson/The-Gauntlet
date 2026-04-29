@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2148407746134675402}
   - component: {fileID: 1288459822302990607}
   - component: {fileID: 2853066179852176373}
+  - component: {fileID: 2619545248829340658}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -49,13 +50,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GauntletMenu
   gauntletImage: {fileID: 0}
   menuCanvas: {fileID: 0}
+  firstSelectedButton: {fileID: 0}
+  restartButton: {fileID: 0}
+  settingsTabManager: {fileID: 0}
+  menuButtons: []
+  inputActions: {fileID: 0}
   slideDuration: 1
   slideEase: 27
-  buttonTextRects:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   breathScale: 1.05
   breathSpeed: 1.5
   settingsPanel: {fileID: 0}
@@ -83,7 +84,11 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  firstItemsInPanels: []
+  leftPromptText: {fileID: 0}
+  rightPromptText: {fileID: 0}
   activeColor: {r: 1, g: 1, b: 1, a: 1}
+  previewColor: {r: 1, g: 0, b: 0, a: 1}
   inactiveColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!114 &1288459822302990607
 MonoBehaviour:
@@ -115,3 +120,19 @@ MonoBehaviour:
   resolutionDropdown: {fileID: 0}
   fpsDropdown: {fileID: 0}
   fullscreenToggle: {fileID: 0}
+--- !u!114 &2619545248829340658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8281800283524944606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3a857121c5525d43aaa87aa0f436ae7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameplaySettingsManager
+  mouseSlider: {fileID: 0}
+  mouseValueText: {fileID: 0}
+  controllerSlider: {fileID: 0}
+  controllerValueText: {fileID: 0}

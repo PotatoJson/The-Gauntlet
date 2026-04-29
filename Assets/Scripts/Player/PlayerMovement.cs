@@ -44,7 +44,9 @@ public class PlayerMovement : MonoBehaviour
 
     // Internal Variables
     private CharacterController _controller;
+    private bool _isMouseInput;
     private PlayerControls _input; 
+    private Vector2 _cameraInput;
     private Transform _cameraTransform;
     
     private Vector3 _velocity;
@@ -154,6 +156,24 @@ public class PlayerMovement : MonoBehaviour
         Vector3 finalVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
         _controller.Move(finalVelocity * Time.deltaTime);
     }
+
+    private void LateUpdate()
+    {
+        // Read the continuous mouse/stick delta
+        _cameraInput = _input.Player.Look.ReadValue<Vector2>();
+
+        // Check if the current input is coming from a mouse
+        if (_input.Player.Look.activeControl != null)
+        {
+            _isMouseInput = _input.Player.Look.activeControl.device.name == "Mouse";
+        }
+
+        // Feed the input and the device type to our Camera script
+        if (PlayerCamera.Instance != null)
+        {
+            PlayerCamera.Instance.HandleAllCameraActions(_cameraInput, _isMouseInput);
+        }
+    }  
 
     private void HandleMovement()
     {
@@ -282,9 +302,22 @@ public class PlayerMovement : MonoBehaviour
     
     private void ToggleLockOn()
     {
-        isTargetLocked = !isTargetLocked; 
-        
-        // Debug.Log("Target Locked: " + isTargetLocked);
+        if (PlayerCamera.Instance == null) return;
+
+        if (isTargetLocked)
+        {
+            // We are already locked on, so unlock
+            isTargetLocked = false;
+            PlayerCamera.Instance.ClearLockOnTarget();
+        }
+        else
+        {
+            // Try to find a target. If the camera finds one, set our state to locked on!
+            if (PlayerCamera.Instance.FindLockOnTarget())
+            {
+                isTargetLocked = true;
+            }
+        }
     }
 
     private void OnJumpInput()

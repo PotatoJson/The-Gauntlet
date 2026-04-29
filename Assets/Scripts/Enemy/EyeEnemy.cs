@@ -83,15 +83,6 @@ public class EyeEnemy : BaseEnemy
     {
         if (isAttacking || isStunned) return;
 
-        // Ask for permission from the EnemyCombatManager if you are using it to regulate attacks
-        if (EnemyCombatManager.Instance != null &&
-            !EnemyCombatManager.Instance.RequestAttackPermission(this))
-        {
-            // If we can't attack, just maintain distance and look at the player
-            MaintainDistance();
-            return;
-        }
-
         float distance = GetDistanceToPlayer();
 
         if (distance > preferredDistance)

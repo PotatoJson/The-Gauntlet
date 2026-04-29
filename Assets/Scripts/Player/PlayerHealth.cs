@@ -29,12 +29,25 @@ public class PlayerHealth : MonoBehaviour
     private float invincibilityTimer;
     private bool isInvincible;
 
+    [Header("References")]
+    private PlayerManager _stateManager;
+    private Animator _animator;
+
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
     public event Action OnPlayerDeath;
 
     public bool IsDead => currentHealth <= 0;
     public float HealthPercentage => currentHealth / maxHealth;
+
+    public GameObject LastCheckPoint;
+    public GameObject PlayerSpawn;
+
+    private void Awake()
+    {
+        _stateManager = GetComponent<PlayerManager>();
+        _animator = GetComponentInChildren<Animator>();
+    }
 
     private void Start()
     {
@@ -90,24 +103,39 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage, GameObject attacker = null)
     {
+        Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
 
         // ... Existing Parry/Block/Dodge logic would go here if uncommented ...
-
+        currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
 
+        healthRecoveryTimer = healthRecoveryDelay;
+        stunRecoveryTimer = stunRecoveryDelay;
+
         // Brief invincibility to prevent multiple hits from same attack
+        
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-
-        //if (currentHealth <= 0)
-        //{
-        //    Die();
-        //}
+        Debug.Log("TakeDamage Test " + currentHealth);
+        TriggerLargeStumble();
+        if (currentHealth <= 0)
+        {
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false; // Disable CharacterController to prevent movement
+            transform.position = PlayerSpawn.transform.position;
+            if (cc != null) cc.enabled = true; // Re-enable CharacterController after repositioning
+        }
     }
 
+    private void TriggerLargeStumble()
+        {
+            _stateManager.SetPlayerState(PlayerState.Staggered);
+            _animator.SetTrigger("LargeStumble");
+            _stateManager.CurrentLungeSpeed = -4f;
+        }
     //private void BreakGuard()
     //{
     //    Debug.Log("GUARD BROKEN! Player is stunned.");
@@ -132,11 +160,21 @@ public class PlayerHealth : MonoBehaviour
 
     public void Heal(float amount)
     {
-        if (IsDead) return;
+        //if (IsDead) return;
 
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    public void PlayerRespawnSpikes()
+    {
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false; // Turn it off so it stops "holding" the position
+
+        transform.position = LastCheckPoint.transform.position;
+
+        if (cc != null) cc.enabled = true; // Turn it back on
     }
 }

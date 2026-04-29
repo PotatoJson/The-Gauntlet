@@ -24,6 +24,16 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected float heavyAttackDamage = 25f;
     [SerializeField] protected float chargeAttackDamage = 20f;
 
+    [Header("Hitbox Settings (Virtual Hitboxes)")]
+    [Tooltip("Layer mask containing the Player")]
+    [SerializeField] protected LayerMask playerLayerMask = ~0; // Default to all layers, but you should set this to 'Player' in inspector
+    [SerializeField] protected Vector3 lightAttackHitboxOffset = new Vector3(0, 1f, 1f);
+    [SerializeField] protected Vector3 lightAttackHitboxSize = new Vector3(2f, 2f, 2f);
+    [SerializeField] protected Vector3 heavyAttackHitboxOffset = new Vector3(0, 1f, 1.5f);
+    [SerializeField] protected Vector3 heavyAttackHitboxSize = new Vector3(2.5f, 2f, 3f);
+    [SerializeField] protected Vector3 chargeAttackHitboxOffset = new Vector3(0, 1f, 1.5f);
+    [SerializeField] protected Vector3 chargeAttackHitboxSize = new Vector3(3f, 2f, 3f);
+
     [Header("Timing")]
     [SerializeField] protected float stunDuration = 2f;
     [SerializeField] protected float attackCooldown = 1.5f;
@@ -36,7 +46,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected bool isInHitStun;
 
     [Header("Hit Immunity")]
-    [SerializeField] protected float hitImmunityDuration = 5f; // Can't be staggered for this long after hit stun ends
+    [SerializeField] protected float hitImmunityDuration = 5f; 
     protected bool isHitImmune;
     protected float hitImmuneTimer;
 
@@ -82,34 +92,13 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent = GetComponent<NavMeshAgent>();
 
         if (animator == null)
-        {
-            animator = GetComponent<Animator>();
-            if (animator == null)
-            {
-                animator = GetComponentInChildren<Animator>();
-            }
-        }
-
-        if (animator == null)
-        {
-            Debug.LogError($"{gameObject.name}: No Animator found! Check that Animator is on this GameObject or a child.", this);
-        }
+            animator = GetComponentInChildren<Animator>();
 
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
         if (player != null)
-        {
             playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth == null)
-            {
-                Debug.LogWarning($"{name}: Player found but has no PlayerHealth component!");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"{name}: Player not found!");
-        }
     }
 
     protected virtual void Start()
@@ -117,82 +106,47 @@ public abstract class BaseEnemy : MonoBehaviour
         currentHealth = maxHealth;
         navAgent.speed = chaseSpeed;
         navAgent.isStopped = true;
-
-        // Stop NavMeshAgent from fighting your custom FacePlayer() rotation
         navAgent.updateRotation = false;
 
         isAware = false;
         isEngaged = false;
         hasOpenedWithCharge = false;
-        isHitImmune = false;
-        hitImmuneTimer = 0f;
 
         if (animator != null)
-        {
             animator.applyRootMotion = false;
-        }
-    }
-
-    protected virtual void OnDestroy()
-    {
-        // Cleanup if needed
     }
 
     protected virtual void Update()
     {
         if (currentHealth <= 0) return;
 
-        // Update hit immunity timer
         if (isHitImmune)
         {
             hitImmuneTimer -= Time.deltaTime;
-            if (hitImmuneTimer <= 0f)
-            {
-                isHitImmune = false;
-                Debug.Log($"{gameObject.name}: Hit immunity expired");
-            }
+            if (hitImmuneTimer <= 0f) isHitImmune = false;
         }
 
-        // Update hit stun timer
         if (isInHitStun)
         {
             hitStunTimer += Time.deltaTime;
             timeSinceLastHit += Time.deltaTime;
 
-            if (hitStunTimer >= maxHitStunDuration)
+            if (hitStunTimer >= maxHitStunDuration || timeSinceLastHit >= hitStunResetTime)
             {
                 ExitHitStunWithImmunity();
             }
-            else if (timeSinceLastHit >= hitStunResetTime)
-            {
-                ExitHitStunWithImmunity();
-            }
-
             return;
         }
 
         if (attackCooldownTimer > 0)
             attackCooldownTimer -= Time.deltaTime;
 
-        if (!isAware)
-        {
-            CheckAwareness();
-        }
-        else if (!isEngaged || !hasOpenedWithCharge)
-        {
-            CheckEngagement();
-        }
-        else
-        {
-            ContinueCombat();
-        }
+        if (!isAware) CheckAwareness();
+        else if (!isEngaged || !hasOpenedWithCharge) CheckEngagement();
+        else ContinueCombat();
 
-        if (isCharging)
-        {
-            UpdateChargeAttack();
-        }
+        if (isCharging) UpdateChargeAttack();
 
-        // PREVENT ROTATING DURING AN ATTACK: Added !isAttacking and !isInHitStun checks
         if (isAware && !isStunned && !isAttacking && !isInHitStun)
         {
             FacePlayer();
@@ -201,20 +155,14 @@ public abstract class BaseEnemy : MonoBehaviour
         UpdateAnimatorParameters();
     }
 
-    public bool IsBlockingOrStunned()
-    {
-        return isStunned || isInHitStun;
-    }
+    public bool IsBlockingOrStunned() => isStunned || isInHitStun;
 
     protected void UpdateAnimatorParameters()
     {
         if (animator == null) return;
-
         Vector3 worldVelocity = navAgent.velocity;
         float rawSpeed = worldVelocity.magnitude;
-
         Vector3 localVelocityDir = transform.InverseTransformDirection(worldVelocity.normalized);
-
         animator.SetFloat(AnimSpeed, rawSpeed);
         animator.SetFloat("VelocityX", localVelocityDir.x);
         animator.SetFloat("VelocityZ", localVelocityDir.z);
@@ -223,24 +171,17 @@ public abstract class BaseEnemy : MonoBehaviour
     private void OnAnimatorMove()
     {
         if (animator == null) return;
-
         if (isAttacking || isInHitStun)
         {
-            // Only set this to false if it is currently true
-            if (navAgent.updatePosition)
-            {
-                navAgent.updatePosition = false;
-            }
-            
+            if (navAgent.updatePosition) navAgent.updatePosition = false;
             transform.position += animator.deltaPosition;
             navAgent.nextPosition = transform.position;
         }
         else
         {
-            // Only toggle this back on if it is currently false
             if (!navAgent.updatePosition)
             {
-                navAgent.nextPosition = transform.position; // Sync back up BEFORE turning on
+                navAgent.nextPosition = transform.position;
                 navAgent.updatePosition = true;
             }
         }
@@ -249,9 +190,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void ContinueCombat()
     {
         if (isAttacking || isCharging || isStunned || isInHitStun) return;
-
         float distance = GetDistanceToPlayer();
-
         if (distance <= attackRange)
         {
             FacePlayer();
@@ -267,10 +206,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void CheckAwareness()
     {
         if (player == null) return;
-
-        float distance = GetDistanceToPlayer();
-
-        if (distance <= awarenessRange)
+        if (GetDistanceToPlayer() <= awarenessRange)
         {
             isAware = true;
             navAgent.isStopped = false;
@@ -280,25 +216,16 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void CheckEngagement()
     {
         if (player == null) return;
-
         float distance = GetDistanceToPlayer();
-
         if (distance <= engagementRange)
         {
             isEngaged = true;
-
-            // Keep retrying the opener charge until it actually fires
             if (!hasOpenedWithCharge)
             {
                 if (CanPerformAction())
                 {
-                    Debug.Log($"{gameObject.name}: OPENER CHARGE FIRED! Distance: {distance:F2}");
                     ChargeAttack();
                     hasOpenedWithCharge = true;
-                }
-                else
-                {
-                    Debug.Log($"{gameObject.name}: Can't perform action yet - cooldown: {attackCooldownTimer:F2}, attacking: {isAttacking}, charging: {isCharging}");
                 }
             }
         }
@@ -309,96 +236,62 @@ public abstract class BaseEnemy : MonoBehaviour
         }
     }
 
-    public bool HasCompletedOpener()
-    {
-        return isEngaged && hasOpenedWithCharge && !isCharging && !isAttacking;
-    }
+    protected float GetDistanceToPlayer() => player != null ? Vector3.Distance(transform.position, player.position) : float.MaxValue;
 
-    public bool IsAware() => isAware;
-    public bool IsEngaged() => isEngaged;
-    public bool IsInHitStun() => isInHitStun;
-    public bool IsAttacking() => isAttacking;
-
-    #region Movement
-    protected virtual void ChasePlayer()
+    protected void ChasePlayer()
     {
         if (isAttacking || isStunned || isCharging || isInHitStun || player == null) return;
-
-        if (navAgent.isStopped) 
-        {
-            navAgent.isStopped = false;
-        }
-        
+        if (navAgent.isStopped) navAgent.isStopped = false;
         navAgent.speed = chaseSpeed;
-
-        // Prevent stalling/stop-and-go by only recalculating the path if the target has 
-        // moved significantly away from the previous destination (1.5 meters squared distance)
         if (Vector3.SqrMagnitude(navAgent.destination - player.position) > 1.5f)
-        {
             navAgent.SetDestination(player.position);
-        }
-    }
-
-    protected float GetDistanceToPlayer()
-    {
-        if (player == null) return float.MaxValue;
-        return Vector3.Distance(transform.position, player.position);
     }
 
     protected void FacePlayer()
     {
         if (player == null) return;
-
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0f;
-
         if (direction.sqrMagnitude > 0.001f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
-        }
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
     }
-    #endregion
+
+    protected void FacePlayerImmediate()
+    {
+        if (player == null) return;
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0f;
+        if (direction.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.LookRotation(direction);
+    }
 
     #region Combat Actions
     public virtual void LightAttack()
     {
         if (!CanPerformAction()) return;
-
         isAttacking = true;
         attackCooldownTimer = attackCooldown;
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
-
-        float randomIndex = Random.Range(0, 2);
-        animator?.SetFloat(AnimLightRandom, randomIndex);
+        animator?.SetFloat(AnimLightRandom, Random.Range(0, 2));
         animator?.SetTrigger(AnimLightAttack);
     }
 
     public virtual void HeavyAttack()
     {
         if (!CanPerformAction()) return;
-
         isAttacking = true;
         attackCooldownTimer = attackCooldown * 1.5f;
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
-
         animator?.SetTrigger(AnimHeavyAttack);
     }
 
     public virtual void ChargeAttack()
     {
-        Debug.Log($"{gameObject.name}: Attempting to start charge attack");
-        if (!CanPerformAction() || player == null)
-        {
-            Debug.Log($"{gameObject.name}: Cannot start charge attack - CanPerformAction: {CanPerformAction()}, Player null: {player == null}");
-            return;
-        }
-        Debug.Log($"{gameObject.name}: Starting charge attack towards player at {player.position}");
+        if (!CanPerformAction() || player == null) return;
         isCharging = true;
         attackCooldownTimer = attackCooldown * 1.8f;
-
         navAgent.isStopped = false;
         navAgent.updatePosition = true;
         navAgent.speed = chargeSpeed;
@@ -407,124 +300,61 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected virtual void UpdateChargeAttack()
     {
-        Debug.Log($"{gameObject.name}: Updating charge attack");
-        if (player == null)
+        if (player == null) { EndCharge(); return; }
+        if (GetDistanceToPlayer() <= chargeStopDistance)
         {
-            EndCharge();
-            Debug.LogWarning($"{gameObject.name}: Player lost during charge - ending charge");
-            return;
-        }
-
-        float distanceToPlayer = GetDistanceToPlayer();
-
-        if (distanceToPlayer <= chargeStopDistance)
-        {
-            Debug.Log($"{gameObject.name}: Charge reached player - stopping and triggering attack! Distance: {distanceToPlayer:F2}");
             navAgent.isStopped = true;
             navAgent.velocity = Vector3.zero;
             navAgent.ResetPath();
-
             isCharging = false;
             isAttacking = true;
-
             FacePlayerImmediate();
-            Debug.Log($"{gameObject.name}: Charge reached player, triggering attack! Distance: {distanceToPlayer:F2}");
             animator?.SetTrigger(AnimChargeAttack);
         }
         else
         {
-            Debug.Log($"{gameObject.name}: Charging towards player - Distance: {distanceToPlayer:F2}");
             navAgent.speed = chargeSpeed;
             navAgent.isStopped = false;
             navAgent.SetDestination(player.position);
         }
     }
 
-    protected void FacePlayerImmediate()
-    {
-        if (player == null) return;
-
-        Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude > 0.001f)
-        {
-            transform.rotation = Quaternion.LookRotation(direction);
-        }
-    }
-
     protected void EndCharge()
     {
-        Debug.Log($"{gameObject.name}: Ending charge - player lost or invalid");
         isCharging = false;
         navAgent.velocity = Vector3.zero;
         navAgent.speed = chaseSpeed;
     }
 
-    protected virtual bool CanPerformAction()
-    {
-        return !isAttacking && !isStunned && !isCharging && !isInHitStun && attackCooldownTimer <= 0;
-    }
+    protected virtual bool CanPerformAction() => !isAttacking && !isStunned && !isCharging && !isInHitStun && attackCooldownTimer <= 0;
     #endregion
 
-    #region Damage & Health
+    #region Damage, Health & Hitboxes
     public virtual void TakeDamage(float damage)
     {
-        Debug.Log($"=== {gameObject.name} TakeDamage({damage}) CALLED ===");
-
         if (IsDead()) return;
+        
+        if (!isAware) { isAware = true; navAgent.isStopped = false; }
+        if (!isEngaged) { isEngaged = true; hasOpenedWithCharge = true; }
 
-        // Become aware and engaged when attacked
-        if (!isAware)
-        {
-            isAware = true;
-            navAgent.isStopped = false;
-        }
-        if (!isEngaged)
-        {
-            isEngaged = true;
-            hasOpenedWithCharge = true;
-        }
-
-        // Take damage (always take damage)
         currentHealth -= damage;
-        Debug.Log($"{gameObject.name}: Health now {currentHealth}/{maxHealth}");
+        GetComponentInChildren<EnemyHealthBar>()?.ShowHealthBar();
 
-        // Show health bar when damaged
-        var healthBar = GetComponentInChildren<EnemyHealthBar>();
-        healthBar?.ShowHealthBar();
+        if (currentHealth <= 0) { Die(); return; }
+        if (isHitImmune || isCharging) return;
 
-        if (currentHealth <= 0)
-        {
-            Die();
-            return;
-        }
-
-        // If immune to hit stun or charging, just take damage but don't stagger
-        if (isHitImmune || isCharging)
-        {
-            Debug.Log($"{gameObject.name}: Hit immune or charging - took damage but no stagger");
-            return;
-        }
-
-        // Interrupt current actions
         isAttacking = false;
         isCharging = false;
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        // Enter hit stun and play hit reaction
-        Debug.Log($"{gameObject.name}: Hit! Entering hit stun");
         animator?.SetTrigger(AnimHitReaction);
         EnterHitStun();
     }
-    #endregion
 
     protected virtual void Die()
     {
-        // Stop all coroutines to prevent any ongoing routines
         StopAllCoroutines();
-
         isAttacking = false;
         isCharging = false;
         isRecovering = false;
@@ -535,45 +365,54 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.enabled = false;
 
         animator?.SetTrigger(AnimDie);
-
-        Collider col = GetComponent<Collider>();
+        gameObject.layer = LayerMask.NameToLayer("Default");
+        var col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
-        // Hide health bar
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
         if (healthBar != null) healthBar.gameObject.SetActive(false);
 
-        // Start dissolve effect
         var dissolve = GetComponent<DissolveExample.DissolveChilds>();
-        if (dissolve != null)
-        {
-            dissolve.StartDissolve();
-        }
-        else
-        {
-            Destroy(gameObject, 3f);
-        }
+        if (dissolve != null) dissolve.StartDissolve();
+        else Destroy(gameObject, 3f);
 
         enabled = false;
     }
 
     public bool IsDead() => currentHealth <= 0;
-    public float GetHealthPercentage() => currentHealth / maxHealth;
-    public float GetStunPercentage() => currentStunMeter / maxStunMeter;
-    public bool IsRecovering() => isRecovering;
-    public bool IsHitImmune() => isHitImmune;
 
-    #region Animation Events
+    // ============== UPDATED HITBOX LOGIC ==============
+    public void OnLightAttackHit() => TryDamagePlayerHitbox(lightAttackDamage, lightAttackHitboxOffset, lightAttackHitboxSize);
+    public void OnHeavyAttackHit() => TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize);
+    public void OnChargeAttackHit() => TryDamagePlayerHitbox(chargeAttackDamage, chargeAttackHitboxOffset, chargeAttackHitboxSize);
+
+    protected bool TryDamagePlayerHitbox(float damage, Vector3 localOffset, Vector3 boxSize)
+    {
+        if (player == null) return false;
+
+        Vector3 center = transform.TransformPoint(localOffset);
+        Collider[] hits = Physics.OverlapBox(center, boxSize / 2f, transform.rotation, playerLayerMask);
+
+        foreach (Collider hit in hits)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(damage);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void OnAttackEnd()
     {
-        Debug.Log($"{gameObject.name}: OnAttackEnd called! isCharging was: {isCharging}, isAttacking was: {isAttacking}");
-
         isAttacking = false;
         isCharging = false;
-
         navAgent.updatePosition = true;
         navAgent.nextPosition = transform.position;
-
         FacePlayerImmediate();
 
         if (!isStunned && !isInHitStun && navAgent.isOnNavMesh)
@@ -581,64 +420,6 @@ public abstract class BaseEnemy : MonoBehaviour
             navAgent.speed = chaseSpeed;
             navAgent.isStopped = false;
         }
-    }
-
-    public void OnLightAttackHit()
-    {
-        TryDamagePlayer(lightAttackDamage, attackRange);
-    }
-
-    public void OnHeavyAttackHit()
-    {
-        TryDamagePlayer(heavyAttackDamage, attackRange * 1.2f);
-    }
-
-    public void OnChargeAttackHit()
-    {
-        TryDamagePlayer(chargeAttackDamage, attackRange * 1.5f);
-    }
-
-    protected bool TryDamagePlayer(float damage, float effectiveRange)
-    {
-        if (player == null) return false;
-
-        float distance = Vector3.Distance(transform.position, player.position);
-
-        Debug.Log($"{gameObject.name}: Attempting to hit player - Distance: {distance:F2}, EffectiveRange: {effectiveRange:F2}");
-
-        if (distance <= effectiveRange)
-        {
-            if (playerHealth != null)
-            {
-                float healthBefore = playerHealth.HealthPercentage * 100f;
-                playerHealth.TakeDamage(damage);
-                float healthAfter = playerHealth.HealthPercentage * 100f;
-
-                Debug.Log($"=== PLAYER HIT ===");
-                Debug.Log($"  Attacker: {gameObject.name}");
-                Debug.Log($"  Damage: {damage}");
-                Debug.Log($"  Distance: {distance:F2}");
-                Debug.Log($"  Player Health: {healthBefore:F1}% -> {healthAfter:F1}%");
-
-                if (playerHealth.IsDead)
-                {
-                    Debug.Log($"  >>> PLAYER KILLED BY {gameObject.name}! <<<");
-                }
-
-                return true;
-            }
-            else
-            {
-                Debug.LogWarning($"{gameObject.name}: Cannot damage player - PlayerHealth component not found!");
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public void OnHitReactionEnd()
-    {
-        Debug.Log($"{gameObject.name}: Hit reaction animation ended");
     }
     #endregion
 
@@ -655,20 +436,14 @@ public abstract class BaseEnemy : MonoBehaviour
         isAttacking = false;
         isCharging = false;
         isInHitStun = false;
-
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
         yield return new WaitForSeconds(duration);
 
         isStunned = false;
-
-        if (navAgent.isOnNavMesh)
-        {
-            navAgent.isStopped = false;
-        }
+        if (navAgent.isOnNavMesh) navAgent.isStopped = false;
     }
-    #endregion
 
     protected virtual void EnterHitStun()
     {
@@ -676,13 +451,9 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             isInHitStun = true;
             hitStunTimer = 0f;
-
-            // Grant hit immunity immediately so they can't be staggered again
             isHitImmune = true;
             hitImmuneTimer = hitImmunityDuration;
-            Debug.Log($"{gameObject.name}: Entered hit stun, now immune to stagger for {hitImmunityDuration}s!");
         }
-
         timeSinceLastHit = 0f;
     }
 
@@ -691,15 +462,38 @@ public abstract class BaseEnemy : MonoBehaviour
         isInHitStun = false;
         hitStunTimer = 0f;
         timeSinceLastHit = 0f;
-
         navAgent.updatePosition = true;
         navAgent.nextPosition = transform.position;
+        if (!isStunned && navAgent.isOnNavMesh) navAgent.isStopped = false;
+    }
+    #endregion
 
-        if (!isStunned && navAgent.isOnNavMesh)
-        {
-            navAgent.isStopped = false;
-        }
+    // This lets you see the attack hitboxes in the Unity Editor when selecting the enemy
+    private void OnDrawGizmosSelected()
+    {
+        DrawBoxGizmo("Light Attack Hitbox", lightAttackHitboxOffset, lightAttackHitboxSize, new Color(1, 0, 0, 0.3f));
+        DrawBoxGizmo("Heavy Attack Hitbox", heavyAttackHitboxOffset, heavyAttackHitboxSize, new Color(1, 0.5f, 0, 0.3f));
+        DrawBoxGizmo("Charge Attack Hitbox", chargeAttackHitboxOffset, chargeAttackHitboxSize, new Color(0.5f, 0, 1, 0.3f));
+    }
 
-        Debug.Log($"{gameObject.name}: Exited hit stun, resuming combat");
+    private void DrawBoxGizmo(string label, Vector3 offset, Vector3 size, Color color)
+    {
+        Gizmos.color = color;
+        Matrix4x4 rotationMatrix = Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale);
+        Gizmos.matrix = rotationMatrix;
+        Gizmos.DrawCube(offset, size);
+        Gizmos.DrawWireCube(offset, size);
+    }
+
+    public float GetHealthPercentage()
+    {
+        if (maxHealth <= 0f)
+            return 0f;
+        return Mathf.Clamp01(currentHealth / maxHealth);
+    }
+
+    public bool IsAttacking()
+    {
+        return isAttacking;
     }
 }
