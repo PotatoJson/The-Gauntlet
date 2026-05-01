@@ -24,9 +24,13 @@ public class SettingsTabManager : MonoBehaviour
     [SerializeField] private Color previewColor = Color.red;
     [SerializeField] private Color inactiveColor = Color.gray;
 
+    [Header("Sub-Tab Managers")]
+    [SerializeField] private ControlsSubTabManager controlsSubTabManager;
+
     private int _currentTabIndex = 0;
     private int _previewTabIndex = 0;
     private bool _isUsingGamepad = false;
+    private bool _isFocusOnHeader = true;
 
     private void Start()
     {
@@ -75,14 +79,27 @@ public class SettingsTabManager : MonoBehaviour
 
     private void HandleTabSwitching()
     {
-        // 1. KEYBOARD: Immediate switching as before
+        // 1. KEYBOARD
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.qKey.wasPressedThisFrame) CycleTab(-1);
-            else if (Keyboard.current.eKey.wasPressedThisFrame) CycleTab(1);
+            int direction = 0;
+            if (Keyboard.current.qKey.wasPressedThisFrame) direction = -1;
+            else if (Keyboard.current.eKey.wasPressedThisFrame) direction = 1;
+
+            if (direction != 0)
+            {
+                // NEW: Intercept logic for nested tabs
+                if (allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
+                {
+                    // If the sub-tab consumed the input, stop here! Do not cycle the main tab.
+                    if (controlsSubTabManager.TryHandleSubTabInput(direction)) return;
+                }
+
+                CycleTab(direction);
+            }
         }
 
-        // 2. GAMEPAD: Select then Confirm flow
+        // 2. GAMEPAD
         if (Gamepad.current != null)
         {
             int direction = 0;
@@ -93,14 +110,53 @@ public class SettingsTabManager : MonoBehaviour
 
             if (direction != 0)
             {
+                // NEW: Intercept logic for nested tabs
+                if (allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
+                {
+                    if (controlsSubTabManager.TryHandleSubTabInput(direction)) return;
+                }
+
                 UpdatePreviewSelection(direction);
             }
 
-            // Confirm selection with Button South
-            if (Gamepad.current.buttonSouth.wasPressedThisFrame && _previewTabIndex != _currentTabIndex)
+            if (Gamepad.current.buttonSouth.wasPressedThisFrame)
             {
-                OpenTab(_previewTabIndex);
+                _isFocusOnHeader = false; // Player is diving into the menu!
+
+                if (_previewTabIndex != _currentTabIndex)
+                {
+                    OpenTab(_previewTabIndex);
+                }
+                else
+                {
+                    UpdateTabVisuals(); // Update visuals even if already open
+                }
             }
+
+            // When pressing EAST (B/Circle) to back out
+            if (Gamepad.current.buttonEast.wasPressedThisFrame)
+            {
+                _isFocusOnHeader = true; // Player is back on the header!
+                ReturnFocusToTabHeader();
+            }
+
+        }
+    }
+
+    private void ReturnFocusToTabHeader()
+    {
+        // 1. Check if we have tab buttons assigned
+        if (tabButtons != null && tabButtons.Count > _currentTabIndex)
+        {
+            // 2. Tell the EventSystem to physically select the main tab button at the top of the screen
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(tabButtons[_currentTabIndex].gameObject);
+            }
+
+            // 3. Sync the preview index just in case, and update your custom visual colors
+            _previewTabIndex = _currentTabIndex;
+            UpdateTabVisuals();
         }
     }
 
@@ -134,12 +190,25 @@ public class SettingsTabManager : MonoBehaviour
         {
             if (tabButtons[i] == null) continue;
 
-            if (i == _currentTabIndex)
+            if (i == _previewTabIndex)
+            {
+                if (i == _currentTabIndex && !_isFocusOnHeader)
+                {
+                    tabButtons[i].image.color = activeColor;
+                }
+                else
+                {
+                    tabButtons[i].image.color = previewColor;
+                }
+            }
+            else if (i == _currentTabIndex)
+            {
                 tabButtons[i].image.color = activeColor;
-            else if (i == _previewTabIndex)
-                tabButtons[i].image.color = previewColor;
+            }
             else
+            {
                 tabButtons[i].image.color = inactiveColor;
+            }
         }
     }
 
