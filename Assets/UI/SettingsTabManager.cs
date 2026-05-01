@@ -7,6 +7,15 @@ using TMPro;
 
 public class SettingsTabManager : MonoBehaviour
 {
+    [Header("Events")]
+    public UnityEngine.Events.UnityEvent onExitSettingsRequested;
+
+    [Header("Input Actions")]
+    [SerializeField] private InputActionReference previousTabAction;
+    [SerializeField] private InputActionReference nextTabAction;
+    [SerializeField] private InputActionReference enterTabAction; // South / Enter
+    [SerializeField] private InputActionReference backTabAction;  // East / Escape
+
     [Header("UI References")]
     [SerializeField] private List<GameObject> allPanels;
     [SerializeField] private List<Button> tabButtons;
@@ -31,16 +40,50 @@ public class SettingsTabManager : MonoBehaviour
     private int _previewTabIndex = 0;
     private bool _isUsingGamepad = false;
     private bool _isFocusOnHeader = true;
+    private float _inputCooldown = 0f;
 
     private void Start()
     {
         OpenTab(0);
     }
 
+    public void InitializeSettingsMenu()
+    {
+        _inputCooldown = 0.2f; // Reset the cooldown to prevent input bleed
+        _isFocusOnHeader = true; // Force the logical state back to the header
+
+        _previewTabIndex = _currentTabIndex;
+
+        OpenTab(_currentTabIndex);
+    }
+
     private void Update()
     {
+        if (_inputCooldown > 0)
+        {
+            _inputCooldown -= Time.unscaledDeltaTime;
+            return;
+        }
+
         HandleInputDetection();
         HandleTabSwitching();
+    }
+
+    private void OnEnable()
+    {
+        // You must enable the actions for them to read input
+        if (previousTabAction != null) previousTabAction.action.Enable();
+        if (nextTabAction != null) nextTabAction.action.Enable();
+        if (enterTabAction != null) enterTabAction.action.Enable();
+        if (backTabAction != null) backTabAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (previousTabAction != null) previousTabAction.action.Disable();
+        if (nextTabAction != null) nextTabAction.action.Disable();
+        if (enterTabAction != null) enterTabAction.action.Disable();
+        if (backTabAction != null) backTabAction.action.Disable();
     }
 
     public void FocusCurrentTab()
@@ -58,16 +101,44 @@ public class SettingsTabManager : MonoBehaviour
 
     private void HandleInputDetection()
     {
-        // Detect current input device to manage cursor and highlights
+        // 1. Switch TO Gamepad
         if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
         {
-            _isUsingGamepad = true;
-            UpdatePromptVisuals("LT", "RT");
+            if (!_isUsingGamepad) // Only trigger this the exact moment we switch
+            {
+                _isUsingGamepad = true;
+                UpdatePromptVisuals("LT", "RT");
+                RestoreGamepadFocus(); // Instantly grab the UI cursor
+            }
         }
-        else if (Keyboard.current != null && Keyboard.current.wasUpdatedThisFrame)
+        // 2. Switch TO Keyboard/Mouse
+        else if ((Keyboard.current != null && Keyboard.current.wasUpdatedThisFrame) ||
+                 (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f))
         {
-            _isUsingGamepad = false;
-            UpdatePromptVisuals("Q", "E");
+            if (_isUsingGamepad) // Only trigger this the exact moment we switch
+            {
+                _isUsingGamepad = false;
+                UpdatePromptVisuals("Q", "E");
+
+                // Clear controller focus so the mouse can hover freely without fighting the system
+                if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            }
+        }
+    }
+
+    // NEW: Decides where the controller cursor should spawn based on where you are in the menu
+    private void RestoreGamepadFocus()
+    {
+        if (_isFocusOnHeader)
+        {
+            if (tabButtons != null && tabButtons.Count > _currentTabIndex && tabButtons[_currentTabIndex] != null)
+            {
+                EventSystem.current.SetSelectedGameObject(tabButtons[_currentTabIndex].gameObject);
+            }
+        }
+        else
+        {
+            FocusCurrentTab(); // Uses your existing method to select the first item inside the panel
         }
     }
 
@@ -79,109 +150,88 @@ public class SettingsTabManager : MonoBehaviour
 
     private void HandleTabSwitching()
     {
-        // 1. KEYBOARD
-        if (Keyboard.current != null)
+        int direction = 0;
+
+        if (previousTabAction.action.WasPressedThisFrame()) direction = -1;
+        else if (nextTabAction.action.WasPressedThisFrame()) direction = 1;
+
+        if (direction != 0)
         {
-            int direction = 0;
-            if (Keyboard.current.qKey.wasPressedThisFrame) direction = -1;
-            else if (Keyboard.current.eKey.wasPressedThisFrame) direction = 1;
-
-            if (direction != 0)
+            // 1. Dived inside Controls? Move the sub-tabs.
+            if (!_isFocusOnHeader && allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
             {
-                // NEW: Intercept logic for nested tabs
-                if (allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
-                {
-                    // If the sub-tab consumed the input, stop here! Do not cycle the main tab.
-                    if (controlsSubTabManager.TryHandleSubTabInput(direction)) return;
-                }
-
-                CycleTab(direction);
+                controlsSubTabManager.TryHandleSubTabInput(direction);
+            }
+            // 2. On the Header? Move the PREVIEW highlight, do not switch the panel yet!
+            else if (_isFocusOnHeader)
+            {
+                CyclePreview(direction);
             }
         }
 
-        // 2. GAMEPAD
-        if (Gamepad.current != null)
+        // Dive In / Confirm Tab (South Button)
+        if (enterTabAction.action.WasPressedThisFrame() && _isFocusOnHeader)
         {
-            int direction = 0;
-            if (Gamepad.current.leftTrigger.wasPressedThisFrame || Gamepad.current.leftShoulder.wasPressedThisFrame)
-                direction = -1;
-            else if (Gamepad.current.rightTrigger.wasPressedThisFrame || Gamepad.current.rightShoulder.wasPressedThisFrame)
-                direction = 1;
+            _isFocusOnHeader = false;
 
-            if (direction != 0)
+            // If they pressed confirm on a NEW tab, actually open it!
+            if (_previewTabIndex != _currentTabIndex)
             {
-                // NEW: Intercept logic for nested tabs
-                if (allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
-                {
-                    if (controlsSubTabManager.TryHandleSubTabInput(direction)) return;
-                }
-
-                UpdatePreviewSelection(direction);
+                OpenTab(_previewTabIndex);
             }
-
-            if (Gamepad.current.buttonSouth.wasPressedThisFrame)
+            // If they pressed confirm on the ALREADY OPEN tab, just dive in!
+            else
             {
-                _isFocusOnHeader = false; // Player is diving into the menu!
-
-                if (_previewTabIndex != _currentTabIndex)
-                {
-                    OpenTab(_previewTabIndex);
-                }
-                else
-                {
-                    UpdateTabVisuals(); // Update visuals even if already open
-                }
+                UpdateTabVisuals();
+                FocusCurrentTab();
             }
+        }
 
-            // When pressing EAST (B/Circle) to back out
-            if (Gamepad.current.buttonEast.wasPressedThisFrame)
+        // Back Out (East Button)
+        if (backTabAction.action.WasPressedThisFrame())
+        {
+            // 1. Are we inside a sub-menu? Just back out to the header.
+            if (!_isFocusOnHeader)
             {
-                _isFocusOnHeader = true; // Player is back on the header!
+                _isFocusOnHeader = true;
+                _previewTabIndex = _currentTabIndex;
                 ReturnFocusToTabHeader();
             }
-
-        }
-    }
-
-    private void ReturnFocusToTabHeader()
-    {
-        // 1. Check if we have tab buttons assigned
-        if (tabButtons != null && tabButtons.Count > _currentTabIndex)
-        {
-            // 2. Tell the EventSystem to physically select the main tab button at the top of the screen
-            if (EventSystem.current != null)
+            // 2. Are we ALREADY on the header? Exit the settings menu entirely!
+            else
             {
-                EventSystem.current.SetSelectedGameObject(tabButtons[_currentTabIndex].gameObject);
+                onExitSettingsRequested?.Invoke();
             }
-
-            // 3. Sync the preview index just in case, and update your custom visual colors
-            _previewTabIndex = _currentTabIndex;
-            UpdateTabVisuals();
         }
     }
 
-    private void UpdatePreviewSelection(int direction)
+    private void CyclePreview(int direction)
     {
         _previewTabIndex += direction;
 
-        // Cycle through tabs and skip the currently active one
+        // Wrap around logic
         if (_previewTabIndex >= allPanels.Count) _previewTabIndex = 0;
         if (_previewTabIndex < 0) _previewTabIndex = allPanels.Count - 1;
 
-        if (_previewTabIndex == _currentTabIndex)
-        {
-            _previewTabIndex += direction;
-            if (_previewTabIndex >= allPanels.Count) _previewTabIndex = 0;
-            if (_previewTabIndex < 0) _previewTabIndex = allPanels.Count - 1;
-        }
-
-        // Clear panel selection while choosing a new tab to avoid double highlights
+        // Clear Unity's default selection so it doesn't fight your custom colors
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
         }
 
         UpdateTabVisuals();
+    }
+
+    private void ReturnFocusToTabHeader()
+    {
+        if (tabButtons != null && tabButtons.Count > _currentTabIndex)
+        {
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(tabButtons[_currentTabIndex].gameObject);
+            }
+            UpdateTabVisuals();
+        }
     }
 
     private void UpdateTabVisuals()
@@ -190,60 +240,66 @@ public class SettingsTabManager : MonoBehaviour
         {
             if (tabButtons[i] == null) continue;
 
+            // 1. Are we hovering over this tab?
             if (i == _previewTabIndex)
             {
+                // If it's the open tab AND we are dived inside, it's Active (Red)
                 if (i == _currentTabIndex && !_isFocusOnHeader)
                 {
                     tabButtons[i].image.color = activeColor;
                 }
+                // Otherwise, we are just previewing it on the header, so it's Pink
                 else
                 {
                     tabButtons[i].image.color = previewColor;
                 }
             }
+            // 2. Is this the open tab, but we are hovering over a DIFFERENT tab?
             else if (i == _currentTabIndex)
             {
-                tabButtons[i].image.color = activeColor;
+                tabButtons[i].image.color = activeColor; // Keep it red so player knows it's the active panel
             }
+            // 3. Not open, not hovered.
             else
             {
-                tabButtons[i].image.color = inactiveColor;
+                tabButtons[i].image.color = inactiveColor; // Gray
             }
         }
     }
 
     public void CycleTab(int direction)
     {
-        _currentTabIndex += direction;
-        if (_currentTabIndex >= allPanels.Count) _currentTabIndex = 0;
-        if (_currentTabIndex < 0) _currentTabIndex = allPanels.Count - 1;
+        int newIndex = _currentTabIndex + direction;
+        if (newIndex >= allPanels.Count) newIndex = 0;
+        if (newIndex < 0) newIndex = allPanels.Count - 1;
 
-        OpenTab(_currentTabIndex);
+        OpenTab(newIndex);
     }
 
     public void OpenTab(int tabIndex)
     {
         _currentTabIndex = tabIndex;
-        _previewTabIndex = tabIndex;
 
-        // Clear focus before switching to ensure a clean visual state
-        if (EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-        }
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
 
         for (int i = 0; i < allPanels.Count; i++)
         {
-            bool isActive = (i == tabIndex);
-            if (allPanels[i] != null) allPanels[i].SetActive(isActive);
+            if (allPanels[i] != null) allPanels[i].SetActive(i == tabIndex);
         }
 
         UpdateTabVisuals();
 
-        // Only force selection if the user is using a controller
-        if (firstItemsInPanels.Count > tabIndex && firstItemsInPanels[tabIndex] != null && _isUsingGamepad)
+        // Re-assign the correct UI focus depending on where the player is
+        if (_isFocusOnHeader)
         {
-            EventSystem.current.SetSelectedGameObject(firstItemsInPanels[tabIndex].gameObject);
+            if (EventSystem.current != null && tabButtons.Count > tabIndex && tabButtons[tabIndex] != null)
+            {
+                EventSystem.current.SetSelectedGameObject(tabButtons[tabIndex].gameObject);
+            }
+        }
+        else if (_isUsingGamepad)
+        {
+            FocusCurrentTab();
         }
     }
 }

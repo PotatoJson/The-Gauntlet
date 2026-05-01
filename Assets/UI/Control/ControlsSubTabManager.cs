@@ -48,22 +48,17 @@ public class ControlsSubTabManager : MonoBehaviour
 
     // Returns TRUE if the input was consumed by this sub-menu.
     // Returns FALSE if we reached the edge and should switch main tabs instead.
-    public bool TryHandleSubTabInput(int direction)
+    public void TryHandleSubTabInput(int direction)
     {
-        if (direction > 0 && _currentSubTab == 0)
+        if (direction > 0)
         {
-            // Pressing E/RT while on Keyboard -> Switch to Gamepad
-            SetSubTab(1);
-            return true;
+            // Go right. If on Keyboard (0), go to Gamepad (1). Otherwise, wrap to Keyboard.
+            SetSubTab(_currentSubTab == 0 ? 1 : 0);
         }
-        else if (direction < 0 && _currentSubTab == 1)
+        else if (direction < 0)
         {
-            // Pressing Q/LT while on Gamepad -> Switch to Keyboard
-            SetSubTab(0);
-            return true;
+            // Go left. If on Gamepad (1), go to Keyboard (0). Otherwise, wrap to Gamepad.
+            SetSubTab(_currentSubTab == 1 ? 0 : 1);
         }
-
-        // Reached the edge (e.g., pressed E while already on Gamepad). Let the main menu take over.
-        return false;
     }
 }

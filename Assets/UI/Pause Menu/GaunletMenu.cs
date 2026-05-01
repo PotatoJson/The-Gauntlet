@@ -129,6 +129,12 @@ public class GauntletMenu : MonoBehaviour
 
         if (Gamepad.current != null)
         {
+            if (Gamepad.current.buttonEast.wasPressedThisFrame && !settingsPanel.gameObject.activeSelf)
+            {
+                ResumeGame();
+                return;
+            }
+
             bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.5f;
             bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.5f;
 
@@ -272,7 +278,7 @@ public class GauntletMenu : MonoBehaviour
             ShowSettingsPanel();
             if (Gamepad.current != null && settingsTabManager != null)
             {
-                settingsTabManager.FocusCurrentTab();
+                settingsTabManager.InitializeSettingsMenu();
             }
         });
         settingsSequence.SetUpdate(true);
