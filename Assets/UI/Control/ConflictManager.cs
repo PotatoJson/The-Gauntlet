@@ -1,53 +1,69 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using DG.Tweening; // For the canvas shake
+using DG.Tweening;
 using TMPro;
 using System.Linq;
+using System.Collections; // Required for Coroutine
 
 public class ConflictManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private RectTransform settingsPanel; // The whole menu to shake
-    [SerializeField] private GameObject conflictPopup; // The tab/popup that appears
-    [SerializeField] private TextMeshProUGUI conflictText; // "Conflict: [Move Forward] and [Move Backward] use [S]"
+    [SerializeField] private RectTransform settingsPanel;
+    [SerializeField] private GameObject conflictPopup;
+    [SerializeField] private TextMeshProUGUI conflictText;
 
     public bool CheckForConflicts(InputAction action, int bindingIndex, string newPath)
     {
-        // Search the action map for any other action using the same key
         var duplicate = action.actionMap.bindings.FirstOrDefault(b =>
             b.effectivePath == newPath &&
             b.action != action.name);
 
         if (!string.IsNullOrEmpty(duplicate.action))
         {
-            TriggerConflictUI(action.name, duplicate.action, newPath);
-            return true; // Conflict found!
+            string keyName = InputControlPath.ToHumanReadableString(newPath,
+                InputControlPath.HumanReadableStringOptions.OmitDevice);
+
+            // Format the specific conflict message
+            string message = $"<b>{keyName}</b> is already used by <b>{duplicate.action}</b>.\n" +
+                             $"Binding it to <b>{action.name}</b> will create a conflict!";
+
+            ShowWarning(message); // Pass to the generic warning method
+            return true;
         }
 
         return false;
     }
 
-    private void TriggerConflictUI(string actionA, string actionB, string keyPath)
+    // NEW: A universal method any script can call to show a warning
+    public void ShowWarning(string message)
     {
-        // 1. Shake the whole settings menu
+        settingsPanel.DOComplete(); // Stop existing shakes before starting a new one
         settingsPanel.DOShakeAnchorPos(0.4f, 15, 20).SetUpdate(true);
 
-        // 2. Format the human-readable key name (e.g. "S")
-        string keyName = InputControlPath.ToHumanReadableString(keyPath,
-            InputControlPath.HumanReadableStringOptions.OmitDevice);
-
-        // 3. Update text and show the popup tab
-        conflictText.text = $"<b>{keyName}</b> is already used by <b>{actionB}</b>.\n" +
-                           $"Binding it to <b>{actionA}</b> will create a conflict!";
+        conflictText.text = message;
 
         conflictPopup.SetActive(true);
+        conflictPopup.transform.DOKill();
         conflictPopup.transform.localScale = Vector3.zero;
         conflictPopup.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
+
+        // Auto-hide the warning after 3 seconds
+        StopAllCoroutines();
+        StartCoroutine(AutoCloseWarning(3f));
     }
 
     public void CloseConflictPopup()
     {
         conflictPopup.transform.DOScale(Vector3.zero, 0.15f).SetUpdate(true)
             .OnComplete(() => conflictPopup.SetActive(false));
+    }
+
+    private IEnumerator AutoCloseWarning(float delay)
+    {
+        yield return new WaitForSecondsRealtime(delay);
+        if (conflictPopup.activeSelf)
+        {
+            CloseConflictPopup();
+        }
     }
 }

@@ -115,7 +115,9 @@ public class GauntletMenu : MonoBehaviour
         // REMOVE the settingsPanel check so mouse detection works in all menus
 
         bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
-        bool keyboardPressed = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
+        bool keyboardPressed = Keyboard.current != null &&
+                           Keyboard.current.anyKey.wasPressedThisFrame &&
+                           !Keyboard.current.escapeKey.wasPressedThisFrame;
 
         if (mouseMoved || keyboardPressed)
         {
@@ -129,6 +131,12 @@ public class GauntletMenu : MonoBehaviour
 
         if (Gamepad.current != null)
         {
+            if (Gamepad.current.buttonEast.wasPressedThisFrame && !settingsPanel.gameObject.activeSelf)
+            {
+                ResumeGame();
+                return;
+            }
+
             bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.5f;
             bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.5f;
 
@@ -272,7 +280,7 @@ public class GauntletMenu : MonoBehaviour
             ShowSettingsPanel();
             if (Gamepad.current != null && settingsTabManager != null)
             {
-                settingsTabManager.FocusCurrentTab();
+                settingsTabManager.InitializeSettingsMenu();
             }
         });
         settingsSequence.SetUpdate(true);
