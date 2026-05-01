@@ -15,7 +15,7 @@ public class GameplaySettingsManager : MonoBehaviour
     void Start()
     {
         // 1. Load saved values (matching PlayerCamera defaults)
-        float savedMouse = PlayerPrefs.GetFloat("MouseSensitivity", 0.02f);
+        float savedMouse = PlayerPrefs.GetFloat("MouseSensitivity", 1.0f); 
         float savedController = PlayerPrefs.GetFloat("ControllerSensitivity", 1f);
 
         // 2. Initialize UI
@@ -44,7 +44,7 @@ public class GameplaySettingsManager : MonoBehaviour
     private void UpdateMouseText(float value)
     {
         // Mouse sensitivity uses small increments (0.001), so show 3 decimal places
-        if (mouseValueText != null) mouseValueText.text = value.ToString("F3");
+        if (mouseValueText != null) mouseValueText.text = value.ToString("F2");
     }
 
     private void UpdateControllerText(float value)
