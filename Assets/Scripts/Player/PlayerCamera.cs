@@ -4,10 +4,15 @@ using UnityEngine.InputSystem;
 public class PlayerCamera : MonoBehaviour
 {
     public static PlayerCamera Instance;
+
+    #region References
+    [Header("References")]
     public Transform playerTarget;
     public Transform cameraPivotTransform;
     public Camera cameraObject;
+    #endregion
 
+    #region Core Settings
     [Header("Camera Settings")]
     public float cameraSmoothSpeed = 1f;
     public float leftAndRightRotationSpeed = 220f;
@@ -18,46 +23,81 @@ public class PlayerCamera : MonoBehaviour
     public LayerMask collideWithLayers;
 
     [Header("Device Sensitivity")]
-    [Tooltip("Scales down the raw, high-number mouse delta to match controller speeds.")]
-    [Range(0.001f, 0.1f)] 
-    [SerializeField] public float mouseSensitivityMultiplier = 0.02f;
+    [Tooltip("Multiplier for mouse pixel delta.")]
+    [Range(0.1f, 2f)]
+    [SerializeField] private float mouseSensitivityMultiplier = 0.15f;
     
     [Tooltip("Multiplier for the controller right stick. Leave at 1 for default.")]
     [Range(0.1f, 5f)]
-    [SerializeField] public float controllerSensitivityMultiplier = 1f;
+    public float controllerSensitivityMultiplier = 1f;
 
-    [Header("Camera Values")]
-    private Vector3 cameraVelocity;
-    private Vector3 cameraObjectPosition;
-    private float leftAndRightLookAngle;
-    private float upAndDownLookAngle;
-    private float cameraZPosition;
-    private float targetCameraZPosition;
-    private Vector2 cameraInput;
+    [Header("Follow Settings (Velocity Lag)")]
+    [Tooltip("How tight the camera is when standing still or walking.")]
+    public float baseSmoothTime = 0.1f;
+    [Tooltip("How much the camera drags behind when sprinting SIDEWAYS.")]
+    public float maxSmoothTimeSideways = 0.4f;
+    [Tooltip("How much the camera drags behind when sprinting FORWARD/BACKWARD. Keep this lower")]
+    public float maxSmoothTimeForward = 0.15f;
+    [Tooltip("How smoothly the camera transitions between tight and relaxed.")]
+    public float lagTransitionSpeed = 3f;
+    #endregion
 
+    #region Lock-On & Framing Settings
     [Header("Lock-On Settings")]
     public Transform currentLockOnTarget;
     public LayerMask enemyLayer;
-    public float maximumLockOnDistance = 30f;
-    public float lockOnTrackingSpeed = 15f; // How fast the camera snaps to the enemy
-    [Tooltip("How hard you have to flick the stick/mouse to trigger a switch.")]
-    public float targetSwitchThreshold = 0.5f; 
-    [Tooltip("Prevents the camera from hyper-swapping multiple times in one flick.")]
-    public float targetSwitchCooldown = 0.3f;
     [Tooltip("The layers that block the camera's line of sight (e.g., Ground, Default).")]
     public LayerMask environmentLayer;
+    public float maximumLockOnDistance = 30f;
+    public float lockOnTrackingSpeed = 15f; // How fast the camera snaps to the enemy
     [Tooltip("How long an enemy can hide behind a wall before the lock-on breaks.")]
     public float timeBeforeLockOnBreaks = 3f;
-    private float _lostSightTimer = 0f;
-    private bool _isCameraLockedOn;
-    
-    private float _switchTimer;
+
+    [Header("Target Switching")]
+    [Tooltip("How far the controller stick must be pushed to switch targets (0 to 1).")]
+    public float controllerSwitchThreshold = 0.5f;
+    [Tooltip("How fast the mouse must be flicked to switch targets (pixels per frame).")]
+    public float mouseSwitchThreshold = 30.0f;
+    [Tooltip("How long to wait before allowing another switch (prevents rapid-fire skipping).")]
+    public float targetSwitchCooldown = 0.3f;
+
+    [Header("Dynamic Framing")]
+    [Tooltip("The distance considered 'point blank' for framing.")]
+    public float closeFramingDistance = 2f;
+    [Tooltip("The distance considered 'max range' for framing.")]
+    public float farFramingDistance = 15f;
+    [Tooltip("How high the camera looks when point-blank (Forces reticle up).")]
+    public float closeVerticalOffset = -0.25f;
+    [Tooltip("How high the camera looks when far away.")]
+    public float farVerticalOffset = -1.0f;
+    [Tooltip("How much the camera physically drops toward the floor when point-blank.")]
+    public float closePivotHeight = 1.0f; 
 
     [Header("UI Settings")]
     public GameObject lockOnReticle;
     [Tooltip("Pushes the reticle up so it targets the chest/head instead of the feet.")]
     public float targetHeightOffset = 1.5f;
+    #endregion
 
+    #region Internal State Variables
+    private Vector3 _cameraVelocity;
+    private Vector3 _cameraObjectPosition;
+    private float _leftAndRightLookAngle;
+    private float _upAndDownLookAngle;
+    private float _cameraZPosition;
+    private float _targetCameraZPosition;
+    private Vector2 _cameraInput;
+    
+    private float _lostSightTimer = 0f;
+    private bool _isCameraLockedOn;
+    private float _switchTimer;
+    
+    private float _currentSmoothTime;
+    private Vector3 _previousTargetPosition;
+    private float _originalPivotHeight;
+    #endregion
+
+    #region Setup & Public Methods
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -67,44 +107,117 @@ public class PlayerCamera : MonoBehaviour
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
-        cameraZPosition = cameraObject.transform.localPosition.z;
+        _cameraZPosition = cameraObject.transform.localPosition.z;
+        
+        if (playerTarget != null) 
+            _previousTargetPosition = playerTarget.position; 
+
+        if (cameraPivotTransform != null) 
+            _originalPivotHeight = cameraPivotTransform.localPosition.y;
     }
 
+    public void SetMouseSensitivity(float newSensitivity)
+    {
+        mouseSensitivityMultiplier = newSensitivity;
+    }
+
+    public void SetControllerSensitivity(float newSensitivity)
+    {
+        controllerSensitivityMultiplier = newSensitivity;
+    }
+    #endregion
+
+    #region Main Update Loop
     public void HandleAllCameraActions(Vector2 input, bool isMouseInput = false)
     {
-        if (Time.timeScale == 0) return;
+        _cameraInput = input;
 
-        cameraInput = input;
+        // Tick down the target switch cooldown every frame
+        if (_switchTimer > 0)
+        {
+            _switchTimer -= Time.deltaTime;
+        }
 
         if (playerTarget != null)
         {
             HandleFollowTarget();
-            HandleTargetDisconnection();
-            HandleTargetSwitching(input);
+            HandleTargetDisconnection(); 
+            HandleTargetSwitching(input, isMouseInput); 
             CheckTargetLineOfSight();
-            HandleRotations(isMouseInput); // Pass the bool here
+            HandleRotations(isMouseInput);
             HandleCollisions();
             HandleLockOnUI();
         }
     }
+    #endregion
 
+    #region Movement & Collision
     private void HandleFollowTarget()
     {
-        Vector3 targetCameraPosition = Vector3.SmoothDamp(transform.position, playerTarget.position, ref cameraVelocity, cameraSmoothSpeed * Time.deltaTime);
-        transform.position = targetCameraPosition;
+        Vector3 targetMovementDelta = playerTarget.position - _previousTargetPosition;
+        float currentTargetSpeed = targetMovementDelta.magnitude / Time.deltaTime;
+        float speedPercent = Mathf.Clamp01(currentTargetSpeed / 9f); 
+
+        Vector3 moveDirection = targetMovementDelta.normalized;
+        float forwardAlignment = Mathf.Abs(Vector3.Dot(transform.forward, moveDirection));
+
+        float dynamicMaxSmoothTime = Mathf.Lerp(maxSmoothTimeSideways, maxSmoothTimeForward, forwardAlignment);
+        float desiredSmoothTime = Mathf.Lerp(baseSmoothTime, dynamicMaxSmoothTime, speedPercent);
+
+        _currentSmoothTime = Mathf.Lerp(_currentSmoothTime, desiredSmoothTime, lagTransitionSpeed * Time.deltaTime);
+        transform.position = Vector3.SmoothDamp(transform.position, playerTarget.position, ref _cameraVelocity, _currentSmoothTime);
+
+        _previousTargetPosition = playerTarget.position;
     }
 
+    private void HandleCollisions()
+    {
+        _targetCameraZPosition = _cameraZPosition;
+        RaycastHit hit;
+        Vector3 direction = cameraObject.transform.position - cameraPivotTransform.position;
+        direction.Normalize();
+
+        if (Physics.SphereCast(cameraPivotTransform.position, cameraCollisionRadius, direction, out hit, Mathf.Abs(_targetCameraZPosition), collideWithLayers))
+        {
+            float distanceFromHitObject = Vector3.Distance(cameraPivotTransform.position, hit.point);
+            _targetCameraZPosition = -(distanceFromHitObject - cameraCollisionRadius);
+        }
+
+        if (Mathf.Abs(_targetCameraZPosition) < cameraCollisionRadius)
+        {
+            _targetCameraZPosition = -cameraCollisionRadius;
+        }
+
+        _cameraObjectPosition.z = Mathf.Lerp(cameraObject.transform.localPosition.z, _targetCameraZPosition, 0.2f);
+        cameraObject.transform.localPosition = _cameraObjectPosition;
+    }
+    #endregion
+
+    #region Rotation
     private void HandleRotations(bool isMouseInput)
     {
         // LOCK ON ROTATION
         if (currentLockOnTarget != null)
         {
-            Vector3 lockOnTargetPosition = GetLockOnTargetPosition(currentLockOnTarget);
+            Vector3 enemyPosition = GetLockOnTargetPosition(currentLockOnTarget);
+            Vector3 playerPosition = playerTarget.position;
 
-            // Rotate the main camera parent left/right to face the target
-            Vector3 targetDirection = lockOnTargetPosition - transform.position;
+            float distanceToTarget = Vector3.Distance(playerPosition, enemyPosition);
+            float distancePercent = Mathf.InverseLerp(closeFramingDistance, farFramingDistance, distanceToTarget);
+
+            float dynamicVerticalOffset = Mathf.Lerp(closeVerticalOffset, farVerticalOffset, distancePercent);
+            float dynamicPivotHeight = Mathf.Lerp(closePivotHeight, _originalPivotHeight, distancePercent);
+
+            Vector3 pivotPos = cameraPivotTransform.localPosition;
+            pivotPos.y = Mathf.Lerp(pivotPos.y, dynamicPivotHeight, 5f * Time.deltaTime);
+            cameraPivotTransform.localPosition = pivotPos;
+
+            Vector3 lookAtPoint = Vector3.Lerp(playerPosition, enemyPosition, 0.7f);
+            lookAtPoint.y += dynamicVerticalOffset;
+
+            Vector3 targetDirection = lookAtPoint - transform.position;
             targetDirection.Normalize();
-            targetDirection.y = 0; // Keep the parent flat
+            targetDirection.y = 0; 
 
             if (targetDirection != Vector3.zero)
             {
@@ -112,8 +225,7 @@ public class PlayerCamera : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, lockOnTrackingSpeed * Time.deltaTime);
             }
 
-            // Rotate the pivot up/down to look at the target's height
-            Vector3 pivotDirection = lockOnTargetPosition - cameraPivotTransform.position;
+            Vector3 pivotDirection = lookAtPoint - cameraPivotTransform.position;
             pivotDirection.Normalize();
 
             if (pivotDirection != Vector3.zero)
@@ -125,95 +237,69 @@ public class PlayerCamera : MonoBehaviour
                 cameraPivotTransform.localRotation = Quaternion.Slerp(cameraPivotTransform.localRotation, Quaternion.Euler(eulerAngle), lockOnTrackingSpeed * Time.deltaTime);
             }
 
-            // Keep internal look angles updated so the camera doesn't snap wildly when you unlock
-            leftAndRightLookAngle = transform.eulerAngles.y;
+            _leftAndRightLookAngle = transform.eulerAngles.y;
             float currentPivotX = cameraPivotTransform.localEulerAngles.x;
             if (currentPivotX > 180) currentPivotX -= 360; 
-            upAndDownLookAngle = currentPivotX;
+            _upAndDownLookAngle = currentPivotX;
             
-            return; // Exit out of normal rotations
+            return; 
         }
 
         // NORMAL ROTATION
-        float timeStep = isMouseInput ? 1f : Time.deltaTime;
-        float deviceSensitivityScale = isMouseInput ? mouseSensitivityMultiplier : controllerSensitivityMultiplier; 
+        float leftRightRotationAmount = 0f;
+        float upDownRotationAmount = 0f;
 
-        leftAndRightLookAngle += (cameraInput.x * leftAndRightRotationSpeed * deviceSensitivityScale) * timeStep;
-        upAndDownLookAngle -= (cameraInput.y * upAndDownRotationSpeed * deviceSensitivityScale) * timeStep;
-        upAndDownLookAngle = Mathf.Clamp(upAndDownLookAngle, minimumPivot, maximumPivot);
+        if (isMouseInput)
+        {
+            float baseMouseScalar = 0.1f; 
+            leftRightRotationAmount = _cameraInput.x * mouseSensitivityMultiplier * baseMouseScalar;
+            upDownRotationAmount = _cameraInput.y * mouseSensitivityMultiplier * baseMouseScalar;
+        }
+        else
+        {
+            leftRightRotationAmount = _cameraInput.x * leftAndRightRotationSpeed * controllerSensitivityMultiplier * Time.deltaTime;
+            upDownRotationAmount = _cameraInput.y * upAndDownRotationSpeed * controllerSensitivityMultiplier * Time.deltaTime;
+        }
+
+        _leftAndRightLookAngle += leftRightRotationAmount;
+        _upAndDownLookAngle -= upDownRotationAmount;
+        _upAndDownLookAngle = Mathf.Clamp(_upAndDownLookAngle, minimumPivot, maximumPivot);
 
         Vector3 cameraRotation = Vector3.zero;
-        cameraRotation.y = leftAndRightLookAngle;
+        cameraRotation.y = _leftAndRightLookAngle;
         transform.rotation = Quaternion.Euler(cameraRotation);
 
         cameraRotation = Vector3.zero;
-        cameraRotation.x = upAndDownLookAngle;
+        cameraRotation.x = _upAndDownLookAngle;
         cameraPivotTransform.localRotation = Quaternion.Euler(cameraRotation);
     }
+    #endregion
 
-    private void HandleCollisions()
-    {
-        targetCameraZPosition = cameraZPosition;
-        RaycastHit hit;
-        Vector3 direction = cameraObject.transform.position - cameraPivotTransform.position;
-        direction.Normalize();
-
-        if (Physics.SphereCast(cameraPivotTransform.position, cameraCollisionRadius, direction, out hit, Mathf.Abs(targetCameraZPosition), collideWithLayers))
-        {
-            float distanceFromHitObject = Vector3.Distance(cameraPivotTransform.position, hit.point);
-            targetCameraZPosition = -(distanceFromHitObject - cameraCollisionRadius);
-        }
-
-        if (Mathf.Abs(targetCameraZPosition) < cameraCollisionRadius)
-        {
-            targetCameraZPosition = -cameraCollisionRadius;
-        }
-
-        cameraObjectPosition.z = Mathf.Lerp(cameraObject.transform.localPosition.z, targetCameraZPosition, 0.2f);
-        cameraObject.transform.localPosition = cameraObjectPosition;
-    }
-
+    #region Lock-On System
     public bool FindLockOnTarget()
     {
-        // Find all enemies in range
         Collider[] colliders = Physics.OverlapSphere(playerTarget.position, maximumLockOnDistance, enemyLayer);
         
         float bestScore = Mathf.Infinity;
         Transform bestTarget = null;
-
-        // Find the exact mathematical center of the player's screen
         Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
 
         foreach (Collider collider in colliders)
         {
             Transform potentialTarget = collider.transform;
-            
             Vector3 targetPos = GetLockOnTargetPosition(potentialTarget); 
-
-            // Convert their 3D world position into a 2D screen coordinate
             Vector3 screenPos = cameraObject.WorldToScreenPoint(targetPos);
 
-            // ONLY consider enemies that are IN FRONT of the camera lens
             if (screenPos.z > 0)
             {
-                // Shoot a raycast from the camera to the center of the enemy
                 Vector3 origin = cameraObject.transform.position;
                 Vector3 directionToTarget = targetPos - origin;
                 float distanceToTarget = directionToTarget.magnitude;
 
-                // If the raycast hits something on the environment layer, skip the enemy
-                if (Physics.Raycast(origin, directionToTarget, out RaycastHit hit, distanceToTarget, environmentLayer))
-                {
-                    continue; 
-                }
-                
+                if (Physics.Raycast(origin, directionToTarget, out RaycastHit hit, distanceToTarget, environmentLayer)) continue; 
 
-                // How far the enemy from the player physically
                 float worldDistance = Vector3.Distance(playerTarget.position, potentialTarget.position);
-
-                // How far the enemy from the center of your screen
                 float screenDistance = Vector2.Distance(screenCenter, new Vector2(screenPos.x, screenPos.y));
-
                 float targetScore = screenDistance + (worldDistance * 10f); 
 
                 if (targetScore < bestScore)
@@ -224,7 +310,6 @@ public class PlayerCamera : MonoBehaviour
             }
         }
 
-        // 4. Lock onto the winner!
         if (bestTarget != null)
         {
             currentLockOnTarget = bestTarget;
@@ -233,18 +318,18 @@ public class PlayerCamera : MonoBehaviour
             return true; 
         }
 
-        return false; // No valid targets found in front of us
+        return false; 
     }
 
     public void ClearLockOnTarget()
     {
         currentLockOnTarget = null;
         _isCameraLockedOn = false;
-        _lostSightTimer = 0f; // Reset timer
+        _lostSightTimer = 0f; 
         
         if (lockOnReticle != null) lockOnReticle.SetActive(false);
 
-        // Tell the movement script that the target was dropped
+        // NOTE: Make sure your PlayerMovement script handles this correctly
         PlayerMovement pm = playerTarget.GetComponentInParent<PlayerMovement>();
         if (pm != null)
         {
@@ -257,64 +342,45 @@ public class PlayerCamera : MonoBehaviour
         if (currentLockOnTarget != null && lockOnReticle != null)
         {
             Vector3 targetWorldPos = GetLockOnTargetPosition(currentLockOnTarget);
-
             Vector3 targetScreenPos = cameraObject.WorldToScreenPoint(targetWorldPos);
             lockOnReticle.transform.position = targetScreenPos;
         }
     }
 
-    private void HandleTargetSwitching(Vector2 input)
+    private void HandleTargetSwitching(Vector2 input, bool isMouseInput)
     {
-        // Only run this if we are currently locked on and the cooldown has finished
         if (currentLockOnTarget == null) return;
-        
-        if (_switchTimer > 0)
-        {
-            _switchTimer -= Time.deltaTime;
-            return;
-        }
+        if (_switchTimer > 0) return;
 
-        // Check if the input is a hard flick left or right
-        bool flickedLeft = input.x < -targetSwitchThreshold;
-        bool flickedRight = input.x > targetSwitchThreshold;
+        float currentThreshold = isMouseInput ? mouseSwitchThreshold : controllerSwitchThreshold;
+
+        bool flickedLeft = input.x < -currentThreshold;
+        bool flickedRight = input.x > currentThreshold;
 
         if (!flickedLeft && !flickedRight) return;
 
-        // Find all potential targets in range
         Collider[] colliders = Physics.OverlapSphere(playerTarget.position, maximumLockOnDistance, enemyLayer);
-        
         Transform bestTarget = null;
         float shortestDistance = Mathf.Infinity;
-
-        // Where is our current target on the screen
         Vector3 currentTargetScreenPos = cameraObject.WorldToScreenPoint(currentLockOnTarget.position);
 
         foreach (Collider collider in colliders)
         {
             Transform potentialTarget = collider.transform;
-
-            // Skip if it's the one we are already locked onto
             if (potentialTarget == currentLockOnTarget) continue;
 
-            // Where is this potential target on the screen
             Vector3 potentialTargetScreenPos = cameraObject.WorldToScreenPoint(potentialTarget.position);
 
-            // Make sure the target is actually in front of the camera
             if (potentialTargetScreenPos.z > 0) 
             {
                 Vector3 origin = cameraObject.transform.position;
                 Vector3 targetCenter = collider.bounds.center;
                 Vector3 directionToTarget = targetCenter - origin;
                 
-                if (Physics.Raycast(origin, directionToTarget, out RaycastHit hit, directionToTarget.magnitude, environmentLayer))
-                {
-                    continue; // Wall in the way
-                }
+                if (Physics.Raycast(origin, directionToTarget, out RaycastHit hit, directionToTarget.magnitude, environmentLayer)) continue;
 
-                // Calculate the 2D distance on the screen between our current target and this new one
                 float distanceFromCurrentTarget = Vector2.Distance(currentTargetScreenPos, potentialTargetScreenPos);
 
-                // If we flicked LEFT, we only care about targets whose X screen position is LESS than our current target
                 if (flickedLeft && potentialTargetScreenPos.x < currentTargetScreenPos.x)
                 {
                     if (distanceFromCurrentTarget < shortestDistance)
@@ -323,7 +389,6 @@ public class PlayerCamera : MonoBehaviour
                         bestTarget = potentialTarget;
                     }
                 }
-                // If we flicked RIGHT, we only care about targets whose X screen position is GREATER than our current target
                 else if (flickedRight && potentialTargetScreenPos.x > currentTargetScreenPos.x)
                 {
                     if (distanceFromCurrentTarget < shortestDistance)
@@ -335,7 +400,6 @@ public class PlayerCamera : MonoBehaviour
             }
         }
 
-        // If we found a valid target in that direction swap to it and start the cooldown
         if (bestTarget != null)
         {
             currentLockOnTarget = bestTarget;
@@ -345,7 +409,6 @@ public class PlayerCamera : MonoBehaviour
     
     private void CheckTargetLineOfSight()
     {
-        // Only run this if we actually have a target
         if (currentLockOnTarget == null)
         {
             _lostSightTimer = 0f;
@@ -353,26 +416,19 @@ public class PlayerCamera : MonoBehaviour
         }
 
         Vector3 lockOnTargetPosition = GetLockOnTargetPosition(currentLockOnTarget);
-
-        // Shoot a raycast from the camera lens to the target
         Vector3 origin = cameraObject.transform.position;
         Vector3 directionToTarget = lockOnTargetPosition - origin;
 
-        // Check if we hit a "hard wall" (environmentLayer)
         if (Physics.Raycast(origin, directionToTarget, out RaycastHit hit, directionToTarget.magnitude, environmentLayer))
         {
-            // The enemy is hiding. Start ticking the timer up.
             _lostSightTimer += Time.deltaTime;
-
             if (_lostSightTimer >= timeBeforeLockOnBreaks)
             {
-                // Timer maxed out. Break the lock-on
                 ClearLockOnTarget();
             }
         }
         else
         {
-            // The raycast hit nothing (or hit the enemy). They are visible. Reset the timer.
             _lostSightTimer = 0f;
         }
     }
@@ -384,32 +440,23 @@ public class PlayerCamera : MonoBehaviour
         Collider targetCollider = target.GetComponent<Collider>();
         if (targetCollider != null)
         {
-            // bounds.center is exactly 50% height.
-            // bounds.extents.y is the distance from the center to the very top.
-            // Adding half of that distance puts us at exactly 75% height (chest/head level) for ANY sized enemy
             return targetCollider.bounds.center + (Vector3.up * (targetCollider.bounds.extents.y * 0.5f));
         }
 
-        // Fallback for objects without colliders
         return target.position + (Vector3.up * targetHeightOffset);
     }
 
     private void HandleTargetDisconnection()
     {
-        // Only run this if we are actively supposed to be locked on
         if (_isCameraLockedOn)
         {
-            // Is it null, deactivated, OR did its collider get turned off
             bool targetIsDead = currentLockOnTarget == null || 
                                 !currentLockOnTarget.gameObject.activeInHierarchy || 
                                 !currentLockOnTarget.GetComponent<Collider>().enabled;
 
             if (targetIsDead)
             {
-                // Attempt to instantly find the next best target on screen
                 bool foundNewTarget = FindLockOnTarget();
-
-                // If nobody else is on screen, completely drop the lock-on
                 if (!foundNewTarget)
                 {
                     ClearLockOnTarget();
@@ -417,4 +464,5 @@ public class PlayerCamera : MonoBehaviour
             }
         }
     }
+    #endregion
 }

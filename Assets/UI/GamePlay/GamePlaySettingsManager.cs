@@ -57,7 +57,7 @@ public class GameplaySettingsManager : MonoBehaviour
     {
         if (PlayerCamera.Instance != null)
         {
-            PlayerCamera.Instance.mouseSensitivityMultiplier = value;
+            PlayerCamera.Instance.SetMouseSensitivity(value);
             PlayerPrefs.SetFloat("MouseSensitivity", value);
         }
     }
