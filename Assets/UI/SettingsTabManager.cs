@@ -59,6 +59,8 @@ public class SettingsTabManager : MonoBehaviour
 
     private void Update()
     {
+        if (allPanels.Count == 0 || !allPanels[0].transform.parent.gameObject.activeInHierarchy) return;
+
         if (_inputCooldown > 0)
         {
             _inputCooldown -= Time.unscaledDeltaTime;
@@ -108,7 +110,7 @@ public class SettingsTabManager : MonoBehaviour
             {
                 _isUsingGamepad = true;
                 UpdatePromptVisuals("LT", "RT");
-                RestoreGamepadFocus(); // Instantly grab the UI cursor
+                UpdateTabVisuals(); // Instantly apply the preview color!
             }
         }
         // 2. Switch TO Keyboard/Mouse
@@ -119,9 +121,7 @@ public class SettingsTabManager : MonoBehaviour
             {
                 _isUsingGamepad = false;
                 UpdatePromptVisuals("Q", "E");
-
-                // Clear controller focus so the mouse can hover freely without fighting the system
-                if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+                UpdateTabVisuals(); // Instantly remove the preview color!
             }
         }
     }
@@ -240,29 +240,32 @@ public class SettingsTabManager : MonoBehaviour
         {
             if (tabButtons[i] == null) continue;
 
-            // 1. Are we hovering over this tab?
+            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active (Red), others are Inactive (Gray).
+            if (!_isUsingGamepad)
+            {
+                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : inactiveColor;
+                continue; // Skip the rest of the loop for this button!
+            }
+
+            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Inactive)
             if (i == _previewTabIndex)
             {
-                // If it's the open tab AND we are dived inside, it's Active (Red)
                 if (i == _currentTabIndex && !_isFocusOnHeader)
                 {
                     tabButtons[i].image.color = activeColor;
                 }
-                // Otherwise, we are just previewing it on the header, so it's Pink
                 else
                 {
                     tabButtons[i].image.color = previewColor;
                 }
             }
-            // 2. Is this the open tab, but we are hovering over a DIFFERENT tab?
             else if (i == _currentTabIndex)
             {
-                tabButtons[i].image.color = activeColor; // Keep it red so player knows it's the active panel
+                tabButtons[i].image.color = activeColor;
             }
-            // 3. Not open, not hovered.
             else
             {
-                tabButtons[i].image.color = inactiveColor; // Gray
+                tabButtons[i].image.color = inactiveColor;
             }
         }
     }

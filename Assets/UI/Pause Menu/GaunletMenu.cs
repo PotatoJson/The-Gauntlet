@@ -115,7 +115,9 @@ public class GauntletMenu : MonoBehaviour
         // REMOVE the settingsPanel check so mouse detection works in all menus
 
         bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
-        bool keyboardPressed = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
+        bool keyboardPressed = Keyboard.current != null &&
+                           Keyboard.current.anyKey.wasPressedThisFrame &&
+                           !Keyboard.current.escapeKey.wasPressedThisFrame;
 
         if (mouseMoved || keyboardPressed)
         {
