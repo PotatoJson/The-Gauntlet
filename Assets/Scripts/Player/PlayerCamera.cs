@@ -130,6 +130,8 @@ public class PlayerCamera : MonoBehaviour
     #region Main Update Loop
     public void HandleAllCameraActions(Vector2 input, bool isMouseInput = false)
     {
+        if (Time.deltaTime == 0f) return;
+        
         _cameraInput = input;
 
         // Tick down the target switch cooldown every frame
