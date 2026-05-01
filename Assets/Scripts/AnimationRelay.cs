@@ -35,7 +35,6 @@ public class AnimationEventRelay : MonoBehaviour
 
     public void EndAttack()
     {
-        Debug.Log("Test");
         if (_playerCombat != null) _playerCombat.EndAttack();
     }
     
@@ -54,8 +53,14 @@ public class AnimationEventRelay : MonoBehaviour
     {
         _playerCombat.HeavyAttackWindUp();
     }
+
     public void HeavySwing()
     {
         _playerCombat.HeavyAttackSwing();
+    }
+
+    public void TriggerAnimationLunge()
+    {
+        _playerCombat.ApplyLungeForce();
     }
 }

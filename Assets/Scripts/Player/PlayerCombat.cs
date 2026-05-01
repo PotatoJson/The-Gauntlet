@@ -15,6 +15,8 @@ public class PlayerCombat : MonoBehaviour
     public AttackNode StartingLightAttack;
     public AttackNode StartingHeavyAttack;
     public AttackNode JumpAttack;
+    public AttackNode RunningLightAttack;
+    public AttackNode RunningHeavyAttack;
 
     [Header("External Links")]
     [SerializeField] private PlayerHealth _healthScript;
@@ -205,19 +207,29 @@ public class PlayerCombat : MonoBehaviour
 
         if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
 
+        //checking for a jump attack
         if(currentState == PlayerState.Airborne)
         {
-            AttemptAttack(JumpAttack);
+            AttemptAttack(JumpAttack, true);
             ConsumeBuffer();
             return;
         }
-        
-        if(currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running)
+
+        //checking for a running attack
+        if(currentState == PlayerState.Running)
+        {
+            Debug.Log("Test Running attack");
+            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light)
+                ? RunningLightAttack
+                : RunningHeavyAttack;
+            AttemptAttack(nodeToPlay, true);
+        }
+        else if(currentState == PlayerState.Idle || currentState == PlayerState.Walking)
         {
             AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) 
                 ? StartingLightAttack 
                 : StartingHeavyAttack;
-            AttemptAttack(nodeToPlay);
+            AttemptAttack(nodeToPlay, false);
         }
         else if(currentState == PlayerState.Attacking && _canCombo)
         {
@@ -226,11 +238,11 @@ public class PlayerCombat : MonoBehaviour
                 : _currentAttackNode.NextHeavyAttack;
 
             Debug.Log($"Attempting to chain from {_currentAttackNode.name} to {(nextNode != null ? nextNode.name : "NULL")}");
-            if(nextNode != null) AttemptAttack(nextNode);
+            if(nextNode != null) AttemptAttack(nextNode, false);
         }
     }
 
-    private void AttemptAttack(AttackNode node)
+    private void AttemptAttack(AttackNode node, bool keepMomentum)
     {
         if(node == null) return;
 
@@ -240,6 +252,7 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
+        _stateManager.CarryMomentum = keepMomentum;
         _isRotationLocked = true;
 
         _internalStamina -= node.StaminaCost;
@@ -249,7 +262,7 @@ public class PlayerCombat : MonoBehaviour
         _canCombo = false;
         _comboQueued = true;
         
-        _stateManager.CurrentLungeSpeed = node.LungeForce;
+        //_stateManager.CurrentLungeSpeed = node.LungeForce; Removed for Testing a better way
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
@@ -364,6 +377,11 @@ public class PlayerCombat : MonoBehaviour
         _animator.speed = 1f;
         _isCharging = false;
         _chargeTimer = 0f;
+    }
+
+    public void ApplyLungeForce()
+    {
+        _stateManager.CurrentLungeSpeed = _currentAttackNode.LungeForce;
     }
 #endregion
 }

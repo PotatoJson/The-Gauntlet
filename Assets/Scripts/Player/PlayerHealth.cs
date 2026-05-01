@@ -121,13 +121,14 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + currentHealth);
         TriggerLargeStumble();
-        if (currentHealth <= 0)
+        /*if (currentHealth <= 0)
         {
+            Debug.Log("testing character controller");
             CharacterController cc = GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false; // Disable CharacterController to prevent movement
             transform.position = PlayerSpawn.transform.position;
             if (cc != null) cc.enabled = true; // Re-enable CharacterController after repositioning
-        }
+        }*/
     }
 
     private void TriggerLargeStumble()

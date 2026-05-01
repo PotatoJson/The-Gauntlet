@@ -160,8 +160,23 @@ public class PlayerMovement : MonoBehaviour
         //stop movement if attacking
         if(_stateManager.GetCurrentState() == PlayerState.Attacking)
         {
-            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime); 
-            _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
+            if (_stateManager.CarryMomentum)
+            {
+                //Running and jumping attacks carry momentum
+                _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 3f * Time.deltaTime);
+                _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f, 15f * Time.deltaTime);
+            }
+            else
+            {
+                
+                _smoothSpeed = 0f; 
+                //quick lerp for normal attacks so they look like they are lunging into the attacks
+                _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f, 15f * Time.deltaTime);
+            }
+
+            // Combine whatever is left of our momentum with the active lunge
+            _horizontalVelocity = (transform.forward * _smoothSpeed) + (transform.forward * _stateManager.CurrentLungeSpeed);
+            
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
             _controller.Move(lastVelocity * Time.deltaTime);

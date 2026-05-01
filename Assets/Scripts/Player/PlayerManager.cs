@@ -25,6 +25,7 @@ public class PlayerManager : MonoBehaviour
     public bool HasBufferedAttack;
     public bool CanCancelAttack;
     public bool RequestBufferClear;
+    public bool CarryMomentum;
     public float CurrentLungeSpeed;
     
     public void Awake()

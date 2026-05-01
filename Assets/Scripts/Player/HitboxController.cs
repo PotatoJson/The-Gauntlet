@@ -26,6 +26,7 @@ public class HitboxController : MonoBehaviour
 
     public void EnableCollider(int damage, int poise)
     {
+        Debug.Log("hitbox enabled");
         _alreadyHit.Clear();
         _currentDamage = damage;
         _currentPoiseDamage = poise;
@@ -34,6 +35,7 @@ public class HitboxController : MonoBehaviour
 
     public void DisableCollider()
     {
+        Debug.Log("hitbox Disabled");
         _collider.enabled = false;
     }
 
