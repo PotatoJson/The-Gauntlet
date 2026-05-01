@@ -163,7 +163,7 @@ public class PlayerMovement : MonoBehaviour
             if (_stateManager.CarryMomentum)
             {
                 //Running and jumping attacks carry momentum
-                _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 3f * Time.deltaTime);
+                _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 1f * Time.deltaTime);
                 _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f, 15f * Time.deltaTime);
             }
             else
