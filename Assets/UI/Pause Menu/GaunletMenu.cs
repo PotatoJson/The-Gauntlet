@@ -38,6 +38,10 @@ public class GauntletMenu : MonoBehaviour
     [SerializeField] private CanvasGroup mainButtonsGroup;
     [SerializeField] private float transitionSpeed = 0.5f;
 
+    [Header("Upgrade Menu References")]
+    [SerializeField] private GameObject upgradePanel;
+    [SerializeField] private GameObject pauseMenuUpgradeButton;
+
     private bool _isPaused = false;
     private Vector2 _centerPosition = Vector2.zero;
     private float _offscreenPosX;
@@ -57,7 +61,6 @@ public class GauntletMenu : MonoBehaviour
 
         // Collect all buttons including Restart for the animation
         List<Button> allButtons = new List<Button>(menuButtons);
-        if (restartButton != null) allButtons.Add(restartButton);
 
         foreach (var btn in allButtons)
         {
@@ -65,35 +68,9 @@ public class GauntletMenu : MonoBehaviour
             if (rect != null) _originalButtonScales[rect] = rect.localScale;
         }
 
-        InitializeExplicitNavigation(); // Link the buttons for the D-pad
         menuCanvas.SetActive(false);
         settingsPanel.gameObject.SetActive(false);
         gauntletImage.anchoredPosition = new Vector2(_offscreenPosX, 0);
-    }
-
-    private void InitializeExplicitNavigation()
-    {
-        // Link the vertical list (Resume -> Setting -> Main Menu -> Quit)
-        for (int i = 0; i < menuButtons.Count; i++)
-        {
-            Navigation nav = new Navigation { mode = Navigation.Mode.Explicit };
-
-            if (i > 0) nav.selectOnUp = menuButtons[i - 1];
-            if (i < menuButtons.Count - 1) nav.selectOnDown = menuButtons[i + 1];
-
-            // If we are on Resume or Setting, allow Right to go to Restart
-            if (i <= 1 && restartButton != null) nav.selectOnRight = restartButton;
-
-            menuButtons[i].navigation = nav;
-        }
-
-        // Setup Restart button separately
-        if (restartButton != null)
-        {
-            Navigation restartNav = new Navigation { mode = Navigation.Mode.Explicit };
-            restartNav.selectOnLeft = menuButtons[0]; // Left from Restart goes to Resume
-            restartButton.navigation = restartNav;
-        }
     }
 
     private void OnEnable()
@@ -131,7 +108,10 @@ public class GauntletMenu : MonoBehaviour
 
         if (Gamepad.current != null)
         {
-            if (Gamepad.current.buttonEast.wasPressedThisFrame && !settingsPanel.gameObject.activeSelf)
+            // NEW: We added the upgradePanel check here so the Pause Menu ignores the East Button if you are upgrading!
+            if (Gamepad.current.buttonEast.wasPressedThisFrame &&
+                !settingsPanel.gameObject.activeSelf &&
+                !upgradePanel.activeSelf)
             {
                 ResumeGame();
                 return;
@@ -149,6 +129,10 @@ public class GauntletMenu : MonoBehaviour
                     // Context-aware selection
                     if (settingsPanel.gameObject.activeSelf)
                         settingsTabManager.FocusCurrentTab();
+                    else if (upgradePanel.activeSelf)
+                    {
+                        // NEW: Do nothing! We are in the upgrade menu, so don't steal focus.
+                    }
                     else if (firstSelectedButton != null)
                         EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
                 }
@@ -176,11 +160,17 @@ public class GauntletMenu : MonoBehaviour
         }
         else
         {
-            // Back button logic: Close settings if open, otherwise resume
+            // Back button logic: Close settings if open
             if (settingsPanel.gameObject.activeSelf)
             {
                 CloseSettings();
             }
+            // This allows your InventoryManager.cs to safely handle the Escape key instead.
+            else if (upgradePanel != null && upgradePanel.activeSelf)
+            {
+                return;
+            }
+            // If no menus are open, resume the game.
             else
             {
                 ResumeGame();
@@ -325,8 +315,27 @@ public class GauntletMenu : MonoBehaviour
             });
     }
 
+
+    // Call this from the Upgrade Menu's "Return" Button OnClick() AND the Unity Event
+    public void CloseUpgradeMenu()
+    {
+        upgradePanel.SetActive(false);
+
+
+        mainButtonsGroup.interactable = true;
+        mainButtonsGroup.blocksRaycasts = true;
+
+
+        // Pass controller focus safely back to the Pause Menu
+        if (EventSystem.current != null && pauseMenuUpgradeButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(pauseMenuUpgradeButton);
+        }
+    }
     public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
     public void ReturnToMainMenu() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); ShowCursor(); }
+    public void OpenUpgradeMenu() { upgradePanel.SetActive(true); mainButtonsGroup.interactable = false ;mainButtonsGroup.blocksRaycasts = false; }
     public void QuitGame() { Application.Quit(); }
 
     private void OnDestroy() { CleanupTweens(); }
