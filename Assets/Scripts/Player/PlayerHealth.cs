@@ -33,6 +33,18 @@ public class PlayerHealth : MonoBehaviour
     private PlayerManager _stateManager;
     private Animator _animator;
 
+    [Header("Poise")]
+    public int MaxPoise;
+    public int CurrentPoise;
+    public Slider PoiseBar; //If we want to visualize the poise and stagger on the player
+    public float PoiseDecayDelay;
+    public int PoiseDecayRate;
+    private float _timeSinceLastHit;
+
+    [Header("Stagger things")]//these will be used to trigger a large knockback throwing the player
+    public float InstantKnockback;
+    public float OvercapKnockback;
+
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
     public event Action OnPlayerDeath;
@@ -52,56 +64,64 @@ public class PlayerHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
+        CurrentPoise = 0f;
+        OnPoiseChanged?.Invoke(CurrentPoise, MaxPoise);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
     private void Update()
     {
+        HandleInvincibility();
+        HandlePoiseRecovery();
+        HandleHealthRecovery();
+    }
+
+    #region UpdateClarity
+    private void HandleInvincibility()
+    {
         if (isInvincible)
         {
             invincibilityTimer -= Time.deltaTime;
-            if (invincibilityTimer <= 0)
-            {
-                isInvincible = false;
-            }
+            if (invincibilityTimer <= 0) isInvincible = false;
         }
+    }
 
-        // gradually recover Stun Meter over time if not currently stunned
-        if (currentStunMeter > 0 && !isStunned)
+    private void HandlePoiseRecovery()
+    {
+        if (currentPoise > 0)
         {
-            // tick down the delay timer first
-            if (stunRecoveryTimer > 0)
+            if (poiseRecoveryTimer > 0)
             {
-                stunRecoveryTimer -= Time.deltaTime;
+                poiseRecoveryTimer -= Time.deltaTime;
             }
-            // once the delay is over, slowly recover the meter
             else
             {
-                currentStunMeter -= stunRecoveryRate * Time.deltaTime;
-                currentStunMeter = Mathf.Max(0, currentStunMeter);
-            }
-        }
-
-        if (currentHealth < maxHealth && !IsDead)
-        {
-            // tick down the delay timer first
-            if (healthRecoveryTimer > 0)
-            {
-                healthRecoveryTimer -= Time.deltaTime;
-            }
-            // once the delay is over, slowly recover health
-            else
-            {
-                currentHealth += healthRecoveryRate * Time.deltaTime;
-                currentHealth = Mathf.Min(currentHealth, maxHealth); // Don't heal past Max HP
-
-                // trigger events
-                OnHealthChanged?.Invoke(currentHealth, maxHealth);
+                currentPoise -= poiseRecoveryRate * Time.deltaTime;
+                currentPoise = Mathf.Max(0, currentPoise);
+                OnPoiseChanged?.Invoke(currentPoise, maxPoise);
             }
         }
     }
 
-    public void TakeDamage(float damage, GameObject attacker = null)
+    private void HandleHealthRecovery()
+    {
+        if (currentHealth < maxHealth && !IsDead)
+        {
+            if (healthRecoveryTimer > 0)
+            {
+                healthRecoveryTimer -= Time.deltaTime;
+            }
+            else
+            {
+                currentHealth += healthRecoveryRate * Time.deltaTime;
+                currentHealth = Mathf.Min(currentHealth, maxHealth);
+                OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            }
+        }
+    }
+    #endregion
+
+    public void TakeDamage(float damage, int poiseDamage, GameObject attacker = null)
     {
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
@@ -114,29 +134,70 @@ public class PlayerHealth : MonoBehaviour
         stunRecoveryTimer = stunRecoveryDelay;
 
         // Brief invincibility to prevent multiple hits from same attack
-        
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + currentHealth);
-        TriggerLargeStumble();
         if (currentHealth <= 0)
         {
-            Debug.Log("testing character controller");
-            CharacterController cc = GetComponent<CharacterController>();
-            if (cc != null) cc.enabled = false; // Disable CharacterController to prevent movement
-            transform.position = PlayerSpawn.transform.position;
-            if (cc != null) cc.enabled = true; // Re-enable CharacterController after repositioning
+            HandleDeath();
+            return;
+        }
+        HandleStagger(poiseDamage);
+    }
+
+    #region Stagger Handling 
+    private HandleStagger(int poiseDamage)
+    {
+        //see if player gets thrown from attack
+        bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (MaxPoise + OvercapKnockback);
+        //check for large stagger for player stumble+staggered state
+        bool isHeavyStagger = (CurrentPoise + poiseDamage) >= MaxPoise;
+
+        if (isKnockBack)
+        {
+            CurrentPoise = 0;
+            TriggerKnockback();
+        }
+        else if (isHeavyStagger)
+        {
+            CurrentPoise = 0;
+            TriggerLargeStumble();
+        }
+        else
+        {
+            CurrentPoise += poiseDamage;
+            TriggerSmallFlinch();
         }
     }
 
+    private void TriggerKnockback()
+    {
+        _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.SetTrigger(KnockbackHit);
+        _stateManager.CurrentLungeSpeed = -20;
+    }
+
     private void TriggerLargeStumble()
-        {
-            _stateManager.SetPlayerState(PlayerState.Staggered);
-            _animator.SetTrigger("LargeStumble");
-            _stateManager.CurrentLungeSpeed = -4f;
-        }
+    {
+        _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.SetTrigger("LargeStumble");
+        _stateManager.CurrentLungeSpeed = -4f;
+    }
+
+    private void TriggerSmallFlinch()
+    {//this doesn't change state at all just some extra feedback for player
+        _animator.SetTrigger("SmallFlinch");
+    }
+
+    #endregion
+
+    private void HandleDeath()
+    {
+        //maybe teleport player not sure what we doin for death yet
+        Debug.Log("Death Test");
+    }
     //private void BreakGuard()
     //{
     //    Debug.Log("GUARD BROKEN! Player is stunned.");
