@@ -12,6 +12,12 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [Header("Visuals")]
     [SerializeField] private Outline selectionOutline;
 
+    [Header("Gem Details")]
+    public string gemName = "Unknown Gem";
+    [TextArea(3, 5)]
+    public string gemDescription = "A mysterious gem with untold power.";
+    public Sprite gemIcon; // Drag the gem's image sprite here in the Inspector!
+
     private CanvasGroup _canvasGroup;
     private RectTransform _rectTransform;
 
