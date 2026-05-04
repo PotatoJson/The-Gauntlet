@@ -35,11 +35,11 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Poise")]
     public int MaxPoise;
-    public int CurrentPoise;
-    public Slider PoiseBar; //If we want to visualize the poise and stagger on the player
-    public float PoiseDecayDelay;
-    public int PoiseDecayRate;
-    private float _timeSinceLastHit;
+    public float CurrentPoise;
+    //public Slider PoiseBar; //If we want to visualize the poise and stagger on the player
+    public float PoiseRecoveryRate;
+    public float PoiseRecoveryDelay;
+    private float PoiseRecoveryTimer;
 
     [Header("Stagger things")]//these will be used to trigger a large knockback throwing the player
     public float InstantKnockback;
@@ -47,6 +47,7 @@ public class PlayerHealth : MonoBehaviour
 
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
+    public event Action<float, int> OnPoiseChanged; //CurrentPoise, MaxPoise
     public event Action OnPlayerDeath;
 
     public bool IsDead => currentHealth <= 0;
@@ -64,7 +65,7 @@ public class PlayerHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
-        CurrentPoise = 0f;
+        CurrentPoise = 0;
         OnPoiseChanged?.Invoke(CurrentPoise, MaxPoise);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
@@ -88,17 +89,17 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandlePoiseRecovery()
     {
-        if (currentPoise > 0)
+        if (CurrentPoise > 0)
         {
-            if (poiseRecoveryTimer > 0)
+            if (PoiseRecoveryTimer > 0)
             {
-                poiseRecoveryTimer -= Time.deltaTime;
+                PoiseRecoveryTimer -= Time.deltaTime;
             }
             else
             {
-                currentPoise -= poiseRecoveryRate * Time.deltaTime;
-                currentPoise = Mathf.Max(0, currentPoise);
-                OnPoiseChanged?.Invoke(currentPoise, maxPoise);
+                CurrentPoise -= PoiseRecoveryRate * Time.deltaTime;
+                CurrentPoise = Mathf.Max(0, CurrentPoise);
+                OnPoiseChanged?.Invoke(CurrentPoise, MaxPoise);
             }
         }
     }
@@ -121,7 +122,7 @@ public class PlayerHealth : MonoBehaviour
     }
     #endregion
 
-    public void TakeDamage(float damage, int poiseDamage, GameObject attacker = null)
+    public void TakeDamage(float damage/*, int poiseDamage*/, GameObject attacker = null)
     {
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
@@ -144,11 +145,11 @@ public class PlayerHealth : MonoBehaviour
             HandleDeath();
             return;
         }
-        HandleStagger(poiseDamage);
+        //HandleStagger(poiseDamage);
     }
 
     #region Stagger Handling 
-    private HandleStagger(int poiseDamage)
+    private void HandleStagger(int poiseDamage)
     {
         //see if player gets thrown from attack
         bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (MaxPoise + OvercapKnockback);
@@ -175,7 +176,7 @@ public class PlayerHealth : MonoBehaviour
     private void TriggerKnockback()
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
-        _animator.SetTrigger(KnockbackHit);
+        _animator.SetTrigger("KnockbackHit");
         _stateManager.CurrentLungeSpeed = -20;
     }
 
