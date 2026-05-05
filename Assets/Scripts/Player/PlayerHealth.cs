@@ -123,6 +123,7 @@ public class PlayerHealth : MonoBehaviour
         TriggerLargeStumble();
         if (currentHealth <= 0)
         {
+            Debug.Log("testing character controller");
             CharacterController cc = GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false; // Disable CharacterController to prevent movement
             transform.position = PlayerSpawn.transform.position;

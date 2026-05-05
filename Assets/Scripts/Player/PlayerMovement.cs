@@ -70,6 +70,11 @@ public class PlayerMovement : MonoBehaviour
     //Player Manager
     private PlayerManager _stateManager;
     #endregion
+    [SerializeField] private InputActionAsset inputAsset;
+
+    private InputActionMap _playerMap;
+    private InputAction _moveAction;
+    private InputAction _lookAction;
 
     private void Awake()
     {
@@ -77,23 +82,30 @@ public class PlayerMovement : MonoBehaviour
         _controller = GetComponent<CharacterController>();
         
         if (Camera.main != null) _cameraTransform = Camera.main.transform;
-        
-        _input = new PlayerControls();
-        
-        _input.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
-        _input.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
 
-        _input.Player.Roll.started += ctx => OnRollButtonDown();
-        _input.Player.Roll.canceled += ctx => OnRollButtonUp();
+        _playerMap = inputAsset.FindActionMap("Player");
+        _moveAction = _playerMap.FindAction("Move");
+        _lookAction = _playerMap.FindAction("Look");
 
-        _input.Player.LockOn.started += ctx => ToggleLockOn();
+        InputAction rollAction = _playerMap.FindAction("Roll");
+        InputAction lockOnAction = _playerMap.FindAction("LockOn");
+        InputAction jumpAction = _playerMap.FindAction("Jump");
 
-        _input.Player.Jump.started += ctx => OnJumpInput();
+        // Subscribe to the events using the mapped actions
+        _moveAction.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
+        _moveAction.canceled += ctx => _moveInput = Vector2.zero;
+
+        rollAction.started += ctx => OnRollButtonDown();
+        rollAction.canceled += ctx => OnRollButtonUp();
+
+        lockOnAction.started += ctx => ToggleLockOn();
+
+        jumpAction.started += ctx => OnJumpInput();
 
     }
 
-    private void OnEnable() => _input.Enable();
-    private void OnDisable() => _input.Disable();
+    private void OnEnable() => _playerMap.Enable();
+    private void OnDisable() => _playerMap.Disable();
 
     private void OnRollButtonDown()
     {
@@ -148,8 +160,23 @@ public class PlayerMovement : MonoBehaviour
         //stop movement if attacking
         if(_stateManager.GetCurrentState() == PlayerState.Attacking)
         {
-            _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime); 
-            _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
+            if (_stateManager.CarryMomentum)
+            {
+                //Running and jumping attacks carry momentum
+                _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 1f * Time.deltaTime);
+                _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f, 15f * Time.deltaTime);
+            }
+            else
+            {
+                
+                _smoothSpeed = 0f; 
+                //quick lerp for normal attacks so they look like they are lunging into the attacks
+                _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f, 15f * Time.deltaTime);
+            }
+
+            // Combine whatever is left of our momentum with the active lunge
+            _horizontalVelocity = (transform.forward * _smoothSpeed) + (transform.forward * _stateManager.CurrentLungeSpeed);
+            
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
             _controller.Move(lastVelocity * Time.deltaTime);
@@ -197,12 +224,12 @@ public class PlayerMovement : MonoBehaviour
     private void LateUpdate()
     {
         // Read the continuous mouse/stick delta
-        _cameraInput = _input.Player.Look.ReadValue<Vector2>();
+        _cameraInput = _lookAction.ReadValue<Vector2>();
 
         // Check if the current input is coming from a mouse
-        if (_input.Player.Look.activeControl != null)
+        if (_lookAction.activeControl != null)
         {
-            _isMouseInput = _input.Player.Look.activeControl.device.name == "Mouse";
+            _isMouseInput = _lookAction.activeControl.device.name == "Mouse";
         }
 
         // Feed the input and the device type to our Camera script
