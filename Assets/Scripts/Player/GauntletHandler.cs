@@ -3,24 +3,42 @@ using UnityEngine;
 public class RunTimeGauntlet
 {
     public GauntletData BaseGauntlet;
-    public object[] SocketedGems;
+    public GemData[] SocketedGems;
 
     public RunTimeGauntlet(GauntletData gauntletData)
     {
         BaseGauntlet = gauntletData;
-        SocketedGems = new object[BaseGauntlet.MaxGemSlots];
+        SocketedGems = new GemData[BaseGauntlet.MaxGemSlots];
+    }
+
+    public float GetTotalGemBonus(StatModifierType statType)
+    {
+        float totalBonus = 0f;
+        foreach(GemData gem in SocketedGems)
+        {
+            if(gem == null) continue;
+
+            foreach(GemModifier mod in gem.Modifiers)
+            {
+                if(mod.StatType == statType)
+                {
+                    totalBonus += mod.Amount;
+                }
+            }
+        }
+        return totalBonus;
     }
 
     public int GetCurrentDamage()
     {
-        int totalDamage = BaseGauntlet.Damage;
+        float gemBonus = GetTotalGemBonus(StatModifierType.PhysicalDamage);
         //eventually loop through gems to see if any increase damage
-        return totalDamage;
+        return BaseGauntlet.Damage + Mathf.RoundToInt(gemBonus);
     }
     public int GetCurrentPoise()
     {
-        int totalPoise = BaseGauntlet.PoiseDamage;
+        float gemBonus = GetTotalGemBonus(StatModifierType.PoiseDamage);
         //loop through gems to get total poise based on gems later
-        return totalPoise;      
+        return BaseGauntlet.PoiseDamage + Mathf.RoundToInt(gemBonus);      
     }
 }
