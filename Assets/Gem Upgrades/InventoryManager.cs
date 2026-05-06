@@ -1,167 +1,127 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using TMPro;
+using UnityEngine.UI;
 
 public class InventoryManager : MonoBehaviour
 {
-    // Simplified State Machine: Just the Headers and the Grid
-    public enum UpgradeMenuState { Category, Grid }
-    private Transform _activeGridContainer;
-    private UpgradeMenuState _currentState = UpgradeMenuState.Category;
+    [Header("Mode Panels")]
+    [SerializeField] private GameObject rightSideDetails;
+    [SerializeField] private GameObject rightSideRewards;
 
-    [Header("Events")]
-    public UnityEvent onExitUpgradeRequested; // Tells GauntletMenu to close us
+    [Header("Details Panel UI")]
+    [SerializeField] private TMP_Text detailNameText;
+    [SerializeField] private TMP_Text detailDescriptionText;
+    [SerializeField] private Image detailIcon;
 
-    [Header("UI References")]
-    [Tooltip("Drag your 'Core' Text Button here")]
-    [SerializeField] private GameObject firstCategoryButton;
+    [Header("Navigation & Setup")]
+    [SerializeField] private GameObject firstGauntletSlot; // E.g., Primary Slot 1
 
-    private GameObject _lastSelectedGridItem; // Remembers our spot in the grid
-    private bool _isUsingGamepad; // Tracks which device the player is currently touching
-    private GameObject _lastSelectedCategoryTab;
+    [Tooltip("Drag your Gauntlet Primary parent object here")]
+    [SerializeField] private Transform primaryGauntlet;
+    [Tooltip("Drag your Gauntlet Secondary parent object here")]
+    [SerializeField] private Transform secondaryGauntlet;
+
+    private GameObject _lastSelectedSlot;
+
+    private void Start()
+    {
+        // Dynamically wire up the Mouse Hover events for all slots!
+        SetupHoverEvents(primaryGauntlet);
+        SetupHoverEvents(secondaryGauntlet);
+    }
+
+    private void SetupHoverEvents(Transform gauntletParent)
+    {
+        if (gauntletParent == null) return;
+
+        foreach (Transform child in gauntletParent)
+        {
+            // Only attach hover events to the actual finger slots!
+            if (child.name.Contains("Slot"))
+            {
+                EventTrigger trigger = child.GetComponent<EventTrigger>();
+                if (trigger == null) trigger = child.gameObject.AddComponent<EventTrigger>();
+
+                EventTrigger.Entry entry = new EventTrigger.Entry();
+                entry.eventID = EventTriggerType.PointerEnter;
+                entry.callback.AddListener((data) => {
+                    _lastSelectedSlot = child.gameObject; // Sync it up so the controller doesn't fight it
+                    UpdateDetailsPanel(child.gameObject);
+                });
+                trigger.triggers.Add(entry);
+            }
+        }
+    }
 
     private void OnEnable()
     {
-        // 1. Always reset to the top layer when the menu opens
-        _currentState = UpgradeMenuState.Category;
+        // When opened normally, show Details, hide Rewards
+        rightSideDetails.SetActive(true);
+        rightSideRewards.SetActive(false);
 
-        // 2. Only force the controller highlight if they are actively using a Gamepad
-        if (Gamepad.current != null)
+        // Give controller focus to the first gauntlet slot
+        if (Gamepad.current != null && firstGauntletSlot != null && EventSystem.current != null)
         {
-            _isUsingGamepad = true;
-            SetFocus(firstCategoryButton);
-        }
-        else
-        {
-            _isUsingGamepad = false;
-            SetFocus(null);
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstGauntletSlot);
         }
     }
 
     private void Update()
     {
-        HandleInputDetection();
-
-        // --- NEW: Constantly track which Tab we are hovering over! ---
-        if (_currentState == UpgradeMenuState.Category && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
-        {
-            _lastSelectedCategoryTab = EventSystem.current.currentSelectedGameObject;
-        }
-
-        // Listen for the "Back / Cancel" button
-        bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
-                             (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
-
-        // NEW: Only cancel the grid if the Popup Menu is closed!
-        if (cancelPressed && (GemPopupMenu.Instance == null || !GemPopupMenu.Instance.gameObject.activeInHierarchy))
-        {
-            HandleCancelInput();
-        }
-
-        // --- THE ELECTRIC FENCE ---
-        if (_currentState == UpgradeMenuState.Grid && EventSystem.current != null &&
-           (GemPopupMenu.Instance == null || !GemPopupMenu.Instance.gameObject.activeInHierarchy))
+        // Controller Navigation Update
+        if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
 
-            if (currentSel != null)
+            // Only update the panel if the controller is actually highlighting a Slot!
+            if (currentSel != null && currentSel.name.Contains("Slot"))
             {
-                if (!currentSel.transform.IsChildOf(_activeGridContainer))
-                {
-                    SetFocus(_lastSelectedGridItem);
-                }
-                else
-                {
-                    _lastSelectedGridItem = currentSel;
-                }
+                _lastSelectedSlot = currentSel;
+                UpdateDetailsPanel(_lastSelectedSlot);
             }
+        }
+
+        // Handle backing out (East/Escape)
+        bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                             (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+
+        // Only allow backing out to the pause menu if we are in Details mode
+        if (cancelPressed && rightSideDetails.activeSelf)
+        {
+            gameObject.SetActive(false);
         }
     }
 
-    private void HandleInputDetection()
+    private void UpdateDetailsPanel(GameObject slot)
     {
-        // Switch TO Gamepad
-        if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
+        if (slot == null) return;
+
+        // Check if the highlighted slot actually has a gem inside it
+        DraggableGem equippedGem = slot.GetComponentInChildren<DraggableGem>();
+
+        if (equippedGem != null)
         {
-            if (!_isUsingGamepad)
+            detailNameText.text = equippedGem.gemName;
+            detailDescriptionText.text = equippedGem.gemDescription;
+
+            if (detailIcon != null)
             {
-                _isUsingGamepad = true;
-
-                // Immediately highlight the correct layer based on where the player was!
-                if (_currentState == UpgradeMenuState.Category)
-                    SetFocus(firstCategoryButton);
-                else if (_currentState == UpgradeMenuState.Grid && _lastSelectedGridItem != null)
-                    SetFocus(_lastSelectedGridItem);
+                detailIcon.sprite = equippedGem.gemIcon;
+                detailIcon.color = Color.white;
             }
-        }
-        // Switch TO Keyboard/Mouse
-        else if ((Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) ||
-                 (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f))
-        {
-            if (_isUsingGamepad)
-            {
-                _isUsingGamepad = false;
-
-                // Clear the controller highlight so the mouse can freely hover and click
-                SetFocus(null);
-            }
-        }
-    }
-
-    private void HandleCancelInput()
-    {
-        switch (_currentState)
-        {
-            case UpgradeMenuState.Grid:
-                // Leave the gem grid, return focus to the specific tab we just came from!
-                _currentState = UpgradeMenuState.Category;
-
-                if (_isUsingGamepad)
-                {
-                    SetFocus(_lastSelectedCategoryTab != null ? _lastSelectedCategoryTab : firstCategoryButton);
-                }
-                break;
-
-            case UpgradeMenuState.Category:
-                // We are at the top level. Tell the main pause menu to close us!
-                onExitUpgradeRequested?.Invoke();
-                break;
-        }
-    }
-
-    // --- BUTTON EVENT: Call this when pressing South/Enter on a Category Text ---
-    public void EnterGrid(Transform gridContainer)
-    {
-        // Safety Check: Are there actually gems in this category?
-        if (gridContainer.childCount > 0)
-        {
-            _currentState = UpgradeMenuState.Grid;
-
-            _activeGridContainer = gridContainer;
-
-            // Grab the very first gem in the list at runtime
-            GameObject firstGem = gridContainer.GetChild(0).gameObject;
-            _lastSelectedGridItem = firstGem; // Store it in memory immediately
-
-            // Give the controller the cursor
-            if (_isUsingGamepad) SetFocus(firstGem);
         }
         else
         {
-            Debug.Log("This inventory is empty! Cannot enter grid.");
-        }
-    }
+            // The slot is empty!
+            detailNameText.text = "Empty Slot";
+            detailDescriptionText.text = "No gem equipped here.";
 
-    // --- HELPER METHOD ---
-    private void SetFocus(GameObject target)
-    {
-        if (EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            if (target != null)
+            if (detailIcon != null)
             {
-                EventSystem.current.SetSelectedGameObject(target);
+                detailIcon.color = Color.clear; // Hide the icon image completely
             }
         }
     }

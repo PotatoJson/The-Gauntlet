@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.EventSystems;
+using UnityEngine.Events;
 
 [ExecuteInEditMode]
-public class ProgressBarCircle : MonoBehaviour
+public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHandler
 {
     [Header("Level & EXP Settings")]
     public int currentLevel = 1;
@@ -21,8 +23,15 @@ public class ProgressBarCircle : MonoBehaviour
 
     private Sequence _expSequence;
 
+    [Header("Reward Menu Link")]
+    public UnityEvent onRewardReadyClicked; // We will link this to the Reward Menu in the Inspector!
+
+    private int _pendingLevelUps = 0;
+    private Tween _pulseTween;
+
     // NEW: Variable to remember your text's exact starting size!
     private Vector3 _originalTextScale;
+    private Vector3 _originalBarScale;
 
     private void Awake()
     {
@@ -35,6 +44,8 @@ public class ProgressBarCircle : MonoBehaviour
         {
             _originalTextScale = txtLevel.transform.localScale;
         }
+
+        _originalBarScale = transform.localScale;
     }
 
     private void Start()
@@ -56,6 +67,16 @@ public class ProgressBarCircle : MonoBehaviour
         currentExp = newExp;
         int previousLevel = currentLevel;
         currentLevel += levelsGained;
+
+        _pendingLevelUps += levelsGained;
+
+        if (_pulseTween == null || !_pulseTween.IsActive())
+        {
+            _pulseTween = transform.DOScale(_originalBarScale * 1.05f, 0.6f)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetUpdate(true); 
+        }
 
         _expSequence?.Kill();
         _expSequence = DOTween.Sequence();
@@ -161,6 +182,7 @@ public class ProgressBarCircle : MonoBehaviour
             UpdateVisualsInstantly();
             // Continuously update the baseline scale while you are tweaking in the editor
             if (txtLevel != null) _originalTextScale = txtLevel.transform.localScale;
+            _originalBarScale = transform.localScale;
         }
     }
 
@@ -169,4 +191,35 @@ public class ProgressBarCircle : MonoBehaviour
         _expSequence?.Kill();
         if (txtLevel != null) txtLevel.transform.DOKill();
     }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        TryOpenRewardMenu();
+    }
+
+    public void OnSubmit(BaseEventData eventData)
+    {
+        TryOpenRewardMenu();
+    }
+
+    private void TryOpenRewardMenu()
+    {
+        if (_pendingLevelUps > 0)
+        {
+            _pendingLevelUps--;
+
+            // If no more levels are pending, stop the pulsing animation
+            if (_pendingLevelUps <= 0)
+            {
+                _pulseTween?.Kill();
+                transform.localScale = Vector3.one;
+
+                transform.localScale = _originalBarScale;
+            }
+
+            // Tell the Reward Menu to open!
+            onRewardReadyClicked?.Invoke();
+        }
+    }
+
 }
