@@ -116,6 +116,23 @@ public class PlayerCamera : MonoBehaviour
             _originalPivotHeight = cameraPivotTransform.localPosition.y;
     }
 
+    private void Update()
+    {
+        if (playerTarget == null)
+        {
+            GameObject newPlayer = GameObject.FindGameObjectWithTag("Player");
+            if (newPlayer != null)
+            {
+                playerTarget = newPlayer.transform;
+            }
+        }
+        
+        if (_switchTimer > 0)
+        {
+            _switchTimer -= Time.deltaTime;
+        }
+    }
+
     public void SetMouseSensitivity(float newSensitivity)
     {
         mouseSensitivityMultiplier = newSensitivity;
