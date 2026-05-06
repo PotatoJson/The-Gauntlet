@@ -653,6 +653,8 @@ MonoBehaviour:
   detailDescriptionText: {fileID: 4275269375771771276}
   detailIcon: {fileID: 8076516592670857075}
   firstGauntletSlot: {fileID: 3247526992003344101}
+  primaryGauntlet: {fileID: 3061550364389887839}
+  secondaryGauntlet: {fileID: 4770017980433496106}
 --- !u!114 &1125904845653065177
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -678,17 +680,6 @@ MonoBehaviour:
   rewardIcon: {fileID: 3410627135249304389}
   warningPanel: {fileID: 8146390709755630736}
   warningCancelButton: {fileID: 4513341800473898191}
-  gauntletSlots:
-  - {fileID: 1997883962833897368}
-  - {fileID: 911530790641203284}
-  - {fileID: 7338035506842709391}
-  - {fileID: 669565443928334876}
-  - {fileID: 983293460162208863}
-  - {fileID: 7334840101520404946}
-  - {fileID: 5227127593346246024}
-  - {fileID: 3765537202575400985}
-  - {fileID: 1112867326112194924}
-  - {fileID: 7815376338525911136}
 --- !u!1 &663428495158935997
 GameObject:
   m_ObjectHideFlags: 0
@@ -1734,6 +1725,7 @@ GameObject:
   - component: {fileID: 5817880978103056912}
   - component: {fileID: 181275890350962556}
   - component: {fileID: 1997883962833897368}
+  - component: {fileID: 1083982911018926297}
   m_Layer: 5
   m_Name: Slot1
   m_TagString: Untagged
@@ -1821,7 +1813,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -1842,6 +1834,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1083982911018926297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3247526992003344101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &3383828120997885946
 GameObject:
   m_ObjectHideFlags: 0
@@ -2066,6 +2070,7 @@ GameObject:
   - component: {fileID: 2458018304073643035}
   - component: {fileID: 4247652438856709345}
   - component: {fileID: 2066990914166588842}
+  - component: {fileID: 1303971732793964057}
   m_Layer: 5
   m_Name: Gem Holder
   m_TagString: Untagged
@@ -2154,6 +2159,18 @@ MonoBehaviour:
   m_Spacing: {x: 50, y: 50}
   m_Constraint: 1
   m_ConstraintCount: 3
+--- !u!114 &1303971732793964057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3535413865313757829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ec38c6cbf57b584f8fa1a8df9d64a0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &3851068802552103173
 GameObject:
   m_ObjectHideFlags: 0
@@ -2166,6 +2183,7 @@ GameObject:
   - component: {fileID: 2959732704134530104}
   - component: {fileID: 9047046834264084396}
   - component: {fileID: 3765537202575400985}
+  - component: {fileID: 6231770099251400043}
   m_Layer: 5
   m_Name: Slot3
   m_TagString: Untagged
@@ -2253,7 +2271,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -2274,6 +2292,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6231770099251400043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3851068802552103173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &3986415683705590306
 GameObject:
   m_ObjectHideFlags: 0
@@ -2898,6 +2928,7 @@ GameObject:
   - component: {fileID: 3772744931217228406}
   - component: {fileID: 3354727558243779623}
   - component: {fileID: 7334840101520404946}
+  - component: {fileID: 7935952496734335892}
   m_Layer: 5
   m_Name: Slot1
   m_TagString: Untagged
@@ -2985,7 +3016,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -3006,6 +3037,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7935952496734335892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4755097436516240989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &5128753296780737272
 GameObject:
   m_ObjectHideFlags: 0
@@ -3091,7 +3134,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &3457728405691378509
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3162,6 +3205,7 @@ GameObject:
   - component: {fileID: 7035635672126108084}
   - component: {fileID: 5803486506495216051}
   - component: {fileID: 7815376338525911136}
+  - component: {fileID: 7290072949354577890}
   m_Layer: 5
   m_Name: Slot5
   m_TagString: Untagged
@@ -3249,7 +3293,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -3270,6 +3314,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7290072949354577890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5392687353549311106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &5429042248689205241
 GameObject:
   m_ObjectHideFlags: 0
@@ -3357,6 +3413,7 @@ GameObject:
   - component: {fileID: 1166045768392058415}
   - component: {fileID: 7313313266253841945}
   - component: {fileID: 983293460162208863}
+  - component: {fileID: 1319766783756499336}
   m_Layer: 5
   m_Name: Slot5
   m_TagString: Untagged
@@ -3444,7 +3501,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -3465,6 +3522,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1319766783756499336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6047289092576780785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &6121617092910013725
 GameObject:
   m_ObjectHideFlags: 0
@@ -3967,6 +4036,7 @@ GameObject:
   - component: {fileID: 7954776106404268757}
   - component: {fileID: 4213069168289753334}
   - component: {fileID: 911530790641203284}
+  - component: {fileID: 44576109661028788}
   m_Layer: 5
   m_Name: Slot2
   m_TagString: Untagged
@@ -4054,7 +4124,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -4075,6 +4145,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &44576109661028788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6511671883163290355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &6715758798475793791
 GameObject:
   m_ObjectHideFlags: 0
@@ -4138,6 +4220,7 @@ GameObject:
   - component: {fileID: 811240945643364460}
   - component: {fileID: 4035649629530803933}
   - component: {fileID: 7338035506842709391}
+  - component: {fileID: 1921209774962786264}
   m_Layer: 5
   m_Name: Slot3
   m_TagString: Untagged
@@ -4225,7 +4308,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -4246,6 +4329,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1921209774962786264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7139943149527724283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &7235496289264609429
 GameObject:
   m_ObjectHideFlags: 0
@@ -4391,6 +4486,7 @@ GameObject:
   - component: {fileID: 3493944793489232292}
   - component: {fileID: 5766863285617695791}
   - component: {fileID: 1112867326112194924}
+  - component: {fileID: 6853122299069254201}
   m_Layer: 5
   m_Name: Slot4
   m_TagString: Untagged
@@ -4478,7 +4574,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -4499,6 +4595,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6853122299069254201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7369766373735466867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &7472330755184630106
 GameObject:
   m_ObjectHideFlags: 0
@@ -4598,7 +4706,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3026937191011435643
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4671,6 +4779,7 @@ GameObject:
   - component: {fileID: 4439301052251031567}
   - component: {fileID: 8051628020782748994}
   - component: {fileID: 5227127593346246024}
+  - component: {fileID: 5078607779480146336}
   m_Layer: 5
   m_Name: Slot2
   m_TagString: Untagged
@@ -4758,7 +4867,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -4779,6 +4888,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5078607779480146336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7692731941639018290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &7743708845934675675
 GameObject:
   m_ObjectHideFlags: 0
@@ -5110,6 +5231,7 @@ GameObject:
   - component: {fileID: 1662705588688635571}
   - component: {fileID: 3391623296597814857}
   - component: {fileID: 669565443928334876}
+  - component: {fileID: 949131612568621852}
   m_Layer: 5
   m_Name: Slot4
   m_TagString: Untagged
@@ -5197,7 +5319,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
-    m_PressedColor: {r: 1, g: 0, b: 0, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 1, g: 0, b: 0, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -5218,6 +5340,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &949131612568621852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8135419831592059356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
 --- !u!1 &8146390709755630736
 GameObject:
   m_ObjectHideFlags: 0
@@ -11818,7 +11952,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3481280668718800119, guid: 9015524ded65f4a49b2e9e65e0f481fd, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3616496304553899067, guid: 9015524ded65f4a49b2e9e65e0f481fd, type: 3}
       propertyPath: m_Pivot.x
