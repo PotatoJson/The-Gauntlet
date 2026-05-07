@@ -34,9 +34,9 @@ public class RewardMenuManager : MonoBehaviour
 
     private GameObject _lastSelectedReward;
     private bool _isWarningActive = false;
-
-    // --- NEW: Lock Tracking ---
     private DraggableGem _currentlySlottedGem;
+
+    private bool _isOverflowMode = false;
 
     private void Awake()
     {
@@ -51,6 +51,9 @@ public class RewardMenuManager : MonoBehaviour
     // Checks if a gem is allowed to be picked up
     public bool CanDragGem(DraggableGem gem)
     {
+        if (_isOverflowMode) return true;
+
+        // Otherwise, apply the strict Level-Up Reward lock
         return _currentlySlottedGem == null || _currentlySlottedGem == gem;
     }
 
@@ -81,7 +84,9 @@ public class RewardMenuManager : MonoBehaviour
         _isWarningActive = false;
         _currentlySlottedGem = null;
 
-        if (menuTitleText != null) menuTitleText.text = "Gauntlet Overflow";
+        _isOverflowMode = true;
+
+        if (menuTitleText != null) menuTitleText.text = "Gem Holder";
         if (warningBodyText != null) warningBodyText.text = "Discard unequipped gems permanently?";
 
         // Clean out the holder first
@@ -128,6 +133,7 @@ public class RewardMenuManager : MonoBehaviour
         if (warningPanel != null) warningPanel.SetActive(false);
         _isWarningActive = false;
         _currentlySlottedGem = null;
+        _isOverflowMode = false;
 
         // Reset text for standard level ups
         if (menuTitleText != null) menuTitleText.text = "Choose a Reward";

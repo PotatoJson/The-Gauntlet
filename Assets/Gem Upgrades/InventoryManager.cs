@@ -14,9 +14,15 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private GameObject rightSideRewards;
 
     [Header("Swap Mode UI")]
-    [SerializeField] private GameObject swapOverlayPanel; // A dark transparent panel covering the screen
-    [SerializeField] private GameObject replacePrimaryBtn; // Invisible button covering the left gauntlet
-    [SerializeField] private GameObject replaceSecondaryBtn; // Invisible button covering the right gauntlet
+    [SerializeField] private GameObject swapOverlayPanel;
+    [SerializeField] private GameObject replacePrimaryBtn;
+    [SerializeField] private GameObject replaceSecondaryBtn;
+
+    [Header("Warning Dialog UI")]
+    [SerializeField] private GameObject warningPanel;
+    [SerializeField] private Button warningConfirmBtn;
+    [SerializeField] private Button warningCancelBtn;
+    [SerializeField] private TMP_Text warningBodyText;
 
     [Header("Details Panel UI")]
     [SerializeField] private TMP_Text detailNameText;
@@ -30,7 +36,9 @@ public class InventoryManager : MonoBehaviour
 
     private GameObject _lastSelectedSlot;
     private GameObject _pendingGauntletPrefab;
+    private bool _isWarningActive = false;
 
+    private GauntletManager.GauntletRarity _pendingGauntletRarity;
     private void Awake()
     {
         Instance = this;
@@ -41,48 +49,45 @@ public class InventoryManager : MonoBehaviour
         SetupHoverEvents(primaryGauntlet);
         SetupHoverEvents(secondaryGauntlet);
         if (swapOverlayPanel != null) swapOverlayPanel.SetActive(false);
+        if (warningPanel != null) warningPanel.SetActive(false);
     }
 
-    // --- NEW: THE EQUIP PIPELINE ---
-
-    public void TryEquipNewGauntlet(GameObject gauntletPrefab)
+    public void TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletManager.GauntletRarity rarity)
     {
-        // 1. Is the Primary Slot empty? (No Gauntlet child)
         if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
-            Instantiate(gauntletPrefab, primaryGauntlet);
+            GameObject newGauntlet = Instantiate(gauntletPrefab, primaryGauntlet);
+            // UPDATE: Pass the rarity!
+            newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(true, rarity);
             SetupHoverEvents(primaryGauntlet);
             return;
         }
 
-        // 2. Is the Secondary Slot empty?
         if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
-            Instantiate(gauntletPrefab, secondaryGauntlet);
+            GameObject newGauntlet = Instantiate(gauntletPrefab, secondaryGauntlet);
+            // UPDATE: Pass the rarity!
+            newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(false, rarity);
             SetupHoverEvents(secondaryGauntlet);
             return;
         }
 
-        // 3. Both are full! Ask the player which one to destroy.
-        BeginGauntletSwap(gauntletPrefab);
+        // UPDATE: Pass the rarity into the swap phase
+        BeginGauntletSwap(gauntletPrefab, rarity);
     }
 
-    private void BeginGauntletSwap(GameObject prefab)
+    private void BeginGauntletSwap(GameObject prefab, GauntletManager.GauntletRarity rarity)
     {
         _pendingGauntletPrefab = prefab;
-
+        _pendingGauntletRarity = rarity; // REMEMBER IT!
         Time.timeScale = 0f;
 
-        // Open the character screen and turn on the Swap Overlay!
         gameObject.SetActive(true);
         rightSideDetails.SetActive(true);
         rightSideRewards.SetActive(false);
-
         swapOverlayPanel.SetActive(true);
-
         swapOverlayPanel.transform.SetAsLastSibling();
 
-        // Give controller focus to the "Replace Primary" button so they can choose
         if (Gamepad.current != null && replacePrimaryBtn != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -90,74 +95,74 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    // Call this from the OnClick of your 'ReplacePrimaryBtn'
     public void OnReplacePrimaryClicked() { ExecuteGauntletSwap(true); }
-
-    // Call this from the OnClick of your 'ReplaceSecondaryBtn'
     public void OnReplaceSecondaryClicked() { ExecuteGauntletSwap(false); }
 
     private void ExecuteGauntletSwap(bool isPrimary)
     {
         Transform targetContainer = isPrimary ? primaryGauntlet : secondaryGauntlet;
         GauntletManager oldManager = targetContainer.GetComponentInChildren<GauntletManager>();
+
         List<GameObject> gemsToTransfer = new List<GameObject>();
 
         if (oldManager != null)
         {
-            // 1. Extract all gems from the old gauntlet
-            for (int i = 0; i < oldManager.fingerSlots.Count; i++)
+            for (int i = 0; i < oldManager.currentActiveSlots; i++)
             {
                 Transform slot = oldManager.fingerSlots[i].transform;
                 if (slot.childCount > 0)
                 {
-                    GameObject gem = slot.GetChild(0).gameObject;
-                    gem.transform.SetParent(this.transform); // Hold temporarily
-                    gemsToTransfer.Add(gem);
-                }
-                else
-                {
-                    gemsToTransfer.Add(null); // Keep the exact index alignment!
+                    DraggableGem gemScript = slot.GetChild(0).GetComponent<DraggableGem>();
+                    if (gemScript != null && gemScript.originalPrefab != null)
+                    {
+                        gemsToTransfer.Add(gemScript.originalPrefab);
+                    }
                 }
             }
-
-            // Disable and destroy the old gauntlet
             oldManager.gameObject.SetActive(false);
-            oldManager.name = "DEAD_GAUNTLET";
             Destroy(oldManager.gameObject);
         }
 
-        // 2. Spawn the new gauntlet
         GameObject newGauntlet = Instantiate(_pendingGauntletPrefab, targetContainer);
         GauntletManager newManager = newGauntlet.GetComponent<GauntletManager>();
 
-        // 3. Jam the gems into the new physical slots! 
-        // (Even if the new gauntlet has fewer 'active' slots, we put them in the physical UI slots. 
-        // When the newManager's Start() method runs in a split second, it will automatically 
-        // detect the overflow and open the Reward Screen for us!)
+        // UPDATE: Pass the remembered rarity into the new gauntlet!
+        newManager.InitializeGauntlet(isPrimary, _pendingGauntletRarity);
+
+        List<GameObject> overflowGems = new List<GameObject>();
+        int availableSlots = newManager.currentActiveSlots;
+
         for (int i = 0; i < gemsToTransfer.Count; i++)
         {
-            GameObject gem = gemsToTransfer[i];
-            if (gem != null && i < newManager.fingerSlots.Count)
+            if (i < availableSlots)
             {
-                gem.transform.SetParent(newManager.fingerSlots[i].transform);
-                gem.transform.localPosition = Vector3.zero;
-                gem.GetComponent<RectTransform>().sizeDelta = newManager.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+                GameObject newlySpawnedGem = Instantiate(gemsToTransfer[i], newManager.fingerSlots[i].transform);
+                newlySpawnedGem.GetComponent<RectTransform>().sizeDelta = newManager.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+
+                Image slotImage = newManager.fingerSlots[i].GetComponent<Image>();
+                Image gemImage = newlySpawnedGem.GetComponent<Image>();
+                if (slotImage != null && gemImage != null) slotImage.color = gemImage.color;
+            }
+            else
+            {
+                overflowGems.Add(gemsToTransfer[i]);
             }
         }
 
-        // 4. Clean up and restore UI
         SetupHoverEvents(targetContainer);
         swapOverlayPanel.SetActive(false);
         _pendingGauntletPrefab = null;
 
-        // Give focus back to normal inventory navigation
-        if (Gamepad.current != null && firstGauntletSlot != null && EventSystem.current != null)
+        if (RewardMenuManager.Instance != null)
         {
-            EventSystem.current.SetSelectedGameObject(firstGauntletSlot);
+            RewardMenuManager.Instance.OpenOverflowMenu(overflowGems);
+        }
+        else
+        {
+            Debug.LogWarning("RewardMenuManager Instance is missing! Closing menu instead.");
+            TryCloseCharacterScreen();
         }
     }
-
-    // --- STANDARD INVENTORY LOGIC ---
 
     private void SetupHoverEvents(Transform gauntletParent)
     {
@@ -170,8 +175,11 @@ public class InventoryManager : MonoBehaviour
                 EventTrigger.Entry entry = new EventTrigger.Entry();
                 entry.eventID = EventTriggerType.PointerEnter;
                 entry.callback.AddListener((data) => {
-                    _lastSelectedSlot = child.gameObject;
-                    UpdateDetailsPanel(child.gameObject);
+                    if (!_isWarningActive)
+                    {
+                        _lastSelectedSlot = child.gameObject;
+                        UpdateDetailsPanel(child.gameObject);
+                    }
                 });
                 trigger.triggers.Add(entry);
             }
@@ -180,7 +188,7 @@ public class InventoryManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (swapOverlayPanel != null && !swapOverlayPanel.activeSelf)
+        if (swapOverlayPanel != null && !swapOverlayPanel.activeSelf && !_isWarningActive)
         {
             rightSideDetails.SetActive(true);
             rightSideRewards.SetActive(false);
@@ -195,27 +203,28 @@ public class InventoryManager : MonoBehaviour
 
     private void Update()
     {
-        // Cancel logic (Esc / East Button)
         bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                              (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
 
         if (cancelPressed)
         {
-            if (swapOverlayPanel.activeSelf)
+            if (_isWarningActive)
             {
-                // Cancel the swap entirely!
+                CancelClose();
+            }
+            else if (swapOverlayPanel.activeSelf)
+            {
                 swapOverlayPanel.SetActive(false);
                 _pendingGauntletPrefab = null;
-                gameObject.SetActive(false);
+                TryCloseCharacterScreen();
             }
             else if (rightSideDetails.activeSelf)
             {
-                gameObject.SetActive(false);
+                TryCloseCharacterScreen();
             }
         }
 
-        // Standard controller hover logic (Disable if swapping!)
-        if (!swapOverlayPanel.activeSelf && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
+        if (!swapOverlayPanel.activeSelf && !_isWarningActive && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
             if (currentSel != null && currentSel.name.Contains("Slot"))
@@ -242,6 +251,64 @@ public class InventoryManager : MonoBehaviour
             detailNameText.text = "Empty Slot";
             detailDescriptionText.text = "No gem equipped here.";
             if (detailIcon != null) detailIcon.color = Color.clear;
+        }
+    }
+
+    // --- NEW: CENTRALIZED CLOSE AND WARNING LOGIC ---
+
+    // Call this explicitly from your UI 'Return' button!
+    public void TryCloseCharacterScreen()
+    {
+        _isWarningActive = true;
+        warningPanel.SetActive(true);
+
+        if (warningBodyText != null)
+            warningBodyText.text = "Are you sure you want to leave the inventory?";
+
+        // Dynamically wire the buttons so they don't conflict with RewardMenuManager
+        warningConfirmBtn.onClick.RemoveAllListeners();
+        warningConfirmBtn.onClick.AddListener(ConfirmClose);
+
+        warningCancelBtn.onClick.RemoveAllListeners();
+        warningCancelBtn.onClick.AddListener(CancelClose);
+
+        if (Gamepad.current != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(warningCancelBtn.gameObject);
+        }
+    }
+
+    public void CancelClose()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
+
+        if (Gamepad.current != null && _lastSelectedSlot != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(_lastSelectedSlot);
+        }
+    }
+
+    public void ConfirmClose()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
+
+        // Find the Gauntlet Menu to see if we came from the Pause Screen
+        GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
+
+        if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
+        {
+            // We opened it from the pause menu, return control to it safely!
+            gauntletMenu.CloseUpgradeMenu();
+        }
+        else
+        {
+            // We opened it from gameplay via the Debug Swap, just close and unpause!
+            gameObject.SetActive(false);
+            Time.timeScale = 1f;
         }
     }
 }
