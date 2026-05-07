@@ -181,7 +181,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3024334567483211732}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 9169751266827448169}
+        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+        m_MethodName: TryCloseCharacterScreen
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &104260036799141377
 GameObject:
   m_ObjectHideFlags: 0
@@ -709,7 +721,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3908608486733493520
 RectTransform:
   m_ObjectHideFlags: 0
@@ -790,6 +802,10 @@ MonoBehaviour:
   swapOverlayPanel: {fileID: 1656206607129844721}
   replacePrimaryBtn: {fileID: 826068989413014531}
   replaceSecondaryBtn: {fileID: 7808048196876291829}
+  warningPanel: {fileID: 8146390709755630736}
+  warningConfirmBtn: {fileID: 4650149000735318311}
+  warningCancelBtn: {fileID: 813024655026093935}
+  warningBodyText: {fileID: 2959473120623477224}
   detailNameText: {fileID: 1224035925030585439}
   detailDescriptionText: {fileID: 4275269375771771276}
   detailIcon: {fileID: 8076516592670857075}
@@ -5453,9 +5469,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4321778118194152076}
-        m_TargetAssemblyTypeName: GauntletMenu, Assembly-CSharp
-        m_MethodName: CloseUpgradeMenu
+      - m_Target: {fileID: 9169751266827448169}
+        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+        m_MethodName: TryCloseCharacterScreen
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
