@@ -28,6 +28,10 @@ public class RewardMenuManager : MonoBehaviour
     [SerializeField] private GameObject warningPanel;
     [SerializeField] private GameObject warningCancelButton;
 
+    [Header("UI Text Overrides")]
+    [SerializeField] private TMP_Text menuTitleText; // Drag your "Rewards" title text here!
+    [SerializeField] private TMP_Text warningBodyText; // Drag the text inside your Warning Panel here
+
     private GameObject _lastSelectedReward;
     private bool _isWarningActive = false;
 
@@ -65,6 +69,54 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
+    public void OpenOverflowMenu(List<GameObject> overflowGemPrefabs)
+    {
+        Time.timeScale = 0f;
+
+        characterScreenRoot.SetActive(true);
+        rightSideDetails.SetActive(false);
+        rightSideRewards.SetActive(true);
+
+        if (warningPanel != null) warningPanel.SetActive(false);
+        _isWarningActive = false;
+        _currentlySlottedGem = null;
+
+        if (menuTitleText != null) menuTitleText.text = "Gauntlet Overflow";
+        if (warningBodyText != null) warningBodyText.text = "Discard unequipped gems permanently?";
+
+        // Clean out the holder first
+        foreach (Transform child in gemHolder) { Destroy(child.gameObject); }
+
+        GameObject firstSpawnedGem = null;
+
+        // Spawn the specific overflow gems!
+        foreach (GameObject gemPrefab in overflowGemPrefabs)
+        {
+            GameObject spawnedGem = Instantiate(gemPrefab, gemHolder);
+            if (firstSpawnedGem == null) firstSpawnedGem = spawnedGem;
+
+            DraggableGem dragScript = spawnedGem.GetComponent<DraggableGem>();
+            if (dragScript != null) dragScript.enabled = true;
+
+            Button btn = spawnedGem.GetComponent<Button>();
+            if (btn != null) btn.onClick.RemoveAllListeners();
+
+            EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
+
+            EventTrigger.Entry entry = new EventTrigger.Entry();
+            entry.eventID = EventTriggerType.PointerEnter;
+            entry.callback.AddListener((data) => { UpdateSmallDescription(spawnedGem); });
+            trigger.triggers.Add(entry);
+        }
+
+        if (Gamepad.current != null && firstSpawnedGem != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstSpawnedGem);
+        }
+    }
+
     public void OpenRewardMenu()
     {
         Time.timeScale = 0f;
@@ -76,6 +128,10 @@ public class RewardMenuManager : MonoBehaviour
         if (warningPanel != null) warningPanel.SetActive(false);
         _isWarningActive = false;
         _currentlySlottedGem = null;
+
+        // Reset text for standard level ups
+        if (menuTitleText != null) menuTitleText.text = "Choose a Reward";
+        if (warningBodyText != null) warningBodyText.text = "Leave without taking a reward?";
 
         GenerateRewards();
     }

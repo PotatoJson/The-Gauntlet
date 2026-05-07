@@ -26,6 +26,8 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private bool _canDrag = true;
     private Vector2 _originalSizeDelta;
 
+    public GameObject originalPrefab;
+
     private void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
