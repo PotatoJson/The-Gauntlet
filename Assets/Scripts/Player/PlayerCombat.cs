@@ -94,8 +94,8 @@ public class PlayerCombat : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        if(LeftGauntletData != null) _leftGauntlet = new RunTimeGauntlet(LeftGauntletData);
-        if(RightGauntletData != null) _rightGauntlet = new RunTimeGauntlet(RightGauntletData);
+        if(LeftGauntletData != null) _leftGauntlet = new RunTimeGauntlet(LeftGauntletData, EquipSlot.Secondary);
+        if(RightGauntletData != null) _rightGauntlet = new RunTimeGauntlet(RightGauntletData, EquipSlot.Primary);
         CurrentStamina = MaxStamina;
         _internalStamina = MaxStamina;
         UpdateStaminaUI();

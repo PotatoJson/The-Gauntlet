@@ -196,7 +196,10 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleDeath()
     {
-        //maybe teleport player not sure what we doin for death yet
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+        transform.position = PlayerSpawn.transform.position;
+        if (cc != null) cc.enabled = true;
         Debug.Log("Death Test");
     }
     //private void BreakGuard()
