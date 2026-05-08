@@ -36,7 +36,6 @@ public class GauntletMenu : MonoBehaviour
     [Header("Settings Transition")]
     [SerializeField] private RectTransform settingsPanel;
     [SerializeField] private CanvasGroup mainButtonsGroup;
-    [SerializeField] private float transitionSpeed = 0.5f;
 
     [Header("Character Menu References")]
     [SerializeField] private GameObject characterScreenRoot;
@@ -47,8 +46,6 @@ public class GauntletMenu : MonoBehaviour
     private float _offscreenPosX;
     private Vector3 _originalGauntletScale;
     private Dictionary<RectTransform, Vector3> _originalButtonScales = new Dictionary<RectTransform, Vector3>();
-    private Vector2 _leftPosition = new Vector2(-867, 0);
-    private Vector3 _settingsRotation = new Vector3(0, 0, 90);
 
     private void Awake()
     {
@@ -263,22 +260,14 @@ public class GauntletMenu : MonoBehaviour
     {
         EventSystem.current.SetSelectedGameObject(null);
 
-        mainButtonsGroup.DOFade(0, 0.2f).SetUpdate(true);
-        mainButtonsGroup.interactable = false;
-        mainButtonsGroup.blocksRaycasts = false;
+        menuCanvas.SetActive(false);
 
-        Sequence settingsSequence = DOTween.Sequence();
-        settingsSequence.Join(gauntletImage.DOAnchorPos(_leftPosition, transitionSpeed).SetEase(Ease.InOutQuad));
-        settingsSequence.Join(gauntletImage.DORotate(_settingsRotation, transitionSpeed).SetEase(Ease.InOutQuad));
+        ShowSettingsPanel();
 
-        settingsSequence.OnComplete(() => {
-            ShowSettingsPanel();
-            if (Gamepad.current != null && settingsTabManager != null)
-            {
-                settingsTabManager.InitializeSettingsMenu();
-            }
-        });
-        settingsSequence.SetUpdate(true);
+        if (Gamepad.current != null && settingsTabManager != null)
+        {
+            settingsTabManager.InitializeSettingsMenu();
+        }
     }
 
     private void ShowSettingsPanel()
@@ -300,28 +289,18 @@ public class GauntletMenu : MonoBehaviour
             .OnComplete(() => {
                 settingsPanel.gameObject.SetActive(false);
 
-                Sequence returnSequence = DOTween.Sequence();
-                returnSequence.Join(gauntletImage.DOAnchorPos(Vector2.zero, transitionSpeed).SetEase(Ease.InOutQuad));
-                returnSequence.Join(gauntletImage.DORotate(Vector3.zero, transitionSpeed).SetEase(Ease.InOutQuad));
+                menuCanvas.SetActive(true);
 
-                returnSequence.OnComplete(() => {
-                    mainButtonsGroup.DOFade(1, 0.2f).SetUpdate(true);
-                    mainButtonsGroup.interactable = true;
-                    mainButtonsGroup.blocksRaycasts = true;
-                    StartBreathing();
+                StartBreathing();
 
-                    if (Gamepad.current != null && firstSelectedButton != null)
-                    {
-                        EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
-                    }
-                });
-
-                returnSequence.SetUpdate(true);
+                if (Gamepad.current != null && firstSelectedButton != null)
+                {
+                    EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
+                }
             });
     }
 
 
-    // Call this from the Upgrade Menu's "Return" Button OnClick() AND the Unity Event
     // Call this from the Pause Menu's "Upgrade/Character" Button OnClick()
     public void OpenUpgradeMenu()
     {
