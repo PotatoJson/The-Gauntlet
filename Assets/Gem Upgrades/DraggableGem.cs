@@ -7,7 +7,9 @@ using UnityEngine.UI;
 public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
 {
     [HideInInspector] public Transform parentAfterDrag;
-    [HideInInspector] public Transform originalInventoryGrid; // NEW: Remembers its specific category
+
+    [Tooltip("Can be null in the new Reward System!")]
+    [HideInInspector] public Transform originalInventoryGrid;
 
     [Header("Visuals")]
     [SerializeField] private Outline selectionOutline;
@@ -16,27 +18,47 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public string gemName = "Unknown Gem";
     [TextArea(3, 5)]
     public string gemDescription = "A mysterious gem with untold power.";
-    public Sprite gemIcon; // Drag the gem's image sprite here in the Inspector!
+    public Sprite gemIcon;
 
     private CanvasGroup _canvasGroup;
     private RectTransform _rectTransform;
+
+    private bool _canDrag = true;
+    private Vector2 _originalSizeDelta;
+
+    public GameObject originalPrefab;
 
     private void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
         _canvasGroup = GetComponent<CanvasGroup>();
+        _originalSizeDelta = _rectTransform.sizeDelta;
+
     }
 
     private void Start()
     {
-        // NEW: The moment the gem spawns, remember its starting inventory grid
         originalInventoryGrid = transform.parent;
-
         if (selectionOutline != null) selectionOutline.enabled = false;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // Check if we are in reward mode and if this gem is locked!
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+        {
+            if (!RewardMenuManager.Instance.CanDragGem(this))
+            {
+                _canDrag = false;
+
+                // Play the denied "Shake" animation
+                transform.DOKill();
+                transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true);
+                return;
+            }
+        }
+
+        _canDrag = true;
         parentAfterDrag = transform.parent;
         transform.SetParent(transform.root);
         transform.SetAsLastSibling();
@@ -49,11 +71,13 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnDrag(PointerEventData eventData)
     {
+        if (!_canDrag) return;
         _rectTransform.position = eventData.position;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (!_canDrag) return;
         transform.SetParent(parentAfterDrag);
         _canvasGroup.blocksRaycasts = true;
         _canvasGroup.alpha = 1f;
@@ -61,58 +85,68 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         AnimateToNewHome();
     }
 
+    public void ReturnToInventory()
+    {
+        if (originalInventoryGrid != null)
+        {
+            // THE FIX: Tell OnEndDrag that the new home is the inventory grid!
+            parentAfterDrag = originalInventoryGrid;
+
+            transform.SetParent(originalInventoryGrid);
+            _rectTransform.sizeDelta = _originalSizeDelta; // Reset to full size!
+            AnimateToNewHome();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Detect if it was a Right-Click
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // Tell the popup menu to open and pass this specific gem's data to it
-            if (GemPopupMenu.Instance != null)
-            {
-                GemPopupMenu.Instance.OpenMenu(this, _rectTransform);
-            }
+            ForceOpenPopUI();
+        }
+    }
+
+    // --- NEW: A public bridge for the Gauntlet Slots to call! ---
+    public void ForceOpenPopUI()
+    {
+        if (GemPopupMenu.Instance != null)
+        {
+            GemPopupMenu.Instance.OpenMenu(this, _rectTransform);
         }
     }
 
     public void AnimateToNewHome()
     {
-        // 1. Check if the new parent is a Grid/Layout Group
-        if (transform.parent.GetComponent<UnityEngine.UI.LayoutGroup>() == null)
+        if (transform.parent != null && transform.parent.GetComponent<UnityEngine.UI.LayoutGroup>() == null)
         {
-            // NOT a grid (it's a Gauntlet slot). Safe to do the slide animation!
             _rectTransform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.OutQuad).SetUpdate(true);
         }
 
-        // 2. The "Pop" Animation (This always runs, even in the grid!)
         transform.localScale = Vector3.one * 0.6f;
         transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack).SetUpdate(true);
     }
-    // --- CONTROLLER / KEYBOARD HIGHLIGHT LOGIC ---
 
     public void OnSelect(BaseEventData eventData)
     {
-        // Turned on when the EventSystem selects it (D-pad/Arrow keys)
         if (selectionOutline != null) selectionOutline.enabled = true;
     }
 
     public void OnDeselect(BaseEventData eventData)
     {
-        // Turned off when the cursor moves away
         if (selectionOutline != null) selectionOutline.enabled = false;
     }
 
-    // --- MOUSE HOVER LOGIC ---
-
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Turned on when the mouse hovers over it
         if (selectionOutline != null) selectionOutline.enabled = true;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Turned off when the mouse leaves... 
-        // BUT only if the controller isn't currently selecting it!
         if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != gameObject)
         {
             if (selectionOutline != null) selectionOutline.enabled = false;
@@ -121,10 +155,6 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnSubmit(BaseEventData eventData)
     {
-        if (GemPopupMenu.Instance != null)
-        {
-            GemPopupMenu.Instance.OpenMenu(this, _rectTransform);
-        }
+        ForceOpenPopUI();
     }
-
 }

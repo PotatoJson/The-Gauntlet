@@ -1,168 +1,314 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    // Simplified State Machine: Just the Headers and the Grid
-    public enum UpgradeMenuState { Category, Grid }
-    private Transform _activeGridContainer;
-    private UpgradeMenuState _currentState = UpgradeMenuState.Category;
+    public static InventoryManager Instance { get; private set; }
 
-    [Header("Events")]
-    public UnityEvent onExitUpgradeRequested; // Tells GauntletMenu to close us
+    [Header("Mode Panels")]
+    [SerializeField] private GameObject rightSideDetails;
+    [SerializeField] private GameObject rightSideRewards;
 
-    [Header("UI References")]
-    [Tooltip("Drag your 'Core' Text Button here")]
-    [SerializeField] private GameObject firstCategoryButton;
+    [Header("Swap Mode UI")]
+    [SerializeField] private GameObject swapOverlayPanel;
+    [SerializeField] private GameObject replacePrimaryBtn;
+    [SerializeField] private GameObject replaceSecondaryBtn;
 
-    private GameObject _lastSelectedGridItem; // Remembers our spot in the grid
-    private bool _isUsingGamepad; // Tracks which device the player is currently touching
-    private GameObject _lastSelectedCategoryTab;
+    [Header("Warning Dialog UI")]
+    [SerializeField] private GameObject warningPanel;
+    [SerializeField] private Button warningConfirmBtn;
+    [SerializeField] private Button warningCancelBtn;
+    [SerializeField] private TMP_Text warningBodyText;
 
-    private void OnEnable()
+    [Header("Details Panel UI")]
+    [SerializeField] private TMP_Text detailNameText;
+    [SerializeField] private TMP_Text detailDescriptionText;
+    [SerializeField] private Image detailIcon;
+
+    [Header("Navigation & Setup")]
+    [SerializeField] private GameObject firstGauntletSlot;
+    public Transform primaryGauntlet;
+    public Transform secondaryGauntlet;
+
+    private GameObject _lastSelectedSlot;
+    private GameObject _pendingGauntletPrefab;
+    private bool _isWarningActive = false;
+
+    private GauntletManager.GauntletRarity _pendingGauntletRarity;
+    private void Awake()
     {
-        // 1. Always reset to the top layer when the menu opens
-        _currentState = UpgradeMenuState.Category;
+        Instance = this;
+    }
 
-        // 2. Only force the controller highlight if they are actively using a Gamepad
-        if (Gamepad.current != null)
+    private void Start()
+    {
+        SetupHoverEvents(primaryGauntlet);
+        SetupHoverEvents(secondaryGauntlet);
+        if (swapOverlayPanel != null) swapOverlayPanel.SetActive(false);
+        if (warningPanel != null) warningPanel.SetActive(false);
+    }
+
+    public void TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletManager.GauntletRarity rarity)
+    {
+        if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
-            _isUsingGamepad = true;
-            SetFocus(firstCategoryButton);
+            GameObject newGauntlet = Instantiate(gauntletPrefab, primaryGauntlet);
+            // UPDATE: Pass the rarity!
+            newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(true, rarity);
+            SetupHoverEvents(primaryGauntlet);
+            return;
+        }
+
+        if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
+        {
+            GameObject newGauntlet = Instantiate(gauntletPrefab, secondaryGauntlet);
+            // UPDATE: Pass the rarity!
+            newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(false, rarity);
+            SetupHoverEvents(secondaryGauntlet);
+            return;
+        }
+
+        // UPDATE: Pass the rarity into the swap phase
+        BeginGauntletSwap(gauntletPrefab, rarity);
+    }
+
+    private void BeginGauntletSwap(GameObject prefab, GauntletManager.GauntletRarity rarity)
+    {
+        _pendingGauntletPrefab = prefab;
+        _pendingGauntletRarity = rarity; // REMEMBER IT!
+        Time.timeScale = 0f;
+
+        gameObject.SetActive(true);
+        rightSideDetails.SetActive(true);
+        rightSideRewards.SetActive(false);
+        swapOverlayPanel.SetActive(true);
+        swapOverlayPanel.transform.SetAsLastSibling();
+
+        if (Gamepad.current != null && replacePrimaryBtn != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(replacePrimaryBtn);
+        }
+    }
+
+    public void OnReplacePrimaryClicked() { ExecuteGauntletSwap(true); }
+    public void OnReplaceSecondaryClicked() { ExecuteGauntletSwap(false); }
+
+    private void ExecuteGauntletSwap(bool isPrimary)
+    {
+        Transform targetContainer = isPrimary ? primaryGauntlet : secondaryGauntlet;
+        GauntletManager oldManager = targetContainer.GetComponentInChildren<GauntletManager>();
+
+        List<GameObject> gemsToTransfer = new List<GameObject>();
+
+        if (oldManager != null)
+        {
+            for (int i = 0; i < oldManager.currentActiveSlots; i++)
+            {
+                Transform slot = oldManager.fingerSlots[i].transform;
+                if (slot.childCount > 0)
+                {
+                    DraggableGem gemScript = slot.GetChild(0).GetComponent<DraggableGem>();
+                    if (gemScript != null && gemScript.originalPrefab != null)
+                    {
+                        gemsToTransfer.Add(gemScript.originalPrefab);
+                    }
+                }
+            }
+            oldManager.gameObject.SetActive(false);
+            Destroy(oldManager.gameObject);
+        }
+
+        GameObject newGauntlet = Instantiate(_pendingGauntletPrefab, targetContainer);
+        GauntletManager newManager = newGauntlet.GetComponent<GauntletManager>();
+
+        // UPDATE: Pass the remembered rarity into the new gauntlet!
+        newManager.InitializeGauntlet(isPrimary, _pendingGauntletRarity);
+
+        List<GameObject> overflowGems = new List<GameObject>();
+        int availableSlots = newManager.currentActiveSlots;
+
+        for (int i = 0; i < gemsToTransfer.Count; i++)
+        {
+            if (i < availableSlots)
+            {
+                GameObject newlySpawnedGem = Instantiate(gemsToTransfer[i], newManager.fingerSlots[i].transform);
+                newlySpawnedGem.GetComponent<RectTransform>().sizeDelta = newManager.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+
+                Image slotImage = newManager.fingerSlots[i].GetComponent<Image>();
+                Image gemImage = newlySpawnedGem.GetComponent<Image>();
+                if (slotImage != null && gemImage != null) slotImage.color = gemImage.color;
+            }
+            else
+            {
+                overflowGems.Add(gemsToTransfer[i]);
+            }
+        }
+
+        SetupHoverEvents(targetContainer);
+        swapOverlayPanel.SetActive(false);
+        _pendingGauntletPrefab = null;
+
+        if (RewardMenuManager.Instance != null)
+        {
+            RewardMenuManager.Instance.OpenOverflowMenu(overflowGems);
         }
         else
         {
-            _isUsingGamepad = false;
-            SetFocus(null);
+            Debug.LogWarning("RewardMenuManager Instance is missing! Closing menu instead.");
+            TryCloseCharacterScreen();
+        }
+    }
+
+    private void SetupHoverEvents(Transform gauntletParent)
+    {
+        if (gauntletParent == null) return;
+        foreach (Transform child in gauntletParent.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name.Contains("Slot") && child.GetComponent<EventTrigger>() == null)
+            {
+                EventTrigger trigger = child.gameObject.AddComponent<EventTrigger>();
+                EventTrigger.Entry entry = new EventTrigger.Entry();
+                entry.eventID = EventTriggerType.PointerEnter;
+                entry.callback.AddListener((data) => {
+                    if (!_isWarningActive)
+                    {
+                        _lastSelectedSlot = child.gameObject;
+                        UpdateDetailsPanel(child.gameObject);
+                    }
+                });
+                trigger.triggers.Add(entry);
+            }
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (swapOverlayPanel != null && !swapOverlayPanel.activeSelf && !_isWarningActive)
+        {
+            rightSideDetails.SetActive(true);
+            rightSideRewards.SetActive(false);
+
+            if (Gamepad.current != null && firstGauntletSlot != null && EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                EventSystem.current.SetSelectedGameObject(firstGauntletSlot);
+            }
         }
     }
 
     private void Update()
     {
-        HandleInputDetection();
-
-        // --- NEW: Constantly track which Tab we are hovering over! ---
-        if (_currentState == UpgradeMenuState.Category && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
-        {
-            _lastSelectedCategoryTab = EventSystem.current.currentSelectedGameObject;
-        }
-
-        // Listen for the "Back / Cancel" button
         bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                              (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
 
-        // NEW: Only cancel the grid if the Popup Menu is closed!
-        if (cancelPressed && (GemPopupMenu.Instance == null || !GemPopupMenu.Instance.gameObject.activeInHierarchy))
+        if (cancelPressed)
         {
-            HandleCancelInput();
+            if (_isWarningActive)
+            {
+                CancelClose();
+            }
+            else if (swapOverlayPanel.activeSelf)
+            {
+                swapOverlayPanel.SetActive(false);
+                _pendingGauntletPrefab = null;
+                TryCloseCharacterScreen();
+            }
+            else if (rightSideDetails.activeSelf)
+            {
+                TryCloseCharacterScreen();
+            }
         }
 
-        // --- THE ELECTRIC FENCE ---
-        if (_currentState == UpgradeMenuState.Grid && EventSystem.current != null &&
-           (GemPopupMenu.Instance == null || !GemPopupMenu.Instance.gameObject.activeInHierarchy))
+        if (!swapOverlayPanel.activeSelf && !_isWarningActive && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
-
-            if (currentSel != null)
+            if (currentSel != null && currentSel.name.Contains("Slot"))
             {
-                if (!currentSel.transform.IsChildOf(_activeGridContainer))
-                {
-                    SetFocus(_lastSelectedGridItem);
-                }
-                else
-                {
-                    _lastSelectedGridItem = currentSel;
-                }
+                _lastSelectedSlot = currentSel;
+                UpdateDetailsPanel(_lastSelectedSlot);
             }
         }
     }
 
-    private void HandleInputDetection()
+    private void UpdateDetailsPanel(GameObject slot)
     {
-        // Switch TO Gamepad
-        if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
+        if (slot == null) return;
+        DraggableGem equippedGem = slot.GetComponentInChildren<DraggableGem>();
+
+        if (equippedGem != null)
         {
-            if (!_isUsingGamepad)
-            {
-                _isUsingGamepad = true;
-
-                // Immediately highlight the correct layer based on where the player was!
-                if (_currentState == UpgradeMenuState.Category)
-                    SetFocus(firstCategoryButton);
-                else if (_currentState == UpgradeMenuState.Grid && _lastSelectedGridItem != null)
-                    SetFocus(_lastSelectedGridItem);
-            }
-        }
-        // Switch TO Keyboard/Mouse
-        else if ((Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) ||
-                 (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f))
-        {
-            if (_isUsingGamepad)
-            {
-                _isUsingGamepad = false;
-
-                // Clear the controller highlight so the mouse can freely hover and click
-                SetFocus(null);
-            }
-        }
-    }
-
-    private void HandleCancelInput()
-    {
-        switch (_currentState)
-        {
-            case UpgradeMenuState.Grid:
-                // Leave the gem grid, return focus to the specific tab we just came from!
-                _currentState = UpgradeMenuState.Category;
-
-                if (_isUsingGamepad)
-                {
-                    SetFocus(_lastSelectedCategoryTab != null ? _lastSelectedCategoryTab : firstCategoryButton);
-                }
-                break;
-
-            case UpgradeMenuState.Category:
-                // We are at the top level. Tell the main pause menu to close us!
-                onExitUpgradeRequested?.Invoke();
-                break;
-        }
-    }
-
-    // --- BUTTON EVENT: Call this when pressing South/Enter on a Category Text ---
-    public void EnterGrid(Transform gridContainer)
-    {
-        // Safety Check: Are there actually gems in this category?
-        if (gridContainer.childCount > 0)
-        {
-            _currentState = UpgradeMenuState.Grid;
-
-            _activeGridContainer = gridContainer;
-
-            // Grab the very first gem in the list at runtime
-            GameObject firstGem = gridContainer.GetChild(0).gameObject;
-            _lastSelectedGridItem = firstGem; // Store it in memory immediately
-
-            // Give the controller the cursor
-            if (_isUsingGamepad) SetFocus(firstGem);
+            detailNameText.text = equippedGem.gemName;
+            detailDescriptionText.text = equippedGem.gemDescription;
+            if (detailIcon != null) { detailIcon.sprite = equippedGem.gemIcon; detailIcon.color = Color.white; }
         }
         else
         {
-            Debug.Log("This inventory is empty! Cannot enter grid.");
+            detailNameText.text = "Empty Slot";
+            detailDescriptionText.text = "No gem equipped here.";
+            if (detailIcon != null) detailIcon.color = Color.clear;
         }
     }
 
-    // --- HELPER METHOD ---
-    private void SetFocus(GameObject target)
+    // --- NEW: CENTRALIZED CLOSE AND WARNING LOGIC ---
+
+    // Call this explicitly from your UI 'Return' button!
+    public void TryCloseCharacterScreen()
     {
-        if (EventSystem.current != null)
+        _isWarningActive = true;
+        warningPanel.SetActive(true);
+
+        if (warningBodyText != null)
+            warningBodyText.text = "Are you sure you want to leave the inventory?";
+
+        // Dynamically wire the buttons so they don't conflict with RewardMenuManager
+        warningConfirmBtn.onClick.RemoveAllListeners();
+        warningConfirmBtn.onClick.AddListener(ConfirmClose);
+
+        warningCancelBtn.onClick.RemoveAllListeners();
+        warningCancelBtn.onClick.AddListener(CancelClose);
+
+        if (Gamepad.current != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            if (target != null)
-            {
-                EventSystem.current.SetSelectedGameObject(target);
-            }
+            EventSystem.current.SetSelectedGameObject(warningCancelBtn.gameObject);
+        }
+    }
+
+    public void CancelClose()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
+
+        if (Gamepad.current != null && _lastSelectedSlot != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(_lastSelectedSlot);
+        }
+    }
+
+    public void ConfirmClose()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
+
+        // Find the Gauntlet Menu to see if we came from the Pause Screen
+        GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
+
+        if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
+        {
+            // We opened it from the pause menu, return control to it safely!
+            gauntletMenu.CloseUpgradeMenu();
+        }
+        else
+        {
+            // We opened it from gameplay via the Debug Swap, just close and unpause!
+            gameObject.SetActive(false);
+            Time.timeScale = 1f;
         }
     }
 }

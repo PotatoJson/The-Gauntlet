@@ -36,10 +36,9 @@ public class GauntletMenu : MonoBehaviour
     [Header("Settings Transition")]
     [SerializeField] private RectTransform settingsPanel;
     [SerializeField] private CanvasGroup mainButtonsGroup;
-    [SerializeField] private float transitionSpeed = 0.5f;
 
-    [Header("Upgrade Menu References")]
-    [SerializeField] private GameObject upgradePanel;
+    [Header("Character Menu References")]
+    [SerializeField] private GameObject characterScreenRoot;
     [SerializeField] private GameObject pauseMenuUpgradeButton;
 
     private bool _isPaused = false;
@@ -47,8 +46,6 @@ public class GauntletMenu : MonoBehaviour
     private float _offscreenPosX;
     private Vector3 _originalGauntletScale;
     private Dictionary<RectTransform, Vector3> _originalButtonScales = new Dictionary<RectTransform, Vector3>();
-    private Vector2 _leftPosition = new Vector2(-867, 0);
-    private Vector3 _settingsRotation = new Vector3(0, 0, 90);
 
     private void Awake()
     {
@@ -111,7 +108,7 @@ public class GauntletMenu : MonoBehaviour
             // NEW: We added the upgradePanel check here so the Pause Menu ignores the East Button if you are upgrading!
             if (Gamepad.current.buttonEast.wasPressedThisFrame &&
                 !settingsPanel.gameObject.activeSelf &&
-                !upgradePanel.activeSelf)
+                !characterScreenRoot.activeSelf)
             {
                 ResumeGame();
                 return;
@@ -129,7 +126,7 @@ public class GauntletMenu : MonoBehaviour
                     // Context-aware selection
                     if (settingsPanel.gameObject.activeSelf)
                         settingsTabManager.FocusCurrentTab();
-                    else if (upgradePanel.activeSelf)
+                    else if (characterScreenRoot.activeSelf)
                     {
                         // NEW: Do nothing! We are in the upgrade menu, so don't steal focus.
                     }
@@ -154,6 +151,11 @@ public class GauntletMenu : MonoBehaviour
 
     private void OnPausePerformed(InputAction.CallbackContext context)
     {
+        if (characterScreenRoot != null && characterScreenRoot.activeSelf)
+        {
+            return;
+        }
+
         if (!_isPaused)
         {
             PauseGame();
@@ -166,7 +168,7 @@ public class GauntletMenu : MonoBehaviour
                 CloseSettings();
             }
             // This allows your InventoryManager.cs to safely handle the Escape key instead.
-            else if (upgradePanel != null && upgradePanel.activeSelf)
+            else if (characterScreenRoot != null && characterScreenRoot.activeSelf) // UPDATE HERE
             {
                 return;
             }
@@ -258,22 +260,14 @@ public class GauntletMenu : MonoBehaviour
     {
         EventSystem.current.SetSelectedGameObject(null);
 
-        mainButtonsGroup.DOFade(0, 0.2f).SetUpdate(true);
-        mainButtonsGroup.interactable = false;
-        mainButtonsGroup.blocksRaycasts = false;
+        menuCanvas.SetActive(false);
 
-        Sequence settingsSequence = DOTween.Sequence();
-        settingsSequence.Join(gauntletImage.DOAnchorPos(_leftPosition, transitionSpeed).SetEase(Ease.InOutQuad));
-        settingsSequence.Join(gauntletImage.DORotate(_settingsRotation, transitionSpeed).SetEase(Ease.InOutQuad));
+        ShowSettingsPanel();
 
-        settingsSequence.OnComplete(() => {
-            ShowSettingsPanel();
-            if (Gamepad.current != null && settingsTabManager != null)
-            {
-                settingsTabManager.InitializeSettingsMenu();
-            }
-        });
-        settingsSequence.SetUpdate(true);
+        if (Gamepad.current != null && settingsTabManager != null)
+        {
+            settingsTabManager.InitializeSettingsMenu();
+        }
     }
 
     private void ShowSettingsPanel()
@@ -295,36 +289,33 @@ public class GauntletMenu : MonoBehaviour
             .OnComplete(() => {
                 settingsPanel.gameObject.SetActive(false);
 
-                Sequence returnSequence = DOTween.Sequence();
-                returnSequence.Join(gauntletImage.DOAnchorPos(Vector2.zero, transitionSpeed).SetEase(Ease.InOutQuad));
-                returnSequence.Join(gauntletImage.DORotate(Vector3.zero, transitionSpeed).SetEase(Ease.InOutQuad));
+                menuCanvas.SetActive(true);
 
-                returnSequence.OnComplete(() => {
-                    mainButtonsGroup.DOFade(1, 0.2f).SetUpdate(true);
-                    mainButtonsGroup.interactable = true;
-                    mainButtonsGroup.blocksRaycasts = true;
-                    StartBreathing();
+                StartBreathing();
 
-                    if (Gamepad.current != null && firstSelectedButton != null)
-                    {
-                        EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
-                    }
-                });
-
-                returnSequence.SetUpdate(true);
+                if (Gamepad.current != null && firstSelectedButton != null)
+                {
+                    EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
+                }
             });
     }
 
 
-    // Call this from the Upgrade Menu's "Return" Button OnClick() AND the Unity Event
+    // Call this from the Pause Menu's "Upgrade/Character" Button OnClick()
+    public void OpenUpgradeMenu()
+    {
+        characterScreenRoot.SetActive(true);
+        mainButtonsGroup.interactable = false;
+        mainButtonsGroup.blocksRaycasts = false;
+    }
+
+    // Call this from the Character Screen's "Return" Button AND your InventoryManager UnityEvent
     public void CloseUpgradeMenu()
     {
-        upgradePanel.SetActive(false);
-
+        characterScreenRoot.SetActive(false);
 
         mainButtonsGroup.interactable = true;
         mainButtonsGroup.blocksRaycasts = true;
-
 
         // Pass controller focus safely back to the Pause Menu
         if (EventSystem.current != null && pauseMenuUpgradeButton != null)
@@ -335,7 +326,6 @@ public class GauntletMenu : MonoBehaviour
     }
     public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
     public void ReturnToMainMenu() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); ShowCursor(); }
-    public void OpenUpgradeMenu() { upgradePanel.SetActive(true); mainButtonsGroup.interactable = false ;mainButtonsGroup.blocksRaycasts = false; }
     public void QuitGame() { Application.Quit(); }
 
     private void OnDestroy() { CleanupTweens(); }
