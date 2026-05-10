@@ -51,7 +51,7 @@ public class HitboxController : MonoBehaviour
                 SpawnBlood(other);
             }
         }
-        //Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+        Debug.Log($"Hit {other.name} for {_currentDamage} Damage");
     }
 
     private void SpawnBlood(Collider target)
