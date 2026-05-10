@@ -13,7 +13,7 @@ public class DebugHUD : MonoBehaviour
         {
             // NEW: Roll a random rarity (0 = Normal, 1 = Rare, 2 = SuperRare)
             // Note: Random.Range with integers is EXCLUSIVE of the max number, so we use 3!
-            GauntletManager.GauntletRarity randomRarity = (GauntletManager.GauntletRarity)Random.Range(0, 3);
+            GauntletRarity randomRarity = (GauntletRarity)Random.Range(0, 3);
 
             Debug.Log($"Spawning {gauntletPrefab.name} with rarity: {randomRarity}");
 

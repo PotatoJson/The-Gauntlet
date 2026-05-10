@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class GauntletManager : MonoBehaviour
 {
-    public enum GauntletRarity { Normal, Rare, SuperRare }
+    [Header("Back End Data")]
+    public GauntletData LinkedGauntletData;
 
     [Header("Gauntlet Settings")]
     [Tooltip("The base max number of slots this gauntlet naturally has (e.g., 3, 4, 5)")]

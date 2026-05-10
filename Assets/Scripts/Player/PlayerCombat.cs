@@ -22,22 +22,16 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private PlayerHealth _healthScript;
 
     [Header("References")]
-    public GauntletData LeftGauntletData;
-    public GauntletData RightGauntletData;
-    [Space]
     private PlayerManager _stateManager;
     private Animator _animator;
     private PlayerControls _input;
+    private PlayerStatsManager _statsManager;
     
     [Header("Physical Hitboxes")]
     [SerializeField] private HitboxController _leftHitbox;
     [SerializeField] private HitboxController _rightHitbox;
     [Space]
     private HitboxController _activeHitbox;
-
-    [Header("Active Weapon (Wrapper)")]
-    private RunTimeGauntlet _leftGauntlet;
-    private RunTimeGauntlet _rightGauntlet;
 
     [Header("Combat Tracking")]
     private AttackNode _currentAttackNode;
@@ -73,6 +67,7 @@ public class PlayerCombat : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _stateManager = GetComponent<PlayerManager>();
+        _statsManager = GetComponent<PlayerStatsManager>();
 
         _input = new PlayerControls();
 
@@ -94,8 +89,6 @@ public class PlayerCombat : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        if(LeftGauntletData != null) _leftGauntlet = new RunTimeGauntlet(LeftGauntletData, EquipSlot.Secondary);
-        if(RightGauntletData != null) _rightGauntlet = new RunTimeGauntlet(RightGauntletData, EquipSlot.Primary);
         CurrentStamina = MaxStamina;
         _internalStamina = MaxStamina;
         UpdateStaminaUI();
@@ -295,20 +288,18 @@ public class PlayerCombat : MonoBehaviour
     public void ArmTargetHitbox()
     {
         _isRotationLocked = false;
-        RunTimeGauntlet activeWeapon = _leftGauntlet;
         _activeHitbox = _leftHitbox;
 
         if(_currentAttackNode.StrikingHand == StrikeHand.Right)
         {
-            activeWeapon = _rightGauntlet;
             _activeHitbox = _rightHitbox;
         }
         else if(_currentAttackNode.StrikingHand == StrikeHand.Both)
         {
             //future dual hand attack
         }
-        int currentDamage = activeWeapon.GetCurrentDamage();
-        int currentPoise = activeWeapon.GetCurrentPoise();
+        int currentDamage = Mathf.RoundToInt(_statsManager.CurrentDamage);
+        int currentPoise = Mathf.RoundToInt(10f); // need to add poiseDamage to _statsManager
 
         float chargeBonus = 1.0f;
 

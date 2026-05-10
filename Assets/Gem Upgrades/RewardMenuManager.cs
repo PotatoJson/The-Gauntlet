@@ -12,6 +12,7 @@ public class RewardMenuManager : MonoBehaviour
 
     [Header("Screen References")]
     [SerializeField] private GameObject characterScreenRoot;
+    [SerializeField] private GameObject leftSideGauntlets; //also for reward menu gauntlets weren't showing up
     [SerializeField] private GameObject rightSideDetails;
     [SerializeField] private GameObject rightSideRewards;
 
@@ -77,6 +78,7 @@ public class RewardMenuManager : MonoBehaviour
         Time.timeScale = 0f;
 
         characterScreenRoot.SetActive(true);
+        leftSideGauntlets.SetActive(true);
         rightSideDetails.SetActive(false);
         rightSideRewards.SetActive(true);
 
@@ -127,6 +129,7 @@ public class RewardMenuManager : MonoBehaviour
         Time.timeScale = 0f;
 
         characterScreenRoot.SetActive(true);
+        leftSideGauntlets.SetActive(true);
         rightSideDetails.SetActive(false);
         rightSideRewards.SetActive(true);
 

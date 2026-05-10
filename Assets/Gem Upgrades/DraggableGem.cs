@@ -6,6 +6,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
 {
+    [Header("Back End Stuff")]
+    public GemData LinkedGemData;
+    
     [HideInInspector] public Transform parentAfterDrag;
 
     [Tooltip("Can be null in the new Reward System!")]

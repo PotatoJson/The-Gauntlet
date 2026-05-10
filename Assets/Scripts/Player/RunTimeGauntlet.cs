@@ -19,7 +19,7 @@ public class RunTimeGauntlet
         SocketedStatGems = new StatGemData[BaseGauntlet.MaxPrimaryGemSlots];
     }
 
-    //Hand Restriction logic
+    //Hand gem slot Restriction logic
     public List<StatGemData> GetActiveStatGems()
     {
         List<StatGemData> activeGems = new List<StatGemData>();
@@ -36,28 +36,23 @@ public class RunTimeGauntlet
         return activeGems;
     }
 
-    public float GetTotalStatBonus(StatModifierType statType)
+    public List<GemModifier> GetAllActiveModifiers()
     {
-        float totalBonus = 0f;
+        List<GemModifier> allMods = new List<GemModifier>();
+        
         foreach(StatGemData gem in GetActiveStatGems())
         {
-            foreach(GemModifier mod in gem.Modifiers)
-            {
-                if(mod.StatType == statType) totalBonus += mod.Amount;
-            }
+            allMods.AddRange(gem.Modifiers);
         }
 
-        if(CurrentSlot == EquipSlot.Primary)
+        if(CurrentSlot == EquipSlot.Primary && BaseGauntlet.InherentPassives != null)
         {
-            foreach(GemModifier mod in BaseGauntlet.InherentPassives)
-            {
-                if(mod.StatType == statType) totalBonus += mod.Amount;
-            }
+            allMods.AddRange(BaseGauntlet.InherentPassives);
         }
-        return totalBonus;
+        return allMods;
     }
 
-    public int GetCurrentDamage()
+    /*public int GetCurrentDamage()
     {
         float gemBonus = GetTotalStatBonus(StatModifierType.PhysicalDamage);
         return BaseGauntlet.Damage + Mathf.RoundToInt(gemBonus);
@@ -66,7 +61,7 @@ public class RunTimeGauntlet
     {
         float gemBonus = GetTotalStatBonus(StatModifierType.PoiseDamage);
         return BaseGauntlet.PoiseDamage + Mathf.RoundToInt(gemBonus);
-    }
+    }*/
 
     //This will be used by UI when swapping gauntlets
     public StatGemData[] ExtractAllGems()

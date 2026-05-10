@@ -1,6 +1,6 @@
 using UnityEngine;
 
-
+[System.Serializable]
 public struct GemModifier
 {
   //see definitions script for list of stat types

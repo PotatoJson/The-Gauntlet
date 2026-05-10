@@ -10,6 +10,7 @@ public class InventoryManager : MonoBehaviour
     public static InventoryManager Instance { get; private set; }
 
     [Header("Mode Panels")]
+    [SerializeField] private GameObject leftSideGauntlets; //they wernt showing up normally so I added this to reference
     [SerializeField] private GameObject rightSideDetails;
     [SerializeField] private GameObject rightSideRewards;
 
@@ -38,7 +39,7 @@ public class InventoryManager : MonoBehaviour
     private GameObject _pendingGauntletPrefab;
     private bool _isWarningActive = false;
 
-    private GauntletManager.GauntletRarity _pendingGauntletRarity;
+    private GauntletRarity _pendingGauntletRarity;
     private void Awake()
     {
         Instance = this;
@@ -52,7 +53,7 @@ public class InventoryManager : MonoBehaviour
         if (warningPanel != null) warningPanel.SetActive(false);
     }
 
-    public void TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletManager.GauntletRarity rarity)
+    public void TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletRarity rarity)
     {
         if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
@@ -76,13 +77,14 @@ public class InventoryManager : MonoBehaviour
         BeginGauntletSwap(gauntletPrefab, rarity);
     }
 
-    private void BeginGauntletSwap(GameObject prefab, GauntletManager.GauntletRarity rarity)
+    private void BeginGauntletSwap(GameObject prefab, GauntletRarity rarity)
     {
         _pendingGauntletPrefab = prefab;
         _pendingGauntletRarity = rarity; // REMEMBER IT!
         Time.timeScale = 0f;
 
         gameObject.SetActive(true);
+        leftSideGauntlets.SetActive(true);
         rightSideDetails.SetActive(true);
         rightSideRewards.SetActive(false);
         swapOverlayPanel.SetActive(true);
@@ -190,6 +192,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (swapOverlayPanel != null && !swapOverlayPanel.activeSelf && !_isWarningActive)
         {
+            leftSideGauntlets.SetActive(true);
             rightSideDetails.SetActive(true);
             rightSideRewards.SetActive(false);
 
@@ -295,6 +298,12 @@ public class InventoryManager : MonoBehaviour
     {
         _isWarningActive = false;
         warningPanel.SetActive(false);
+
+        PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
+        if(statsManager != null)
+        {
+            statsManager.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+        }
 
         // Find the Gauntlet Menu to see if we came from the Pause Screen
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
