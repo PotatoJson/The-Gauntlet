@@ -1195,22 +1195,11 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""6dbb9123-99f0-4cff-b838-08aa63273b89"",
-                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""id"": ""3ea15053-f734-4aa6-a849-cd76469bbb07"",
+                    ""path"": ""<Gamepad>/dpad/up"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
-                    ""action"": ""PreviousTab"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""3ea15053-f734-4aa6-a849-cd76469bbb07"",
-                    ""path"": ""<Gamepad>/dpad/left"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
                     ""action"": ""PreviousTab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -1228,22 +1217,11 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""36e8ae37-7510-4252-8451-92963e0f2365"",
-                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""id"": ""828aac39-8c4d-48ce-8675-42de80538ee3"",
+                    ""path"": ""<Gamepad>/dpad/down"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
-                    ""action"": ""NextTab"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""828aac39-8c4d-48ce-8675-42de80538ee3"",
-                    ""path"": ""<Gamepad>/dpad/right"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
                     ""action"": ""NextTab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false

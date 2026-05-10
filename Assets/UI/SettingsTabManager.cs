@@ -213,10 +213,10 @@ public class SettingsTabManager : MonoBehaviour
         if (_previewTabIndex >= allPanels.Count) _previewTabIndex = 0;
         if (_previewTabIndex < 0) _previewTabIndex = allPanels.Count - 1;
 
-        // Clear Unity's default selection so it doesn't fight your custom colors
-        if (EventSystem.current != null)
+        // Sync the EventSystem directly to the newly previewed tab button.
+        if (EventSystem.current != null && tabButtons.Count > _previewTabIndex)
         {
-            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(tabButtons[_previewTabIndex].gameObject);
         }
 
         UpdateTabVisuals();
@@ -236,18 +236,21 @@ public class SettingsTabManager : MonoBehaviour
 
     private void UpdateTabVisuals()
     {
+        // THE FIX: Define a perfectly transparent white color to match your new UI borders
+        Color transparentState = new Color(1f, 1f, 1f, 0f);
+
         for (int i = 0; i < tabButtons.Count; i++)
         {
             if (tabButtons[i] == null) continue;
 
-            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active (Red), others are Inactive (Gray).
+            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active, others are Transparent.
             if (!_isUsingGamepad)
             {
-                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : inactiveColor;
-                continue; // Skip the rest of the loop for this button!
+                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : transparentState;
+                continue;
             }
 
-            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Inactive)
+            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Transparent)
             if (i == _previewTabIndex)
             {
                 if (i == _currentTabIndex && !_isFocusOnHeader)
@@ -265,7 +268,8 @@ public class SettingsTabManager : MonoBehaviour
             }
             else
             {
-                tabButtons[i].image.color = inactiveColor;
+                // Unselected and un-previewed tabs vanish entirely!
+                tabButtons[i].image.color = transparentState;
             }
         }
     }
