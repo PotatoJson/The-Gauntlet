@@ -1179,6 +1179,24 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""PreviousSubTab"",
+                    ""type"": ""Button"",
+                    ""id"": ""04d83b68-f8e7-4d5e-b41e-9c42ed9f6991"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""NextSubTab"",
+                    ""type"": ""Button"",
+                    ""id"": ""3d7df085-3ab5-4011-b3d3-8eb4175dc61f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1239,12 +1257,78 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""2fce61cb-9ffd-410c-9f92-f6e4b727ae2b"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""EnterTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""0c63712b-f2da-422c-9dc7-4d4163c254b6"",
                     ""path"": ""<Gamepad>/buttonEast"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
                     ""action"": ""BackTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a22e0517-8cd0-42e7-a102-d37b31e7e4db"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""BackTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a2c69c2f-139c-4f01-8e7c-6c188b087550"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""PreviousSubTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8e1e2f1e-06df-4578-8c4e-aca09b946293"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""PreviousSubTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a97a6f8a-969b-45b2-ad0f-bd8c0a67527f"",
+                    ""path"": ""<Gamepad>/dpad/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""NextSubTab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""efd10599-c200-41f1-a3b9-725589fb88de"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""NextSubTab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1345,6 +1429,8 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_MenuNavigation_NextTab = m_MenuNavigation.FindAction("NextTab", throwIfNotFound: true);
         m_MenuNavigation_EnterTab = m_MenuNavigation.FindAction("EnterTab", throwIfNotFound: true);
         m_MenuNavigation_BackTab = m_MenuNavigation.FindAction("BackTab", throwIfNotFound: true);
+        m_MenuNavigation_PreviousSubTab = m_MenuNavigation.FindAction("PreviousSubTab", throwIfNotFound: true);
+        m_MenuNavigation_NextSubTab = m_MenuNavigation.FindAction("NextSubTab", throwIfNotFound: true);
     }
 
     ~@PlayerControls()
@@ -1832,6 +1918,8 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_MenuNavigation_NextTab;
     private readonly InputAction m_MenuNavigation_EnterTab;
     private readonly InputAction m_MenuNavigation_BackTab;
+    private readonly InputAction m_MenuNavigation_PreviousSubTab;
+    private readonly InputAction m_MenuNavigation_NextSubTab;
     /// <summary>
     /// Provides access to input actions defined in input action map "MenuNavigation".
     /// </summary>
@@ -1859,6 +1947,14 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "MenuNavigation/BackTab".
         /// </summary>
         public InputAction @BackTab => m_Wrapper.m_MenuNavigation_BackTab;
+        /// <summary>
+        /// Provides access to the underlying input action "MenuNavigation/PreviousSubTab".
+        /// </summary>
+        public InputAction @PreviousSubTab => m_Wrapper.m_MenuNavigation_PreviousSubTab;
+        /// <summary>
+        /// Provides access to the underlying input action "MenuNavigation/NextSubTab".
+        /// </summary>
+        public InputAction @NextSubTab => m_Wrapper.m_MenuNavigation_NextSubTab;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1897,6 +1993,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @BackTab.started += instance.OnBackTab;
             @BackTab.performed += instance.OnBackTab;
             @BackTab.canceled += instance.OnBackTab;
+            @PreviousSubTab.started += instance.OnPreviousSubTab;
+            @PreviousSubTab.performed += instance.OnPreviousSubTab;
+            @PreviousSubTab.canceled += instance.OnPreviousSubTab;
+            @NextSubTab.started += instance.OnNextSubTab;
+            @NextSubTab.performed += instance.OnNextSubTab;
+            @NextSubTab.canceled += instance.OnNextSubTab;
         }
 
         /// <summary>
@@ -1920,6 +2022,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @BackTab.started -= instance.OnBackTab;
             @BackTab.performed -= instance.OnBackTab;
             @BackTab.canceled -= instance.OnBackTab;
+            @PreviousSubTab.started -= instance.OnPreviousSubTab;
+            @PreviousSubTab.performed -= instance.OnPreviousSubTab;
+            @PreviousSubTab.canceled -= instance.OnPreviousSubTab;
+            @NextSubTab.started -= instance.OnNextSubTab;
+            @NextSubTab.performed -= instance.OnNextSubTab;
+            @NextSubTab.canceled -= instance.OnNextSubTab;
         }
 
         /// <summary>
@@ -2216,5 +2324,19 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnBackTab(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "PreviousSubTab" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPreviousSubTab(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "NextSubTab" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNextSubTab(InputAction.CallbackContext context);
     }
 }
