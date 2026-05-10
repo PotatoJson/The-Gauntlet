@@ -21,6 +21,22 @@ public class AudioSettingsManager : MonoBehaviour
     [Header("Toggles")]
     [SerializeField] private Toggle muteInBackgroundToggle;
 
+    public static AudioSettingsManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void Start()
     {
         // Set slider ranges to 0.0001 to 1 (Mixer math fails at 0)

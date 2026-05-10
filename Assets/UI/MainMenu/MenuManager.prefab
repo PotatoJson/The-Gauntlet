@@ -9,8 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 949434764428194977}
-  - component: {fileID: 1235609706757598894}
-  - component: {fileID: 3533091284303849073}
+  - component: {fileID: 6094911107297963142}
   m_Layer: 5
   m_Name: MenuManager
   m_TagString: Untagged
@@ -37,7 +36,7 @@ RectTransform:
   m_AnchoredPosition: {x: 959.9999, y: 540}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1235609706757598894
+--- !u!114 &6094911107297963142
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,24 +45,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 1583424952304072630}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8461bcab33cb9884cae4c1cd1edca4fc, type: 3}
+  m_Script: {fileID: 11500000, guid: ab4855add58a2414e8b1fde44eaa0509, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
-  menuText: {fileID: 0}
+  mainMenuPanel: {fileID: 0}
   settingsPanel: {fileID: 0}
-  loading: {fileID: 0}
---- !u!114 &3533091284303849073
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1583424952304072630}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb08c87e5c891394b8c060dfe2b94a3b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HighContrastToggle
-  rendererData: {fileID: 11400000, guid: f288ae1f4751b564a96ac7587541f7a2, type: 2}
-  featureIndices: 0100000002000000
-  highContrastToggle: {fileID: 0}

@@ -273,24 +273,26 @@ public class GauntletMenu : MonoBehaviour
     private void ShowSettingsPanel()
     {
         settingsPanel.gameObject.SetActive(true);
-        float panelWidth = settingsPanel.rect.width;
-        settingsPanel.anchoredPosition = new Vector2(-panelWidth, 0);
 
-        settingsPanel.DOAnchorPos(new Vector2(350, 0), 0.4f)
-            .SetEase(Ease.OutCubic)
+        settingsPanel.anchoredPosition = Vector2.zero;
+
+        settingsPanel.localScale = Vector3.one * 0.8f;
+
+        // 3. DOTWEEN: Pop the scale up to 1 for a juicy entrance!
+        settingsPanel.DOScale(Vector3.one, 0.4f)
+            .SetEase(Ease.OutBack)
             .SetUpdate(true);
     }
 
     public void CloseSettings()
     {
-        settingsPanel.DOAnchorPos(new Vector2(-Screen.width, 0), 0.3f)
-            .SetEase(Ease.InCubic)
+        settingsPanel.DOScale(Vector3.one * 0.8f, 0.3f)
+            .SetEase(Ease.InBack)
             .SetUpdate(true)
             .OnComplete(() => {
                 settingsPanel.gameObject.SetActive(false);
 
                 menuCanvas.SetActive(true);
-
                 StartBreathing();
 
                 if (Gamepad.current != null && firstSelectedButton != null)
