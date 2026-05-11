@@ -18,15 +18,14 @@ public class PlayerCombat : MonoBehaviour
     public AttackNode RunningLightAttack;
     public AttackNode RunningHeavyAttack;
 
-    [Header("External Links")]
-    [SerializeField] private PlayerHealth _healthScript;
-
     [Header("References")]
     private PlayerManager _stateManager;
     private Animator _animator;
     private PlayerControls _input;
     private PlayerStatsManager _statsManager;
-    
+    private PlayerStamina _staminaScript;
+    private PlayerHealth _healthScript;
+
     [Header("Physical Hitboxes")]
     [SerializeField] private HitboxController _leftHitbox;
     [SerializeField] private HitboxController _rightHitbox;
@@ -46,15 +45,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float _normHeavyWindUp;
     public float MaxChargeDuration;
     private float _chargeTimer = 0f;
-
-    [Header("Stamina Settings")]
-    [SerializeField] private StaminaBar _staminaBar;
-    public float RegenRate = 60f;
-    public float RegenDelay = 3f;
-    private float _staminaRegenTimer = 0f;
-    private float _internalStamina;
-    private int CurrentStamina;
-    public int MaxStamina = 100;
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
@@ -68,6 +58,8 @@ public class PlayerCombat : MonoBehaviour
         _animator = GetComponentInChildren<Animator>();
         _stateManager = GetComponent<PlayerManager>();
         _statsManager = GetComponent<PlayerStatsManager>();
+        _staminaScript = GetComponent<PlayerStamina>();
+        _healthScript = GetComponent<PlayerHealth>();
 
         _input = new PlayerControls();
 
@@ -85,14 +77,6 @@ public class PlayerCombat : MonoBehaviour
     private void OnEnable() => _input.Enable();
     
     private void OnDisable() => _input.Disable();
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        CurrentStamina = MaxStamina;
-        _internalStamina = MaxStamina;
-        UpdateStaminaUI();
-    }
 
     // Update is called once per frame
     void Update()
@@ -111,7 +95,6 @@ public class PlayerCombat : MonoBehaviour
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
 
         HandleHeavyChargeTimer();
-        HandleStaminaRegen();
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
@@ -153,35 +136,6 @@ public class PlayerCombat : MonoBehaviour
         BufferTimer = 0;
     }
     #endregion
-
-    //stamina stuff
-    private void HandleStaminaRegen()
-    {
-        if(_internalStamina < MaxStamina)
-        {
-            if (_staminaRegenTimer > 0)
-            {
-                _staminaRegenTimer -= Time.deltaTime;
-            }
-            else
-            {
-                // Rapidly refill once timer hits zero
-                _internalStamina += RegenRate * Time.deltaTime;
-                _internalStamina = Mathf.Min(_internalStamina, MaxStamina);
-                
-                CurrentStamina = Mathf.RoundToInt(_internalStamina);
-                UpdateStaminaUI();
-            }
-        }
-    }
-
-    private void UpdateStaminaUI()
-    {
-        if(_staminaBar != null)
-        {
-            _staminaBar.SetStamina(Mathf.RoundToInt(_internalStamina), MaxStamina);
-        }
-    }
 
     //Temp Potion logic
     private void UsePotion()
@@ -239,7 +193,7 @@ public class PlayerCombat : MonoBehaviour
     {
         if(node == null) return;
 
-        if(_internalStamina < node.StaminaCost)
+        if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
         {
             ConsumeBuffer();
             return;
@@ -248,9 +202,7 @@ public class PlayerCombat : MonoBehaviour
         _stateManager.CarryMomentum = keepMomentum;
         _isRotationLocked = true;
 
-        _internalStamina -= node.StaminaCost;
-        _staminaRegenTimer = RegenDelay;
-        UpdateStaminaUI();
+        _staminaScript.ConsumeStamina(node.StaminaCost);
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;
@@ -299,7 +251,7 @@ public class PlayerCombat : MonoBehaviour
             //future dual hand attack
         }
         int currentDamage = Mathf.RoundToInt(_statsManager.CurrentDamage);
-        int currentPoise = Mathf.RoundToInt(10f); // need to add poiseDamage to _statsManager
+        int currentPoise = Mathf.RoundToInt(_statsManager.CurrentPoiseDamage); // need to add poiseDamage to _statsManager
 
         float chargeBonus = 1.0f;
 

@@ -13,10 +13,10 @@ GameObject:
   - component: {fileID: 4334081717290201699}
   - component: {fileID: 2373864898780370289}
   - component: {fileID: 4665901765588477522}
-  - component: {fileID: 7841120548770968586}
-  - component: {fileID: 8415252290080951698}
+  - component: {fileID: 8922564061652712018}
+  - component: {fileID: 5879185346560414251}
   m_Layer: 5
-  m_Name: Augment Gem
+  m_Name: StaminaGem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,7 +34,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4609862200874094436}
+  - {fileID: 8233253890364819832}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -63,7 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9490197, g: 0.28235295, b: 0.13333334, a: 1}
+  m_Color: {r: 0.19691172, g: 0.7075472, b: 0.34018317, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -92,14 +92,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 533c39aa1aa57ac4db10a2bc81692016, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  LinkedGemData: {fileID: 11400000, guid: be53d82f8a27a744fb19017a460322a0, type: 2}
+  LinkedGemData: {fileID: 11400000, guid: 532bc70147d67884597293d220ee30e1, type: 2}
   parentAfterDrag: {fileID: 0}
   originalInventoryGrid: {fileID: 0}
-  selectionOutline: {fileID: 7841120548770968586}
-  gemName: MAMBO
-  gemDescription: 'MAMBO TESTING
-
-'
+  selectionOutline: {fileID: 8922564061652712018}
+  gemName: FIRE GEM
+  gemDescription: I HATE CONTROLLER PLAYER
   gemIcon: {fileID: -9095717837082945937, guid: 34587324d412940a79d530020c957dc0, type: 3}
   originalPrefab: {fileID: 3363818813761411258}
 --- !u!225 &4665901765588477522
@@ -114,7 +112,7 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &7841120548770968586
+--- !u!114 &8922564061652712018
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -129,7 +127,7 @@ MonoBehaviour:
   m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
---- !u!114 &8415252290080951698
+--- !u!114 &5879185346560414251
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -173,7 +171,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &5652809654162068574
+--- !u!1 &5124184029498635287
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -181,9 +179,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4609862200874094436}
-  - component: {fileID: 4193012854804670853}
-  - component: {fileID: 2766580641753126696}
+  - component: {fileID: 8233253890364819832}
+  - component: {fileID: 711669151948625973}
+  - component: {fileID: 6198393703519230474}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -191,14 +189,14 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &4609862200874094436
+--- !u!224 &8233253890364819832
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5652809654162068574}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_GameObject: {fileID: 5124184029498635287}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -207,24 +205,24 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.00012207, y: 0}
-  m_SizeDelta: {x: 52.573, y: 50}
+  m_AnchoredPosition: {x: 1.141, y: 0}
+  m_SizeDelta: {x: 50.291, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &4193012854804670853
+--- !u!222 &711669151948625973
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5652809654162068574}
+  m_GameObject: {fileID: 5124184029498635287}
   m_CullTransparentMesh: 1
---- !u!114 &2766580641753126696
+--- !u!114 &6198393703519230474
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5652809654162068574}
+  m_GameObject: {fileID: 5124184029498635287}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}

@@ -4,9 +4,12 @@ using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
+    private PlayerStatsManager _statsManager;
+    
+
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
-    [SerializeField] private float currentHealth;
+    private float _currentHealth;
     [Tooltip("How much health recovers per second after the delay.")]
     [SerializeField] private float healthRecoveryRate = 1f; // 1 HP per second = REAL slow
 
@@ -16,13 +19,6 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Defense & Posture")]
     public bool isBlocking;
-    [SerializeField] private float maxStunMeter = 100f;
-    [SerializeField] private float stunRecoveryRate = 5f;
-    [Tooltip("How long to wait after taking damage before posture starts recovering.")]
-    [SerializeField] private float stunRecoveryDelay = 2.0f; // Wait 2 seconds
-    private float stunRecoveryTimer = 0f; // Tracks the delay
-    private float currentStunMeter = 0f;
-    public bool isStunned { get; private set; }
 
     [Header("Invincibility")]
     [SerializeField] private float invincibilityDuration = 0.5f;
@@ -34,41 +30,81 @@ public class PlayerHealth : MonoBehaviour
     private Animator _animator;
 
     [Header("Poise")]
-    public int MaxPoise;
+    public float _maxPoise;
     public float CurrentPoise;
     //public Slider PoiseBar; //If we want to visualize the poise and stagger on the player
     public float PoiseRecoveryRate;
     public float PoiseRecoveryDelay;
     private float PoiseRecoveryTimer;
 
-    [Header("Stagger things")]//these will be used to trigger a large knockback throwing the player
+    [Header("Stagger stuff")]//these will be used to trigger a large knockback throwing the player
     public float InstantKnockback;
     public float OvercapKnockback;
 
     // Events for UI or other systems to subscribe to
-    public event Action<float, float> OnHealthChanged; // currentHealth, maxHealth
-    public event Action<float, int> OnPoiseChanged; //CurrentPoise, MaxPoise
+    public event Action<float, float> OnHealthChanged; // _currentHealth, maxHealth
+    public event Action<float, float> OnPoiseChanged; //CurrentPoise, MaxPoise
     public event Action OnPlayerDeath;
 
-    public bool IsDead => currentHealth <= 0;
-    public float HealthPercentage => currentHealth / maxHealth;
+    public bool IsDead => _currentHealth <= 0;
+    public float HealthPercentage => _currentHealth / maxHealth;
 
     public GameObject LastCheckPoint;
     public GameObject PlayerSpawn;
 
     private void Awake()
     {
+        _statsManager = GetComponent<PlayerStatsManager>();
         _stateManager = GetComponent<PlayerManager>();
         _animator = GetComponentInChildren<Animator>();
     }
 
+    private void OnEnable()
+    {
+        if(_statsManager != null)
+        {
+            _statsManager.OnStatsCalculated += HandleMaxHealthChange;  
+            _statsManager.OnStatsCalculated += HandleMaxPoiseChange;
+        } 
+
+    }
+
+    private void OnDisable()
+    {
+        if(_statsManager != null)
+        {
+            _statsManager.OnStatsCalculated -= HandleMaxHealthChange;
+            _statsManager.OnStatsCalculated += HandleMaxPoiseChange;
+        }
+    }
+
     private void Start()
     {
-        currentHealth = maxHealth;
+        _currentHealth = maxHealth;
         CurrentPoise = 0;
-        OnPoiseChanged?.Invoke(CurrentPoise, MaxPoise);
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
+
+    private void HandleMaxPoiseChange()
+    {
+        _maxPoise = _statsManager.CurrentMaxPoise;
+        OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
+    }
+
+    private void HandleMaxHealthChange()
+    {
+        float newMax = _statsManager.CurrentMaxHealth;
+        float differnece = newMax - maxHealth;
+
+        maxHealth = newMax;
+
+        if(differnece > 0) _currentHealth += differnece;
+        else _currentHealth = Mathf.Min(_currentHealth, maxHealth);
+
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+    }
+
 
     private void Update()
     {
@@ -99,14 +135,14 @@ public class PlayerHealth : MonoBehaviour
             {
                 CurrentPoise -= PoiseRecoveryRate * Time.deltaTime;
                 CurrentPoise = Mathf.Max(0, CurrentPoise);
-                OnPoiseChanged?.Invoke(CurrentPoise, MaxPoise);
+                OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
             }
         }
     }
 
     private void HandleHealthRecovery()
     {
-        if (currentHealth < maxHealth && !IsDead)
+        if (_currentHealth < maxHealth && !IsDead)
         {
             if (healthRecoveryTimer > 0)
             {
@@ -114,9 +150,9 @@ public class PlayerHealth : MonoBehaviour
             }
             else
             {
-                currentHealth += healthRecoveryRate * Time.deltaTime;
-                currentHealth = Mathf.Min(currentHealth, maxHealth);
-                OnHealthChanged?.Invoke(currentHealth, maxHealth);
+                _currentHealth += healthRecoveryRate * Time.deltaTime;
+                _currentHealth = Mathf.Min(_currentHealth, maxHealth);
+                OnHealthChanged?.Invoke(_currentHealth, maxHealth);
             }
         }
     }
@@ -128,19 +164,18 @@ public class PlayerHealth : MonoBehaviour
         if (IsDead || isInvincible) return;
 
         // ... Existing Parry/Block/Dodge logic would go here if uncommented ...
-        currentHealth -= damage;
-        currentHealth = Mathf.Max(currentHealth, 0);
+        _currentHealth -= damage;
+        _currentHealth = Mathf.Max(_currentHealth, 0);
 
         healthRecoveryTimer = healthRecoveryDelay;
-        stunRecoveryTimer = stunRecoveryDelay;
 
         // Brief invincibility to prevent multiple hits from same attack
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
 
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        Debug.Log("TakeDamage Test " + currentHealth);
-        if (currentHealth <= 0)
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        Debug.Log("TakeDamage Test " + _currentHealth);
+        if (_currentHealth <= 0)
         {
             HandleDeath();
             return;
@@ -152,9 +187,9 @@ public class PlayerHealth : MonoBehaviour
     private void HandleStagger(int poiseDamage)
     {
         //see if player gets thrown from attack
-        bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (MaxPoise + OvercapKnockback);
+        bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (_maxPoise + OvercapKnockback);
         //check for large stagger for player stumble+staggered state
-        bool isHeavyStagger = (CurrentPoise + poiseDamage) >= MaxPoise;
+        bool isHeavyStagger = (CurrentPoise + poiseDamage) >= _maxPoise;
 
         if (isKnockBack)
         {
@@ -171,6 +206,8 @@ public class PlayerHealth : MonoBehaviour
             CurrentPoise += poiseDamage;
             TriggerSmallFlinch();
         }
+
+        OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
     }
 
     private void TriggerKnockback()
@@ -205,45 +242,15 @@ public class PlayerHealth : MonoBehaviour
 
         Debug.Log("Death Test");
     }
-    //private void BreakGuard()
-    //{
-    //    Debug.Log("GUARD BROKEN! Player is stunned.");
-    //    isStunned = true;
-    //
-    //    // Reset the meter visually
-    //    currentStunMeter = 0;
-    //
-    //    // Tell CombatSandBox to lock inputs and force drop the shield
-    //    float stunDuration = 2.0f; // 2 seconds of stun
-    //    _combatSandBox.TriggerGuardBreak(stunDuration);
-    //
-    //    // Tell PlayerHealth to unlock after the duration
-    //    Invoke(nameof(RecoverFromStun), stunDuration);
-    //}
-
-    private void RecoverFromStun()
-    {
-        Debug.Log("Player recovered from stun.");
-        isStunned = false;
-    }
 
     public void Heal(float amount)
     {
         //if (IsDead) return;
 
-        currentHealth += amount;
-        currentHealth = Mathf.Min(currentHealth, maxHealth);
+        _currentHealth += amount;
+        _currentHealth = Mathf.Min(_currentHealth, maxHealth);
 
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
-    }
-
-    public void UpdateMaxHealth(float newMaxHealth)
-    {
-        Debug.Log("Before change " + maxHealth);
-        maxHealth = newMaxHealth;
-        Debug.Log("After change " + maxHealth);
-        currentHealth = Mathf.Min(currentHealth, maxHealth);
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
 
     public void PlayerRespawnSpikes()
