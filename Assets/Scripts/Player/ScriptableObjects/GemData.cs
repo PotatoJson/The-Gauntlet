@@ -1,30 +1,32 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public enum StatModifierType
+public abstract class GemData : BaseItemData
 {
-  PhysicalDamage,
-  PoiseDamage,
-  MaxHealth,
-  MaxStamina,
-  HealthRegen,
-  StaminaRegen,
-  CritChance,
+  [Header("Gem Properties")]
+  public int GemTier;
+  //potential socketing sound ADD HERE
 }
 
-public struct GemModifier
+[CreateAssetMenu(fileName = "New Stat Gem", menuName = "Items/Gems/Stat Gem")]
+public class StatGemData : GemData
 {
-  public StatModifierType StatType;
-  public float Amount;
-}
-
-[CreateAssetMenu(fileName = "New_Gem", menuName = "Scriptable Objects/GemData")]
-public class GemData : ScriptableObject
-{
-    [Header("Gem Identification")]
-    public string GemName;
-    public Sprite GemIcon;
-
     [Header("Stat Bonuses")]
     public List<GemModifier> Modifiers = new List<GemModifier>();
+
+    [Header("Cursed Properties")]
+    public bool IsCursed;
+    //add more logic here when we have more info on curses
+}
+
+[CreateAssetMenu(fileName = "New Skill Gem", menuName = "Items/Gems/Skill Gem")]
+public class SkillGemData : GemData
+{
+    [Header("Skill Properties")]
+    public GameObject SkillPrefab;
+    public float BaseCooldown;
+    public float StaminaCost;
+
+    //example of general skill logic (see definitions script for list of categories)
+    public SkillCategory Category;
 }

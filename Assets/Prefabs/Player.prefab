@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: 2615825535877183288}
   - component: {fileID: 8214966954790734677}
   - component: {fileID: 1490983485963244258}
+  - component: {fileID: 7300029207042372441}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -179,8 +180,6 @@ MonoBehaviour:
   RunningLightAttack: {fileID: 11400000, guid: 74723694e66882a418df2fe76906c0da, type: 2}
   RunningHeavyAttack: {fileID: 11400000, guid: 6f01a5b79fc084747b9f0a889d7dc51e, type: 2}
   _healthScript: {fileID: 8214966954790734677}
-  LeftGauntletData: {fileID: 11400000, guid: 960120bce33a6674ebabbd798d2ec07a, type: 2}
-  RightGauntletData: {fileID: 11400000, guid: a126c23a51e0625489897c1909206519, type: 2}
   _leftHitbox: {fileID: 6711534601265782201}
   _rightHitbox: {fileID: 235802254161317062}
   _pullBackSpeed: 0.12
@@ -234,6 +233,12 @@ MonoBehaviour:
   stunRecoveryRate: 5
   stunRecoveryDelay: 2
   invincibilityDuration: 0.5
+  MaxPoise: 0
+  CurrentPoise: 0
+  PoiseRecoveryRate: 0
+  PoiseRecoveryDelay: 0
+  InstantKnockback: 0
+  OvercapKnockback: 0
   LastCheckPoint: {fileID: 0}
   PlayerSpawn: {fileID: 0}
 --- !u!136 &1490983485963244258
@@ -259,6 +264,23 @@ CapsuleCollider:
   m_Height: 3
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7300029207042372441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f0be08bd281f343b3eae772cccd1ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsManager
+  BaseMaxHealth: 100
+  BaseDamage: 10
+  CurrentMaxHealth: 0
+  CurrentDamage: 0
+  _healthScript: {fileID: 8214966954790734677}
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0

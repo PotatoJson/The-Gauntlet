@@ -17,14 +17,6 @@ public class GemPopupMenu : MonoBehaviour
     [Tooltip("Drag the parent object that holds Slot1-Slot5 for Secondary here")]
     [SerializeField] private Transform secondaryGauntlet;
 
-    [Header("Detail Panel References")]
-    [SerializeField] private GameObject detailPanel;
-    [SerializeField] private TMPro.TMP_Text detailNameText;
-    [SerializeField] private TMPro.TMP_Text detailDescriptionText;
-    [SerializeField] private UnityEngine.UI.Image detailImage;
-    [SerializeField] private GameObject detailCloseButton; // So the controller doesn't get stuck!
-
-    [SerializeField] private GameObject detailButtonInPopUI; // To return focus when closing details
     private DraggableGem _targetGem;
     private RectTransform _rectTransform;
 
@@ -35,7 +27,7 @@ public class GemPopupMenu : MonoBehaviour
         gameObject.SetActive(false); // Hide the menu when the game starts
     }
 
-private void Update()
+    private void Update()
     {
         if (gameObject.activeInHierarchy)
         {
@@ -44,13 +36,8 @@ private void Update()
 
             if (cancelPressed)
             {
-                // LAYER 1: If the Detail Panel is open, just close that!
-                if (detailPanel != null && detailPanel.activeSelf)
-                {
-                    CloseDetailPanel();
-                }
-                // LAYER 2: If the Sub Panel (Primary/Secondary) is open, close that and return to Equip!
-                else if (subPanel != null && subPanel.activeSelf)
+                // LAYER 1: If the Sub Panel (Primary/Secondary) is open, close that and return to Equip!
+                if (subPanel != null && subPanel.activeSelf)
                 {
                     subPanel.SetActive(false);
                     if (EventSystem.current != null && equipButton != null)
@@ -58,11 +45,11 @@ private void Update()
                         EventSystem.current.SetSelectedGameObject(equipButton);
                     }
                 }
-                // LAYER 3: Otherwise, close the whole PopUI and go back to the Gem!
+                // LAYER 2: Otherwise, close the whole PopUI and go back to the Gem!
                 else
                 {
                     CloseMenu();
-                    
+
                     if (EventSystem.current != null && _targetGem != null)
                     {
                         EventSystem.current.SetSelectedGameObject(null);
@@ -83,7 +70,7 @@ private void Update()
         subPanel.SetActive(false);
         gameObject.SetActive(true);
 
-        // NEW: Instantly give the controller cursor to the Equip button
+        // Instantly give the controller cursor to the Equip button
         if (Gamepad.current != null && equipButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -108,8 +95,7 @@ private void Update()
         if (_targetGem != null)
         {
             // Send it back to its specific category grid
-            _targetGem.transform.SetParent(_targetGem.originalInventoryGrid);
-            _targetGem.AnimateToNewHome(); // Triggers your DOTween pop!
+            _targetGem.ReturnToInventory(); // Uses the safe return method we added earlier!
         }
         CloseMenu();
     }
@@ -131,7 +117,7 @@ private void Update()
         // Loop through all children (image, Text, Slot1, Slot2...)
         foreach (Transform child in gauntletParent)
         {
-            // NEW: Skip this child completely if it is not a Gauntlet Slot
+            // Skip this child completely if it is not a Gauntlet Slot
             if (!child.name.Contains("Slot"))
             {
                 continue;
@@ -156,37 +142,4 @@ private void Update()
         Debug.Log("This Gauntlet is full!");
         CloseMenu();
     }
-
-    public void OnDetailClicked()
-    {
-        if (_targetGem == null) return;
-
-        // 1. Pass the data from the gem to the UI texts/image
-        detailNameText.text = _targetGem.gemName;
-        detailDescriptionText.text = _targetGem.gemDescription;
-        detailImage.sprite = _targetGem.gemIcon;
-
-        // 2. Turn on the panel
-        detailPanel.SetActive(true);
-
-        // 3. Hand the controller cursor to the Close button inside the Detail panel
-        if (Gamepad.current != null && detailCloseButton != null && EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(detailCloseButton);
-        }
-    }
-
-    public void CloseDetailPanel()
-    {
-        detailPanel.SetActive(false);
-
-        // Hand the cursor back to the "Detail" button in the main PopUI
-        if (Gamepad.current != null && detailButtonInPopUI != null && EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(detailButtonInPopUI);
-        }
-    }
-
 }

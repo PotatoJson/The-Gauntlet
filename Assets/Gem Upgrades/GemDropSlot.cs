@@ -1,8 +1,30 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class GemDropSlot : MonoBehaviour, IDropHandler
 {
+    private Image _slotImage;
+    private Color _defaultColor; // To remember what color the slot was originally!
+
+    private void Awake()
+    {
+        _slotImage = GetComponent<Image>();
+        if (_slotImage != null)
+        {
+            _defaultColor = _slotImage.color;
+        }
+    }
+
+    private void Update()
+    {
+        // THE FIX: If the player picks the gem back up and the slot is empty, reset the color!
+        if (transform.childCount == 0 && _slotImage != null && _slotImage.color != _defaultColor)
+        {
+            _slotImage.color = _defaultColor;
+        }
+    }
+
     public void OnDrop(PointerEventData eventData)
     {
         GameObject droppedObject = eventData.pointerDrag;
@@ -11,25 +33,34 @@ public class GemDropSlot : MonoBehaviour, IDropHandler
         DraggableGem incomingGem = droppedObject.GetComponent<DraggableGem>();
         if (incomingGem != null)
         {
-            // 1. SWAP LOGIC: Is there already a gem in this slot?
-            if (transform.childCount > 0)
+            // If it is locked, ignore the drop completely!
+            if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             {
-                // Grab the gem currently sitting in this slot
-                DraggableGem existingGem = transform.GetChild(0).GetComponent<DraggableGem>();
-
-                if (existingGem != null)
-                {
-                    // Tell the existing gem to go back to where the new gem came from!
-                    Transform previousHome = incomingGem.parentAfterDrag;
-                    existingGem.transform.SetParent(previousHome);
-
-                    // Trigger the animation for the gem that got kicked out
-                    existingGem.AnimateToNewHome();
-                }
+                if (!RewardMenuManager.Instance.CanDragGem(incomingGem)) return;
             }
 
-            // 2. Accept the incoming gem
+            foreach (Transform child in transform) { Destroy(child.gameObject); }
+
             incomingGem.parentAfterDrag = transform;
+
+            RectTransform slotRect = GetComponent<RectTransform>();
+            RectTransform gemRect = incomingGem.GetComponent<RectTransform>();
+
+            if (slotRect != null && gemRect != null)
+            {
+                gemRect.sizeDelta = slotRect.rect.size;
+            }
+
+            Image gemImage = incomingGem.GetComponent<Image>();
+            if (gemImage != null && _slotImage != null)
+            {
+                _slotImage.color = gemImage.color;
+            }
+
+            if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+            {
+                RewardMenuManager.Instance.OnGemSlotted(incomingGem);
+            }
         }
     }
 }

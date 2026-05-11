@@ -196,7 +196,10 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleDeath()
     {
-        //maybe teleport player not sure what we doin for death yet
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+        transform.position = PlayerSpawn.transform.position;
+        if (cc != null) cc.enabled = true;
         Debug.Log("Death Test");
     }
     //private void BreakGuard()
@@ -231,6 +234,15 @@ public class PlayerHealth : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
+    public void UpdateMaxHealth(float newMaxHealth)
+    {
+        Debug.Log("Before change " + maxHealth);
+        maxHealth = newMaxHealth;
+        Debug.Log("After change " + maxHealth);
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public void PlayerRespawnSpikes()
     {
         CharacterController cc = GetComponent<CharacterController>();
@@ -240,4 +252,5 @@ public class PlayerHealth : MonoBehaviour
 
         if (cc != null) cc.enabled = true; // Turn it back on
     }
+
 }

@@ -15,6 +15,8 @@ public class SettingsTabManager : MonoBehaviour
     [SerializeField] private InputActionReference nextTabAction;
     [SerializeField] private InputActionReference enterTabAction; // South / Enter
     [SerializeField] private InputActionReference backTabAction;  // East / Escape
+    [SerializeField] private InputActionReference previousSubTabAction; 
+    [SerializeField] private InputActionReference nextSubTabAction;
 
     [Header("UI References")]
     [SerializeField] private List<GameObject> allPanels;
@@ -73,9 +75,10 @@ public class SettingsTabManager : MonoBehaviour
 
     private void OnEnable()
     {
-        // You must enable the actions for them to read input
         if (previousTabAction != null) previousTabAction.action.Enable();
         if (nextTabAction != null) nextTabAction.action.Enable();
+        if (previousSubTabAction != null) previousSubTabAction.action.Enable();
+        if (nextSubTabAction != null) nextSubTabAction.action.Enable();
         if (enterTabAction != null) enterTabAction.action.Enable();
         if (backTabAction != null) backTabAction.action.Enable();
     }
@@ -84,6 +87,8 @@ public class SettingsTabManager : MonoBehaviour
     {
         if (previousTabAction != null) previousTabAction.action.Disable();
         if (nextTabAction != null) nextTabAction.action.Disable();
+        if (previousSubTabAction != null) previousSubTabAction.action.Disable();
+        if (nextSubTabAction != null) nextSubTabAction.action.Disable();
         if (enterTabAction != null) enterTabAction.action.Disable();
         if (backTabAction != null) backTabAction.action.Disable();
     }
@@ -150,23 +155,26 @@ public class SettingsTabManager : MonoBehaviour
 
     private void HandleTabSwitching()
     {
-        int direction = 0;
+        // 1. Check Main Tab Navigation (Up/Down)
+        int mainDirection = 0;
+        if (previousTabAction.action.WasPressedThisFrame()) mainDirection = -1;
+        else if (nextTabAction.action.WasPressedThisFrame()) mainDirection = 1;
 
-        if (previousTabAction.action.WasPressedThisFrame()) direction = -1;
-        else if (nextTabAction.action.WasPressedThisFrame()) direction = 1;
-
-        if (direction != 0)
+        // Main Tab movement ONLY happens if we are on the header
+        if (mainDirection != 0 && _isFocusOnHeader)
         {
-            // 1. Dived inside Controls? Move the sub-tabs.
-            if (!_isFocusOnHeader && allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
-            {
-                controlsSubTabManager.TryHandleSubTabInput(direction);
-            }
-            // 2. On the Header? Move the PREVIEW highlight, do not switch the panel yet!
-            else if (_isFocusOnHeader)
-            {
-                CyclePreview(direction);
-            }
+            CyclePreview(mainDirection);
+        }
+
+        // 2. Check Sub-Tab Navigation (Left/Right)
+        int subDirection = 0;
+        if (previousSubTabAction != null && previousSubTabAction.action.WasPressedThisFrame()) subDirection = -1;
+        else if (nextSubTabAction != null && nextSubTabAction.action.WasPressedThisFrame()) subDirection = 1;
+
+        // Sub Tab movement ONLY happens if we are inside the Controls panel
+        if (subDirection != 0 && !_isFocusOnHeader && allPanels[_currentTabIndex].name == "Controls" && controlsSubTabManager != null)
+        {
+            controlsSubTabManager.TryHandleSubTabInput(subDirection);
         }
 
         // Dive In / Confirm Tab (South Button)
@@ -174,12 +182,10 @@ public class SettingsTabManager : MonoBehaviour
         {
             _isFocusOnHeader = false;
 
-            // If they pressed confirm on a NEW tab, actually open it!
             if (_previewTabIndex != _currentTabIndex)
             {
                 OpenTab(_previewTabIndex);
             }
-            // If they pressed confirm on the ALREADY OPEN tab, just dive in!
             else
             {
                 UpdateTabVisuals();
@@ -190,14 +196,12 @@ public class SettingsTabManager : MonoBehaviour
         // Back Out (East Button)
         if (backTabAction.action.WasPressedThisFrame())
         {
-            // 1. Are we inside a sub-menu? Just back out to the header.
             if (!_isFocusOnHeader)
             {
                 _isFocusOnHeader = true;
                 _previewTabIndex = _currentTabIndex;
                 ReturnFocusToTabHeader();
             }
-            // 2. Are we ALREADY on the header? Exit the settings menu entirely!
             else
             {
                 onExitSettingsRequested?.Invoke();
@@ -213,10 +217,10 @@ public class SettingsTabManager : MonoBehaviour
         if (_previewTabIndex >= allPanels.Count) _previewTabIndex = 0;
         if (_previewTabIndex < 0) _previewTabIndex = allPanels.Count - 1;
 
-        // Clear Unity's default selection so it doesn't fight your custom colors
-        if (EventSystem.current != null)
+        // Sync the EventSystem directly to the newly previewed tab button.
+        if (EventSystem.current != null && tabButtons.Count > _previewTabIndex)
         {
-            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(tabButtons[_previewTabIndex].gameObject);
         }
 
         UpdateTabVisuals();
@@ -236,18 +240,21 @@ public class SettingsTabManager : MonoBehaviour
 
     private void UpdateTabVisuals()
     {
+        // THE FIX: Define a perfectly transparent white color to match your new UI borders
+        Color transparentState = new Color(1f, 1f, 1f, 0f);
+
         for (int i = 0; i < tabButtons.Count; i++)
         {
             if (tabButtons[i] == null) continue;
 
-            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active (Red), others are Inactive (Gray).
+            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active, others are Transparent.
             if (!_isUsingGamepad)
             {
-                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : inactiveColor;
-                continue; // Skip the rest of the loop for this button!
+                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : transparentState;
+                continue;
             }
 
-            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Inactive)
+            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Transparent)
             if (i == _previewTabIndex)
             {
                 if (i == _currentTabIndex && !_isFocusOnHeader)
@@ -265,7 +272,8 @@ public class SettingsTabManager : MonoBehaviour
             }
             else
             {
-                tabButtons[i].image.color = inactiveColor;
+                // Unselected and un-previewed tabs vanish entirely!
+                tabButtons[i].image.color = transparentState;
             }
         }
     }
