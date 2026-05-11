@@ -103,12 +103,10 @@ public class PlayerCamera : MonoBehaviour
         if (Instance == null) 
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Moved to Awake
+            DontDestroyOnLoad(gameObject);
         }
         else if (Instance != this)
         {
-            // HANDOFF: Before destroying the duplicate, pass the fresh scene references 
-            // (like the new Canvas Reticle) to the surviving Singleton instance!
             if (this.lockOnReticle != null) Instance.lockOnReticle = this.lockOnReticle;
             if (this.playerTarget != null) Instance.playerTarget = this.playerTarget;
             
@@ -122,7 +120,6 @@ public class PlayerCamera : MonoBehaviour
 
     private void Start()
     {
-        // DontDestroyOnLoad is removed from here since it's now in Awake
 
         _cameraZPosition = cameraObject.transform.localPosition.z;
         
