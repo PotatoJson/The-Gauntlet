@@ -100,13 +100,30 @@ public class PlayerCamera : MonoBehaviour
     #region Setup & Public Methods
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null) 
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Moved to Awake
+        }
+        else if (Instance != this)
+        {
+            // HANDOFF: Before destroying the duplicate, pass the fresh scene references 
+            // (like the new Canvas Reticle) to the surviving Singleton instance!
+            if (this.lockOnReticle != null) Instance.lockOnReticle = this.lockOnReticle;
+            if (this.playerTarget != null) Instance.playerTarget = this.playerTarget;
+            
+            // Snap the surviving camera to the new player immediately
+            Instance.SnapToTarget(); 
+            
+            Destroy(gameObject);
+            return;
+        }
     }
 
     private void Start()
     {
-        DontDestroyOnLoad(gameObject);
+        // DontDestroyOnLoad is removed from here since it's now in Awake
+
         _cameraZPosition = cameraObject.transform.localPosition.z;
         
         if (playerTarget != null) 
@@ -124,6 +141,7 @@ public class PlayerCamera : MonoBehaviour
             if (newPlayer != null)
             {
                 playerTarget = newPlayer.transform;
+                SnapToTarget();
             }
         }
         
@@ -141,6 +159,28 @@ public class PlayerCamera : MonoBehaviour
     public void SetControllerSensitivity(float newSensitivity)
     {
         controllerSensitivityMultiplier = newSensitivity;
+    }
+
+    public void SnapToTarget()
+    {
+        if (playerTarget != null)
+        {
+            // Teleport the camera base
+            transform.position = playerTarget.position;
+            _previousTargetPosition = playerTarget.position;
+            
+            // Kill leftover momentum
+            _cameraVelocity = Vector3.zero;
+            
+            // Reset collision depth to prevent getting stuck in walls
+            _cameraObjectPosition = cameraObject.transform.localPosition;
+            _cameraObjectPosition.z = _cameraZPosition;
+            cameraObject.transform.localPosition = _cameraObjectPosition;
+            _targetCameraZPosition = _cameraZPosition;
+            
+            // Break lock-on so the camera doesn't violently snap its rotation
+            ClearLockOnTarget();
+        }
     }
     #endregion
 

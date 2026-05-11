@@ -200,6 +200,9 @@ public class PlayerHealth : MonoBehaviour
         if (cc != null) cc.enabled = false;
         transform.position = PlayerSpawn.transform.position;
         if (cc != null) cc.enabled = true;
+
+        if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
+
         Debug.Log("Death Test");
     }
     //private void BreakGuard()
@@ -251,6 +254,8 @@ public class PlayerHealth : MonoBehaviour
         transform.position = LastCheckPoint.transform.position;
 
         if (cc != null) cc.enabled = true; // Turn it back on
+
+        if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
     }
 
 }
