@@ -231,7 +231,15 @@ public class PlayerCombat : MonoBehaviour
             if (directionToTarget != Vector3.zero)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
+                
+                // Check if we are performing a running attack
+                bool isRunningAttack = (_currentAttackNode == RunningLightAttack || _currentAttackNode == RunningHeavyAttack);
+                
+                // Use a slower turn speed (e.g., 5f) for running attacks to create U-turn arc, 
+                // and a fast snap (30f) for standing/walking attacks
+                float currentTurnSpeed = isRunningAttack ? 5f : 30f; 
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentTurnSpeed * Time.deltaTime);
             }
         }
     }
