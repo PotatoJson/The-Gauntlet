@@ -193,16 +193,20 @@ public class PlayerCombat : MonoBehaviour
     {
         if(node == null) return;
 
-        if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+        if (_stateManager.IsInCombat)
         {
-            ConsumeBuffer();
-            return;
+            // We ARE in combat: enforce stamina rules strictly
+            if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+            {
+                ConsumeBuffer();
+                return;
+            }
+            _staminaScript.ConsumeStamina(node.StaminaCost);
         }
 
         _stateManager.CarryMomentum = keepMomentum;
         _isRotationLocked = true;
 
-        _staminaScript.ConsumeStamina(node.StaminaCost);
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;

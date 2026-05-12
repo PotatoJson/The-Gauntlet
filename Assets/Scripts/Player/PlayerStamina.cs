@@ -66,7 +66,7 @@ public class PlayerStamina : MonoBehaviour
     // used by combat and movement
     public bool HasEnoughStamina(float cost)
     {
-        return _currentStamina >= cost;
+        return _currentStamina > 0f;
     }
 
     public void ConsumeStamina(float amount)
