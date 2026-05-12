@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -41,6 +43,16 @@ public class PlayerHealth : MonoBehaviour
     public float InstantKnockback;
     public float OvercapKnockback;
 
+    [Header("Haptic Feedback")]
+    [Tooltip("Low frequency motor (left side). Heavy, deep rumble.")]
+    [Range(0f, 1f)] [SerializeField] private float damageRumbleLow = 0.5f;
+    
+    [Tooltip("High frequency motor (right side). Sharp, light vibration.")]
+    [Range(0f, 1f)] [SerializeField] private float damageRumbleHigh = 0.8f;
+    
+    [Tooltip("How long the controller vibrates when taking damage.")]
+    [SerializeField] private float damageRumbleDuration = 0.25f;
+
     // Events for UI or other systems to subscribe to
     public event Action<float, float> OnHealthChanged; // _currentHealth, maxHealth
     public event Action<float, float> OnPoiseChanged; //CurrentPoise, MaxPoise
@@ -75,6 +87,12 @@ public class PlayerHealth : MonoBehaviour
         {
             _statsManager.OnStatsCalculated -= HandleMaxHealthChange;
             _statsManager.OnStatsCalculated += HandleMaxPoiseChange;
+        }
+
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad != null)
+        {
+            gamepad.SetMotorSpeeds(0f, 0f);
         }
     }
 
@@ -173,6 +191,8 @@ public class PlayerHealth : MonoBehaviour
         isInvincible = true;
         invincibilityTimer = invincibilityDuration;
 
+        TriggerHaptics(damageRumbleLow, damageRumbleHigh, damageRumbleDuration);
+
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + _currentHealth);
         if (_currentHealth <= 0)
@@ -264,5 +284,33 @@ public class PlayerHealth : MonoBehaviour
 
         if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
     }
+
+    #region Haptics
+    private void TriggerHaptics(float lowFrequency, float highFrequency, float duration)
+    {
+        // Check if there is an active gamepad connected
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad != null)
+        {
+            // Start the motors
+            gamepad.SetMotorSpeeds(lowFrequency, highFrequency);
+            
+            // Start a coroutine to stop the motors after 'duration'
+            StartCoroutine(StopHapticsCoroutine(gamepad, duration));
+        }
+    }
+
+    private IEnumerator StopHapticsCoroutine(Gamepad gamepad, float duration)
+    {
+        // Using WaitForSecondsRealtime ensures the rumble stops even if Time.timeScale == 0 (e.g., hit pause or pausing the game)
+        yield return new WaitForSecondsRealtime(duration);
+
+        // Double check if the gamepad is still connected/current before stopping
+        if (gamepad != null)
+        {
+            gamepad.SetMotorSpeeds(0f, 0f);
+        }
+    }
+    #endregion
 
 }
