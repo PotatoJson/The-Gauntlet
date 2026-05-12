@@ -10,16 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab43d127c66d9f74aa071f25a29c18ef, type: 3}
-  m_Name: BasicLeft
+  m_Name: IceGauntlet
   m_EditorClassIdentifier: Assembly-CSharp::GauntletData
-  Name: 
+  Name: Fire Gauntlet
   Icon: {fileID: 0}
   Description: 
-  Damage: 10
-  PoiseDamage: 5
+  Damage: 15
+  PoiseDamage: 0
   Rarity: 0
-  Element: 0
-  InherentPassives: []
-  MaxPrimaryGemSlots: 0
-  MaxSecondaryGemSlots: 0
+  Element: 2
+  InherentPassives:
+  - StatType: 0
+    Amount: 0
+  MaxPrimaryGemSlots: 4
+  MaxSecondaryGemSlots: 2
   HasSkillSlot: 0
