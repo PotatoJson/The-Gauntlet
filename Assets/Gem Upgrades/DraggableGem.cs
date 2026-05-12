@@ -47,6 +47,13 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (GemPopupMenu.Instance != null &&
+           (GemPopupMenu.Instance.gameObject.activeInHierarchy || GemPopupMenu.Instance.IsPlacingMode))
+        {
+            eventData.pointerDrag = null;
+            return;
+        }
+
         // Check if we are in reward mode and if this gem is locked!
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
         {
@@ -105,11 +112,31 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
     }
 
+    public bool IsEquipped()
+    {
+        return transform.parent != null && transform.parent.name.Contains("Slot");
+    }
+
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Right)
+        if (eventData.button == PointerEventData.InputButton.Left)
         {
-            ForceOpenPopUI();
+            if (!IsEquipped())
+            {
+                if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+                {
+                    if (!RewardMenuManager.Instance.CanDragGem(this))
+                    {
+                        return; // Block the click
+                    }
+                }
+            }
+
+            if (GemPopupMenu.Instance != null)
+            {
+                RectTransform myRect = GetComponent<RectTransform>();
+                GemPopupMenu.Instance.OpenMenu(this, myRect);
+            }
         }
     }
 

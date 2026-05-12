@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TMPro;
-using UnityEditor.Localization.Plugins.XLIFF.V20;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -12,7 +11,7 @@ public class RewardMenuManager : MonoBehaviour
 
     [Header("Screen References")]
     [SerializeField] private GameObject characterScreenRoot;
-    [SerializeField] private GameObject leftSideGauntlets; //also for reward menu gauntlets weren't showing up
+    [SerializeField] private GameObject leftSideGauntlets;
     [SerializeField] private GameObject rightSideDetails;
     [SerializeField] private GameObject rightSideRewards;
 
@@ -30,8 +29,12 @@ public class RewardMenuManager : MonoBehaviour
     [SerializeField] private GameObject warningCancelButton;
 
     [Header("UI Text Overrides")]
-    [SerializeField] private TMP_Text menuTitleText; // Drag your "Rewards" title text here!
-    [SerializeField] private TMP_Text warningBodyText; // Drag the text inside your Warning Panel here
+    [SerializeField] private TMP_Text menuTitleText;
+    [SerializeField] private TMP_Text warningBodyText;
+
+    [Header("Navigation Anchors")]
+    [SerializeField] private GameObject primaryTitleButton;
+    [SerializeField] private GameObject secondaryTitleButton; // NEW: Added this so it knows both gauntlets!
 
     private GameObject _lastSelectedReward;
     private bool _isWarningActive = false;
@@ -49,22 +52,17 @@ public class RewardMenuManager : MonoBehaviour
         return rightSideRewards != null && rightSideRewards.activeSelf;
     }
 
-    // Checks if a gem is allowed to be picked up
     public bool CanDragGem(DraggableGem gem)
     {
         if (_isOverflowMode) return true;
-
-        // Otherwise, apply the strict Level-Up Reward lock
         return _currentlySlottedGem == null || _currentlySlottedGem == gem;
     }
 
-    // Called by GemDropSlot.cs
     public void OnGemSlotted(DraggableGem gem)
     {
         _currentlySlottedGem = gem;
     }
 
-    // Called by GemReturnZone.cs
     public void OnGemReturned(DraggableGem gem)
     {
         if (_currentlySlottedGem == gem)
@@ -91,12 +89,11 @@ public class RewardMenuManager : MonoBehaviour
         if (menuTitleText != null) menuTitleText.text = "Gem Holder";
         if (warningBodyText != null) warningBodyText.text = "Discard unequipped gems permanently?";
 
-        // Clean out the holder first
         foreach (Transform child in gemHolder) { Destroy(child.gameObject); }
 
         GameObject firstSpawnedGem = null;
+        List<Button> spawnedButtons = new List<Button>();
 
-        // Spawn the specific overflow gems!
         foreach (GameObject gemPrefab in overflowGemPrefabs)
         {
             GameObject spawnedGem = Instantiate(gemPrefab, gemHolder);
@@ -106,7 +103,22 @@ public class RewardMenuManager : MonoBehaviour
             if (dragScript != null) dragScript.enabled = true;
 
             Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null) btn.onClick.RemoveAllListeners();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+
+                btn.onClick.AddListener(() =>
+                {
+                    if (!CanDragGem(dragScript)) return;
+
+                    if (GemPopupMenu.Instance != null)
+                    {
+                        GemPopupMenu.Instance.OpenMenu(dragScript, spawnedGem.GetComponent<RectTransform>());
+                    }
+                });
+
+                spawnedButtons.Add(btn);
+            }
 
             EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
             if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
@@ -116,6 +128,8 @@ public class RewardMenuManager : MonoBehaviour
             entry.callback.AddListener((data) => { UpdateSmallDescription(spawnedGem); });
             trigger.triggers.Add(entry);
         }
+
+        TrapControllerFocus(spawnedButtons);
 
         if (Gamepad.current != null && firstSpawnedGem != null && EventSystem.current != null)
         {
@@ -138,7 +152,6 @@ public class RewardMenuManager : MonoBehaviour
         _currentlySlottedGem = null;
         _isOverflowMode = false;
 
-        // Reset text for standard level ups
         if (menuTitleText != null) menuTitleText.text = "Choose a Reward";
         if (warningBodyText != null) warningBodyText.text = "Leave without taking a reward?";
 
@@ -159,6 +172,7 @@ public class RewardMenuManager : MonoBehaviour
         }
 
         GameObject firstSpawnedGem = null;
+        List<Button> spawnedButtons = new List<Button>();
 
         foreach (GameObject gemPrefab in chosenGems)
         {
@@ -169,7 +183,22 @@ public class RewardMenuManager : MonoBehaviour
             if (dragScript != null) dragScript.enabled = true;
 
             Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null) btn.onClick.RemoveAllListeners();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+
+                btn.onClick.AddListener(() =>
+                {
+                    if (!CanDragGem(dragScript)) return;
+
+                    if (GemPopupMenu.Instance != null)
+                    {
+                        GemPopupMenu.Instance.OpenMenu(dragScript, spawnedGem.GetComponent<RectTransform>());
+                    }
+                });
+
+                spawnedButtons.Add(btn);
+            }
 
             EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
             if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
@@ -180,6 +209,8 @@ public class RewardMenuManager : MonoBehaviour
             trigger.triggers.Add(entry);
         }
 
+        TrapControllerFocus(spawnedButtons);
+
         if (Gamepad.current != null && firstSpawnedGem != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -187,10 +218,32 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
+    private void TrapControllerFocus(List<Button> spawnedButtons)
+    {
+        if (spawnedButtons.Count > 0)
+        {
+            for (int i = 0; i < spawnedButtons.Count; i++)
+            {
+                Navigation nav = new Navigation();
+                nav.mode = Navigation.Mode.Explicit;
+
+                int leftIndex = (i == 0) ? spawnedButtons.Count - 1 : i - 1;
+                int rightIndex = (i == spawnedButtons.Count - 1) ? 0 : i + 1;
+
+                nav.selectOnLeft = spawnedButtons[leftIndex];
+                nav.selectOnRight = spawnedButtons[rightIndex];
+
+                spawnedButtons[i].navigation = nav;
+            }
+        }
+    }
+
     private void Update()
     {
         if (rightSideRewards.activeSelf)
         {
+            if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+
             if (!_isWarningActive && EventSystem.current != null)
             {
                 GameObject currentSel = EventSystem.current.currentSelectedGameObject;
@@ -208,11 +261,50 @@ public class RewardMenuManager : MonoBehaviour
             {
                 if (_isWarningActive)
                 {
-                    CancelClose(); // Hide warning, stay in menu
+                    CancelClose();
                 }
                 else
                 {
-                    ShowWarning(); // Show warning to confirm leaving
+                    GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+                    if (currentSel != null)
+                    {
+                        // 1. If focused on a gem -> Step back to Primary Title
+                        if (currentSel.transform.IsChildOf(gemHolder))
+                        {
+                            if (primaryTitleButton != null)
+                            {
+                                EventSystem.current.SetSelectedGameObject(null);
+                                EventSystem.current.SetSelectedGameObject(primaryTitleButton);
+                            }
+                        }
+                        // 2. THE FIX 1: If focused on a SLOT (after equipping!) -> Step back to the matching Gauntlet Title
+                        else if (currentSel.name.Contains("Slot") && InventoryManager.Instance != null)
+                        {
+                            if (currentSel.transform.IsChildOf(InventoryManager.Instance.primaryGauntlet) && primaryTitleButton != null)
+                            {
+                                EventSystem.current.SetSelectedGameObject(null);
+                                EventSystem.current.SetSelectedGameObject(primaryTitleButton);
+                            }
+                            else if (currentSel.transform.IsChildOf(InventoryManager.Instance.secondaryGauntlet) && secondaryTitleButton != null)
+                            {
+                                EventSystem.current.SetSelectedGameObject(null);
+                                EventSystem.current.SetSelectedGameObject(secondaryTitleButton);
+                            }
+                            else
+                            {
+                                ShowWarning();
+                            }
+                        }
+                        else
+                        {
+                            ShowWarning();
+                        }
+                    }
+                    else
+                    {
+                        ShowWarning();
+                    }
                 }
             }
         }
@@ -237,6 +329,25 @@ public class RewardMenuManager : MonoBehaviour
     {
         _isWarningActive = true;
         warningPanel.SetActive(true);
+
+        // THE FIX: Dynamically check the player's status right before the panel appears!
+        if (warningBodyText != null)
+        {
+            if (_isOverflowMode)
+            {
+                warningBodyText.text = "Discard unequipped gems permanently?";
+            }
+            else if (_currentlySlottedGem != null)
+            {
+                // If they have successfully slotted a gem!
+                warningBodyText.text = "Reward equipped! Ready to leave?";
+            }
+            else
+            {
+                // If they haven't picked anything yet!
+                warningBodyText.text = "Leave without taking a reward?";
+            }
+        }
 
         if (Gamepad.current != null && warningCancelButton != null && EventSystem.current != null)
         {
