@@ -69,27 +69,34 @@ public class RebindHandler : MonoBehaviour
                 return;
             }
 
-            // 2. Conflict Validation
+            // 2. Conflict Validation (Uses the new string check!)
             if (conflictManager != null)
             {
-                if (conflictManager.CheckForConflicts(inputAction.action, bindingIndex, newPath))
+                string conflictMsg = conflictManager.GetConflictMessage(inputAction.action, bindingIndex, newPath);
+                if (conflictMsg != null)
                 {
-                    RejectRebind(null); // ConflictManager already handles the text
+                    RejectRebind(conflictMsg);
                     return;
                 }
             }
 
-            // 3. Success!
+            // 3. Success! Save and restore focus cleanly.
             string rebinds = inputAction.action.SaveBindingOverridesAsJson();
             PlayerPrefs.SetString("rebinds_" + inputAction.action.name, rebinds);
+
+            inputAction.action.Enable();
+            rebindButton.interactable = true;
+            RefreshDisplay();
+
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(rebindButton.gameObject);
+            }
         }
         else
         {
             RejectRebind(null); // Silent reject for manual cancels
-            return;
         }
-
-        CleanupAndRestoreFocus();
     }
 
     private void RejectRebind(string warningMessage)
@@ -100,25 +107,24 @@ public class RebindHandler : MonoBehaviour
         else
             inputAction.action.ApplyBindingOverride(bindingIndex, _oldOverridePath);
 
-        // Tell the central manager to show the error
-        if (!string.IsNullOrEmpty(warningMessage) && conflictManager != null)
-        {
-            conflictManager.ShowWarning(warningMessage);
-        }
-
-        CleanupAndRestoreFocus();
-    }
-
-    private void CleanupAndRestoreFocus()
-    {
+        // Turn the UI back on
         inputAction.action.Enable();
         rebindButton.interactable = true;
         RefreshDisplay();
 
-        // Fix the vanishing cursor bug!
-        if (EventSystem.current != null)
+        // THE FIX: Route the focus properly!
+        if (!string.IsNullOrEmpty(warningMessage) && conflictManager != null)
         {
-            EventSystem.current.SetSelectedGameObject(rebindButton.gameObject);
+            // If there is an error, pass the Warning Message AND the Rebind Button to the popup!
+            conflictManager.ShowWarning(warningMessage, rebindButton.gameObject);
+        }
+        else
+        {
+            // If there is no error (the player just hit ESC to cancel), return focus normally.
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(rebindButton.gameObject);
+            }
         }
     }
 

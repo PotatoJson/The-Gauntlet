@@ -37,6 +37,7 @@ public class SettingsTabManager : MonoBehaviour
 
     [Header("Sub-Tab Managers")]
     [SerializeField] private ControlsSubTabManager controlsSubTabManager;
+    [SerializeField] private ConflictManager conflictManager;
 
     private int _currentTabIndex = 0;
     private int _previewTabIndex = 0;
@@ -155,6 +156,8 @@ public class SettingsTabManager : MonoBehaviour
 
     private void HandleTabSwitching()
     {
+        if (conflictManager != null && conflictManager.IsPopupActive()) return;
+
         // 1. Check Main Tab Navigation (Up/Down)
         int mainDirection = 0;
         if (previousTabAction.action.WasPressedThisFrame()) mainDirection = -1;
