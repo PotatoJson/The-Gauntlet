@@ -18,15 +18,14 @@ public class PlayerCombat : MonoBehaviour
     public AttackNode RunningLightAttack;
     public AttackNode RunningHeavyAttack;
 
-    [Header("External Links")]
-    [SerializeField] private PlayerHealth _healthScript;
-
     [Header("References")]
     private PlayerManager _stateManager;
     private Animator _animator;
     private PlayerControls _input;
     private PlayerStatsManager _statsManager;
-    
+    private PlayerStamina _staminaScript;
+    private PlayerHealth _healthScript;
+
     [Header("Physical Hitboxes")]
     [SerializeField] private HitboxController _leftHitbox;
     [SerializeField] private HitboxController _rightHitbox;
@@ -46,15 +45,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float _normHeavyWindUp;
     public float MaxChargeDuration;
     private float _chargeTimer = 0f;
-
-    [Header("Stamina Settings")]
-    [SerializeField] private StaminaBar _staminaBar;
-    public float RegenRate = 60f;
-    public float RegenDelay = 3f;
-    private float _staminaRegenTimer = 0f;
-    private float _internalStamina;
-    private int CurrentStamina;
-    public int MaxStamina = 100;
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
@@ -68,6 +58,8 @@ public class PlayerCombat : MonoBehaviour
         _animator = GetComponentInChildren<Animator>();
         _stateManager = GetComponent<PlayerManager>();
         _statsManager = GetComponent<PlayerStatsManager>();
+        _staminaScript = GetComponent<PlayerStamina>();
+        _healthScript = GetComponent<PlayerHealth>();
 
         _input = new PlayerControls();
 
@@ -85,14 +77,6 @@ public class PlayerCombat : MonoBehaviour
     private void OnEnable() => _input.Enable();
     
     private void OnDisable() => _input.Disable();
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        CurrentStamina = MaxStamina;
-        _internalStamina = MaxStamina;
-        UpdateStaminaUI();
-    }
 
     // Update is called once per frame
     void Update()
@@ -111,7 +95,6 @@ public class PlayerCombat : MonoBehaviour
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
 
         HandleHeavyChargeTimer();
-        HandleStaminaRegen();
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
@@ -153,35 +136,6 @@ public class PlayerCombat : MonoBehaviour
         BufferTimer = 0;
     }
     #endregion
-
-    //stamina stuff
-    private void HandleStaminaRegen()
-    {
-        if(_internalStamina < MaxStamina)
-        {
-            if (_staminaRegenTimer > 0)
-            {
-                _staminaRegenTimer -= Time.deltaTime;
-            }
-            else
-            {
-                // Rapidly refill once timer hits zero
-                _internalStamina += RegenRate * Time.deltaTime;
-                _internalStamina = Mathf.Min(_internalStamina, MaxStamina);
-                
-                CurrentStamina = Mathf.RoundToInt(_internalStamina);
-                UpdateStaminaUI();
-            }
-        }
-    }
-
-    private void UpdateStaminaUI()
-    {
-        if(_staminaBar != null)
-        {
-            _staminaBar.SetStamina(Mathf.RoundToInt(_internalStamina), MaxStamina);
-        }
-    }
 
     //Temp Potion logic
     private void UsePotion()
@@ -239,18 +193,20 @@ public class PlayerCombat : MonoBehaviour
     {
         if(node == null) return;
 
-        if(_internalStamina < node.StaminaCost)
+        if (_stateManager.IsInCombat)
         {
-            ConsumeBuffer();
-            return;
+            // We ARE in combat: enforce stamina rules strictly
+            if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+            {
+                ConsumeBuffer();
+                return;
+            }
+            _staminaScript.ConsumeStamina(node.StaminaCost);
         }
 
         _stateManager.CarryMomentum = keepMomentum;
         _isRotationLocked = true;
 
-        _internalStamina -= node.StaminaCost;
-        _staminaRegenTimer = RegenDelay;
-        UpdateStaminaUI();
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;
@@ -263,16 +219,48 @@ public class PlayerCombat : MonoBehaviour
     }
 
     private void ProcessAttackRotation()
+{
+    if (_stateManager.GetCurrentState() != PlayerState.Attacking) return;
+
+    // LOCK-ON
+    if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
     {
-        if(_stateManager.IsLockedOn || _isRotationLocked || _stateManager.GetCurrentState() != PlayerState.Attacking) return;
+        // Track the enemy during the wind-up phase (while _isRotationLocked is true).
+        // Once the hitbox is armed (_isRotationLocked = false), we stop tracking so the swing follows through naturally.
+        if (_isRotationLocked) 
+        {
+            Vector3 directionToTarget = PlayerCamera.Instance.currentLockOnTarget.position - transform.position;
+            directionToTarget.y = 0; // Keep the rotation strictly horizontal
+
+            if (directionToTarget != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
+                
+                // Check if we are performing a running attack
+                bool isRunningAttack = (_currentAttackNode == RunningLightAttack || _currentAttackNode == RunningHeavyAttack);
+                
+                // Use a slower turn speed (e.g., 5f) for running attacks to create U-turn arc, 
+                // and a fast snap (30f) for standing/walking attacks
+                float currentTurnSpeed = isRunningAttack ? 5f : 30f; 
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentTurnSpeed * Time.deltaTime);
+            }
+        }
+    }
+    // FREE-AIM BEHAVIOR
+    else
+    {
+        // Only allow free-aim snapping if the rotation is unlocked (hitbox is armed / active frames)
+        if (_isRotationLocked) return;
 
         Vector3 snapDir = _stateManager.MoveDirectionIntent;
-        if(snapDir != Vector3.zero)
+        if (snapDir != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(snapDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
         }
     }
+}
 
     private void HandleHeavyChargeTimer()
     {
@@ -299,7 +287,7 @@ public class PlayerCombat : MonoBehaviour
             //future dual hand attack
         }
         int currentDamage = Mathf.RoundToInt(_statsManager.CurrentDamage);
-        int currentPoise = Mathf.RoundToInt(10f); // need to add poiseDamage to _statsManager
+        int currentPoise = Mathf.RoundToInt(_statsManager.CurrentPoiseDamage); // need to add poiseDamage to _statsManager
 
         float chargeBonus = 1.0f;
 

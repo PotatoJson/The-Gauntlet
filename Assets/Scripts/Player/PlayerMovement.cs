@@ -15,6 +15,11 @@ public class PlayerMovement : MonoBehaviour
     private bool _isRollButtonHeld;
     private float _rollButtonHoldTimer;
     private bool _isSprinting;
+
+    [Header("Stamina Costs")]
+    public float rollStaminaCost = 15f;
+    public float jumpStaminaCost = 10f;
+    public float sprintStaminaDrainRate = 15f; // Drain per second
     
     [Header("Combat Settings")]
     public bool isTargetLocked = false;
@@ -55,6 +60,7 @@ public class PlayerMovement : MonoBehaviour
     private float _smoothSpeed;
     private float _targetSpeed;
     private Vector3 _horizontalVelocity;
+    private PlayerStamina _playerStamina;
     
     // Roll Logic
     private bool _isRolling;
@@ -80,6 +86,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _stateManager = GetComponent<PlayerManager>();
         _controller = GetComponent<CharacterController>();
+        _playerStamina = GetComponent<PlayerStamina>();
         
         if (Camera.main != null) _cameraTransform = Camera.main.transform;
 
@@ -252,6 +259,21 @@ public class PlayerMovement : MonoBehaviour
         }
 
         bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+
+        if (actualSprint && _stateManager.IsInCombat)
+        {
+            if (_playerStamina.HasEnoughStamina(sprintStaminaDrainRate * Time.deltaTime))
+            {
+                _playerStamina.ConsumeStamina(sprintStaminaDrainRate * Time.deltaTime);
+            }
+            else
+            {
+                // Force the player to stop sprinting if they run out of stamina
+                actualSprint = false;
+                _isSprinting = false; 
+            }
+        }
+
         if (_controller.isGrounded)
         {
             _stateManager.SetPlayerState(actualSprint ? PlayerState.Running : PlayerState.Walking);
@@ -310,6 +332,12 @@ public class PlayerMovement : MonoBehaviour
         else if(isCombatCancel)
         {
           if(!_controller.isGrounded) return;
+        }
+
+        if (_stateManager.IsInCombat)
+        {
+            if (!_playerStamina.HasEnoughStamina(rollStaminaCost)) return; // Fail roll
+            _playerStamina.ConsumeStamina(rollStaminaCost);
         }
 
         _hasBufferedRoll = false;
@@ -447,6 +475,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (_controller.isGrounded && canJump)
         {
+            if (_stateManager.IsInCombat)
+            {
+                if (!_playerStamina.HasEnoughStamina(jumpStaminaCost)) return; // Fail jump
+                _playerStamina.ConsumeStamina(jumpStaminaCost);
+            }
+
             // Physics formula for jump height
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * gravityMultiplier);
 

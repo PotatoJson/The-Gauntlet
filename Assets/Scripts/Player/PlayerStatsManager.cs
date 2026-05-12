@@ -1,15 +1,23 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class PlayerStatsManager : MonoBehaviour
 {
     [Header("Base Stats")]
     public float BaseMaxHealth = 100f;
     public float BaseDamage = 10f;
+    public float BaseStamina = 100f;
+    public float BasePoiseDamage = 10f;
+    public float BaseMaxPoise = 100f;
+    
 
-    [Header("Current Global Stats")]
-    public float CurrentMaxHealth;
-    public float CurrentDamage;
+    [Header("Current Global Stats (Read Only)")]
+    public float CurrentMaxHealth {get; private set;}
+    public float CurrentDamage {get; private set;}
+    public float CurrentStamina {get; private set;}
+    public float CurrentPoiseDamage {get; private set;}
+    public float CurrentMaxPoise {get; private set;}
 
     public RunTimeGauntlet PrimaryGauntlet;
     public RunTimeGauntlet SecondaryGauntlet;
@@ -17,8 +25,8 @@ public class PlayerStatsManager : MonoBehaviour
     //safe gaurd that holds the sum of all active bonuses making sure there are no duplicating stats
     private Dictionary<StatModifierType, float> _activeBonuses = new Dictionary<StatModifierType, float>();
 
-    //probably link players scripts here, but maybe go through player manager
-    [SerializeField] private PlayerHealth _healthScript;
+    // no need to link scripts becasue of events
+    public event Action OnStatsCalculated;
 
     private void Start()
     {
@@ -71,17 +79,17 @@ public class PlayerStatsManager : MonoBehaviour
             }
         }
 
-        float primaryWeaponDamage = 0f;
-        if(PrimaryGauntlet != null && PrimaryGauntlet.BaseGauntlet != null)
-        {
-            primaryWeaponDamage = PrimaryGauntlet.BaseGauntlet.Damage;
-        }
+        float primaryWeaponDamage = (PrimaryGauntlet != null && PrimaryGauntlet.BaseGauntlet != null) ? PrimaryGauntlet.BaseGauntlet.Damage : 0f;
+        float primaryPoiseDamage = (PrimaryGauntlet != null && PrimaryGauntlet.BaseGauntlet != null) ? PrimaryGauntlet.BaseGauntlet.PoiseDamage : 0f;
 
         CurrentMaxHealth = BaseMaxHealth + GetBonus(StatModifierType.MaxHealth);
         CurrentDamage = BaseDamage + primaryWeaponDamage + GetBonus(StatModifierType.PhysicalDamage);
-        Debug.Log("Current Damage " + CurrentDamage);
-        //maybe update player health bar max?
-        _healthScript.UpdateMaxHealth(CurrentMaxHealth);
+        CurrentStamina = BaseStamina + GetBonus(StatModifierType.MaxStamina);
+        CurrentPoiseDamage = BasePoiseDamage + primaryPoiseDamage + GetBonus(StatModifierType.PoiseDamage);
+        CurrentMaxPoise = BaseMaxPoise + GetBonus(StatModifierType.MaxPoise);
+  
+        //invoke event to tell other scripts stats have changed 
+        OnStatsCalculated?.Invoke();
     }
 
     //this is a universal function that other scripts will need to call in order to know what 

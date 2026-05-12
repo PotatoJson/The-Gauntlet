@@ -31,6 +31,7 @@ public enum StatModifierType
     PoiseDamage,
     MaxHealth,
     MaxStamina,
+    MaxPoise,
     HealthRegen,
     StaminaRegen,
     CritChance,
