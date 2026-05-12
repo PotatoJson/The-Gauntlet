@@ -10,10 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8195759787244779321}
   - component: {fileID: 8910073527973273634}
-  - component: {fileID: 2148407746134675402}
-  - component: {fileID: 1288459822302990607}
-  - component: {fileID: 2853066179852176373}
-  - component: {fileID: 2619545248829340658}
+  - component: {fileID: 5433243826567604236}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -61,8 +58,9 @@ MonoBehaviour:
   breathSpeed: 1.5
   settingsPanel: {fileID: 0}
   mainButtonsGroup: {fileID: 0}
-  transitionSpeed: 0.5
---- !u!114 &2148407746134675402
+  characterScreenRoot: {fileID: 0}
+  pauseMenuUpgradeButton: {fileID: 0}
+--- !u!114 &5433243826567604236
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -71,68 +69,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 8281800283524944606}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b4efb4abd625cb44aeb564b3f9adf87, type: 3}
+  m_Script: {fileID: 11500000, guid: ddbccbc843e033446bee4c6ec3f1c732, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SettingsTabManager
-  allPanels:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  tabButtons:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  firstItemsInPanels: []
-  leftPromptText: {fileID: 0}
-  rightPromptText: {fileID: 0}
-  activeColor: {r: 1, g: 1, b: 1, a: 1}
-  previewColor: {r: 1, g: 0, b: 0, a: 1}
-  inactiveColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
---- !u!114 &1288459822302990607
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8281800283524944606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0382de6e16cd5a4fb90d39c74c56680, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ConflictManager
-  settingsPanel: {fileID: 0}
-  conflictPopup: {fileID: 0}
-  conflictText: {fileID: 0}
---- !u!114 &2853066179852176373
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8281800283524944606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81aec01df07f8214db649f9874849ac0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VideoSettingsManager
-  resolutionDropdown: {fileID: 0}
-  fpsDropdown: {fileID: 0}
-  fullscreenToggle: {fileID: 0}
---- !u!114 &2619545248829340658
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8281800283524944606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3a857121c5525d43aaa87aa0f436ae7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameplaySettingsManager
-  mouseSlider: {fileID: 0}
-  mouseValueText: {fileID: 0}
-  controllerSlider: {fileID: 0}
-  controllerValueText: {fileID: 0}
+  m_EditorClassIdentifier: '::'

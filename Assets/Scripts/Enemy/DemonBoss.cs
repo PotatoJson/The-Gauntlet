@@ -107,15 +107,24 @@ public class DemonBoss : BaseEnemy
         {
             isAware = true;
             navAgent.isStopped = false;
+
+            // NEW: Show health bar if hit from afar before aggroing!
+            if (BossHealthBar.Instance != null)
+            {
+                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth);
+            }
+
         }
 
         isEngaged = true;
         hasOpenedWithCharge = true;
 
         currentHealth -= damage;
+        BossHealthBar.Instance.UpdateHealth(currentHealth, maxHealth);
 
         if (currentHealth <= 0)
         {
+            BossHealthBar.Instance.HideBossHealthBar();
             Die();
             return;
         }
@@ -142,6 +151,12 @@ public class DemonBoss : BaseEnemy
         float distance = GetDistanceToPlayer();
         if (distance <= engagementRange)
         {
+            // NEW: Show the boss health bar the moment the boss aggros!
+            if (!isEngaged && BossHealthBar.Instance != null)
+            {
+                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth);
+            }
+
             isEngaged = true;
             hasOpenedWithCharge = true; // Always true for the boss
         }

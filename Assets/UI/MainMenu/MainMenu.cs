@@ -1,49 +1,115 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
-public class MainMenu : MonoBehaviour
+public class MainMenuManager : MonoBehaviour
 {
-    [Header("UI Screens")]
-    public GameObject menuText;
+    [Header("UI Panels")]
+    public GameObject mainMenuPanel;
     public GameObject settingsPanel;
 
-    public GameObject loading;
-    private Animation anim;
+    [Header("Settings Connection")]
+    public SettingsTabManager settingsTabManager;
 
-    void Start()
+    [Header("Focus Management")]
+    [Tooltip("Drag your Main Menu 'Play' Button here so the controller knows where to return!")]
+    public GameObject firstMainMenuButton;
+
+    private bool _isUsingGamepad = false;
+
+    private void Start()
     {
-        anim = loading.GetComponent<Animation>();
-    }
-
-    public void OpenSettings() {
-        menuText.SetActive(false);
-        settingsPanel.SetActive(true);
-    }
-
-    public void CloseSettings() {
+        // Ensure the correct panels are active on startup
+        mainMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);
-        menuText.SetActive(true);
+
+        // Do a quick check on start
+        if (Gamepad.current != null)
+        {
+            _isUsingGamepad = true;
+            if (firstMainMenuButton != null && EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(firstMainMenuButton);
+            }
+        }
+        else if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null); // Keep it clean for mouse users!
+        }
     }
 
-    public void play_game() 
+    private void Update()
     {
-        StartCoroutine(play_and_load());
+        // 1. Switch TO Gamepad
+        if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame)
+        {
+            if (!_isUsingGamepad)
+            {
+                _isUsingGamepad = true;
+
+                // Only snap focus to the Play button if we are looking at the Main Menu
+                if (mainMenuPanel.activeSelf && firstMainMenuButton != null && EventSystem.current != null)
+                {
+                    EventSystem.current.SetSelectedGameObject(null);
+                    EventSystem.current.SetSelectedGameObject(firstMainMenuButton);
+                }
+            }
+        }
+        // 2. Switch TO Keyboard/Mouse
+        else if ((Keyboard.current != null && Keyboard.current.wasUpdatedThisFrame) ||
+                 (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f))
+        {
+            if (_isUsingGamepad)
+            {
+                _isUsingGamepad = false;
+
+                // Instantly drop the highlight so it doesn't bother mouse users
+                if (mainMenuPanel.activeSelf && EventSystem.current != null)
+                {
+                    EventSystem.current.SetSelectedGameObject(null);
+                }
+            }
+        }
     }
 
-    IEnumerator play_and_load() {
-        anim.Play("Loading-Transition");
-        yield return new WaitForSeconds(anim["Loading-Transition"].length);
+    public void OnPlayClicked()
+    {
+        Time.timeScale = 1f;
         SceneManager.LoadScene("Dungeon Level");
     }
 
-    public void goto_credits() 
+    public void OnSettingsClicked()
     {
-        SceneManager.LoadScene("Credits");
+        mainMenuPanel.SetActive(false);
+        settingsPanel.SetActive(true);
+
+        if (settingsTabManager != null)
+        {
+            settingsTabManager.InitializeSettingsMenu();
+        }
     }
 
-    public void quit_game()
+    public void CloseSettings()
     {
+        settingsPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
+
+        // THE FIX: When returning to the Main Menu, ONLY grab focus back if they are using a controller!
+        if (_isUsingGamepad && firstMainMenuButton != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstMainMenuButton);
+        }
+        else if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
+    public void OnQuitClicked()
+    {
+        Debug.Log("Quitting Game...");
         Application.Quit();
     }
 }

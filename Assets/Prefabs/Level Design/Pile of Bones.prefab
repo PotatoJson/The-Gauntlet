@@ -11,6 +11,9 @@ GameObject:
   - component: {fileID: 6564321738467279139}
   - component: {fileID: 1593729483720122545}
   - component: {fileID: 1405625419541507349}
+  - component: {fileID: 6751291088573216080}
+  - component: {fileID: 6163329504036937553}
+  - component: {fileID: 5698178257124090674}
   m_Layer: 9
   m_Name: skull
   m_TagString: Untagged
@@ -90,6 +93,95 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!54 &6751291088573216080
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326467575876427688}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6163329504036937553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326467575876427688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 3
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!135 &5698178257124090674
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326467575876427688}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.005
+  m_Center: {x: 0, y: -0.001, z: 0.001}
 --- !u!1 &5797771356954726860
 GameObject:
   m_ObjectHideFlags: 0
@@ -99,6 +191,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6346436511151377735}
+  - component: {fileID: 885018730327864218}
+  - component: {fileID: 5453707954931103375}
   m_Layer: 9
   m_Name: Pile of Bones
   m_TagString: Untagged
@@ -138,6 +232,63 @@ Transform:
   - {fileID: 6564321738467279139}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &885018730327864218
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5797771356954726860}
+  m_Mesh: {fileID: 0}
+--- !u!23 &5453707954931103375
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5797771356954726860}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &328653928003121848
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -209,13 +360,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7929838306859535271}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3907235960369309186}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6289421500167523084}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &2106591883288423391 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 328653928003121848}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &4835490717573707829 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 328653928003121848}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &7929838306859535271
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4835490717573707829}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3907235960369309186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4835490717573707829}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &6289421500167523084
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4835490717573707829}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017788, y: 0.0009923539, z: 0.0010401489}
+  m_Center: {x: 5.7868528e-12, y: -0.0000000023469955, z: -0.00003883299}
 --- !u!1001 &513638015798182179
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -275,13 +529,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2818821309105998485}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7721021818642734253}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5456964061525675382}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &2203188361563248708 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 513638015798182179}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &4662438635194141614 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 513638015798182179}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &2818821309105998485
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4662438635194141614}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7721021818642734253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4662438635194141614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &5456964061525675382
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4662438635194141614}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017785, y: 0.0009923527, z: 0.0010401477}
+  m_Center: {x: -1.157313e-12, y: -0.0000000024156177, z: -0.00003883299}
 --- !u!1001 &969041274405825875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -341,13 +698,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5714991999783521684}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5859164681700580186}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2272887156149639816}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &1495541208358827060 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 969041274405825875}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &5397064795182786526 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 969041274405825875}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &5714991999783521684
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5397064795182786526}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5859164681700580186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5397064795182786526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &2272887156149639816
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5397064795182786526}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017788, y: 0.000992353, z: 0.0010401479}
+  m_Center: {x: 1.4681905e-13, y: -0.000000002406362, z: -0.00003883299}
 --- !u!1001 &2241843311354019261
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -407,13 +867,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6914282767654348663}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7474858289889607423}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3859428155699623256}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &481642943935833306 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 2241843311354019261}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6379384797832361776 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 2241843311354019261}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &6914282767654348663
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6379384797832361776}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7474858289889607423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6379384797832361776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &3859428155699623256
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6379384797832361776}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177865, y: 0.0009923532, z: 0.001040148}
+  m_Center: {x: 3.1418708e-11, y: -0.0000000024109894, z: -0.00003883275}
 --- !u!1001 &2942531564838040702
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -473,13 +1036,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4765670083849421484}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5684691287589806713}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4852197087034042027}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &3559668859290168601 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 2942531564838040702}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8016821781896625907 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 2942531564838040702}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &4765670083849421484
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8016821781896625907}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &5684691287589806713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8016821781896625907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &4852197087034042027
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8016821781896625907}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177846, y: 0.0009923533, z: 0.0010401477}
+  m_Center: {x: -2.31477e-12, y: -0.0000000024167752, z: -0.000038832983}
 --- !u!1001 &3332057933352087039
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -539,13 +1205,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3047825260088657444}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4408192826242054832}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6359881673439191459}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &4003236215803360408 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 3332057933352087039}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7613714746117547890 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 3332057933352087039}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &3047825260088657444
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7613714746117547890}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4408192826242054832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7613714746117547890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &6359881673439191459
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7613714746117547890}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177865, y: 0.0009923531, z: 0.0010401483}
+  m_Center: {x: 4.629252e-12, y: -0.0000000026438196, z: -0.000038832983}
 --- !u!1001 &3433564865502646853
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -605,13 +1374,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7480201830533822880}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 210415214664660865}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7844418918193159763}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &3897296085806549794 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 3433564865502646853}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7508337565251426504 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 3433564865502646853}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &7480201830533822880
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7508337565251426504}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &210415214664660865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7508337565251426504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &7844418918193159763
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7508337565251426504}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017786, y: 0.0009923532, z: 0.0010401474}
+  m_Center: {x: -7.1991024e-17, y: -0.0000000026472913, z: -0.00003883298}
 --- !u!1001 &4301934055478784371
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -671,13 +1543,116 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4075355845494260404}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 262140397667259730}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8740236247749589584}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
 --- !u!4 &2449968172711733268 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 4301934055478784371}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8946130225695276030 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 4301934055478784371}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &4075355845494260404
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8946130225695276030}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &262140397667259730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8946130225695276030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &8740236247749589584
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8946130225695276030}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017785, y: 0.0009923524, z: 0.0010401472}
+  m_Center: {x: 0, y: -0.0000000024156175, z: -0.00003883297}
 --- !u!1001 &4910787173011495930
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -737,8 +1712,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3417583616721284389}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1640949692898314052}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8844261474515942456}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &266309257838809463 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 4910787173011495930}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &3417583616721284389
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266309257838809463}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1640949692898314052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266309257838809463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &8844261474515942456
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266309257838809463}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017786, y: 0.0009923528, z: 0.0010401477}
+  m_Center: {x: 2.314671e-12, y: -0.0000000024145694, z: -0.00003883298}
 --- !u!4 &6743328743976862365 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -803,8 +1881,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1908304639432961388}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7796218091803803405}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4848437309951007235}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &752042837095010467 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 5619167184806255150}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &1908304639432961388
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752042837095010467}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &7796218091803803405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752042837095010467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &4848437309951007235
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752042837095010467}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017785, y: 0.0009923526, z: 0.0010401476}
+  m_Center: {x: -1.157313e-12, y: -0.000000002415618, z: -0.00003883298}
 --- !u!4 &6073326069696529225 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -869,8 +2050,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8161445153129638120}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2181372360557144497}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 695043905119047065}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &672352949012825971 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 5674585284975316478}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &8161445153129638120
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672352949012825971}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2181372360557144497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672352949012825971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &695043905119047065
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672352949012825971}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017786, y: 0.0009923535, z: 0.0010401484}
+  m_Center: {x: 4.788768e-12, y: -0.0000000024113034, z: -0.00003883299}
 --- !u!4 &6301572073308673177 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -939,8 +2223,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2879069218265548389}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3531143923003720553}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7972699868739296516}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &2375259570985076868 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 7449549510649168393}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &2879069218265548389
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2375259570985076868}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3531143923003720553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2375259570985076868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &7972699868739296516
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2375259570985076868}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017786, y: 0.000992353, z: 0.0010401476}
+  m_Center: {x: -2.314626e-12, y: -0.0000000024144606, z: -0.000038833216}
 --- !u!4 &9138259833825581934 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -1005,8 +2392,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 179982460546147843}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6823369335922280032}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5988950399589850034}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &2902227147365775603 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 8057581880356057726}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &179982460546147843
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2902227147365775603}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &6823369335922280032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2902227147365775603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &5988950399589850034
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2902227147365775603}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.006017785, y: 0.0009923532, z: 0.001040148}
+  m_Center: {x: -2.314482e-12, y: -0.000000002413304, z: -0.000038832983}
 --- !u!4 &8530322571901938457 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -1071,8 +2561,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2944085225356612024}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 626737400215345721}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5142061998647852430}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &3956252913879574598 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 8175140677284340427}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &2944085225356612024
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3956252913879574598}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &626737400215345721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3956252913879574598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &5142061998647852430
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3956252913879574598}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177865, y: 0.000992354, z: 0.0010401484}
+  m_Center: {x: -3.4723372e-12, y: -0.0000000024113422, z: -0.000038832994}
 --- !u!4 &7548151758580104108 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -1137,8 +2730,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2741372580197846198}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3943029667074866522}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9033033926699819764}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &3866023680229052071 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 8228745281689699370}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &2741372580197846198
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3866023680229052071}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3943029667074866522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3866023680229052071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &9033033926699819764
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3866023680229052071}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177865, y: 0.0009923537, z: 0.0010401484}
+  m_Center: {x: -4.6295402e-12, y: -0.0000000024109894, z: -0.00003883299}
 --- !u!4 &7746722517225594189 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
@@ -1203,8 +2899,111 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5254132497249561824}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3757575657145701109}
+    - targetCorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7337341334959699176}
   m_SourcePrefab: {fileID: 100100000, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+--- !u!1 &4469715402367391301 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5157888424392542861, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
+  m_PrefabInstance: {fileID: 8760379010492865736}
+  m_PrefabAsset: {fileID: 0}
+--- !u!54 &5254132497249561824
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4469715402367391301}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3757575657145701109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4469715402367391301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 374f46e2fff6dd545a1e3706a917401f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Fracture
+  triggerOptions:
+    triggerType: 1
+    minimumCollisionForce: 0
+    filterCollisionsByTag: 1
+    triggerAllowedTags:
+    - Player
+    triggerKey: 0
+  fractureOptions:
+    fragmentCount: 2
+    xAxis: 1
+    yAxis: 1
+    zAxis: 1
+    detectFloatingFragments: 0
+    asynchronous: 0
+    insideMaterial: {fileID: -4163170327692077165, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
+    textureScale: {x: 1, y: 1}
+    textureOffset: {x: 0, y: 0}
+  refractureOptions:
+    enableRefracturing: 0
+    maxRefractureCount: 1
+    invokeCallbacks: 0
+  callbackOptions:
+    onFracture:
+      m_PersistentCalls:
+        m_Calls: []
+    onCompleted:
+      m_PersistentCalls:
+        m_Calls: []
+  currentRefractureCount: 0
+--- !u!65 &7337341334959699176
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4469715402367391301}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0060177846, y: 0.0009923527, z: 0.0010401475}
+  m_Center: {x: 2.3147442e-10, y: -0.0000000024145694, z: -0.00003883298}
 --- !u!4 &6926709271811720623 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}

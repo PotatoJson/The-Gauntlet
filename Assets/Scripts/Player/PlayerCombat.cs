@@ -15,24 +15,22 @@ public class PlayerCombat : MonoBehaviour
     public AttackNode StartingLightAttack;
     public AttackNode StartingHeavyAttack;
     public AttackNode JumpAttack;
+    public AttackNode RunningLightAttack;
+    public AttackNode RunningHeavyAttack;
 
     [Header("References")]
-    public GauntletData LeftGauntletData;
-    public GauntletData RightGauntletData;
-    [Space]
     private PlayerManager _stateManager;
     private Animator _animator;
     private PlayerControls _input;
-    
+    private PlayerStatsManager _statsManager;
+    private PlayerStamina _staminaScript;
+    private PlayerHealth _healthScript;
+
     [Header("Physical Hitboxes")]
     [SerializeField] private HitboxController _leftHitbox;
     [SerializeField] private HitboxController _rightHitbox;
     [Space]
     private HitboxController _activeHitbox;
-
-    [Header("Active Weapon (Wrapper)")]
-    private RunTimeGauntlet _leftGauntlet;
-    private RunTimeGauntlet _rightGauntlet;
 
     [Header("Combat Tracking")]
     private AttackNode _currentAttackNode;
@@ -47,10 +45,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float _normHeavyWindUp;
     public float MaxChargeDuration;
     private float _chargeTimer = 0f;
-
-    [Header("Player Stats")]
-    public int CurrentStamina = 100;
-    public int MaxStamina = 100;
     
     [Header("Input Buffer Things")]
     public float BufferDuration;
@@ -63,6 +57,9 @@ public class PlayerCombat : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _stateManager = GetComponent<PlayerManager>();
+        _statsManager = GetComponent<PlayerStatsManager>();
+        _staminaScript = GetComponent<PlayerStamina>();
+        _healthScript = GetComponent<PlayerHealth>();
 
         _input = new PlayerControls();
 
@@ -73,19 +70,13 @@ public class PlayerCombat : MonoBehaviour
             OnHeavyAttackInput();
         };
         _input.Player.HeavyAttack.canceled += ctx => OnHeavyAttackReleased();
+        _input.Player.Heal.started += ctx => UsePotion();
+        _input.Player.DebugTeleport.started += ctx => _stateManager.DebugTeleport();
     }
 
     private void OnEnable() => _input.Enable();
     
     private void OnDisable() => _input.Disable();
-    
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        if(LeftGauntletData != null) _leftGauntlet = new RunTimeGauntlet(LeftGauntletData);
-        if(RightGauntletData != null) _rightGauntlet = new RunTimeGauntlet(RightGauntletData);
-        CurrentStamina = MaxStamina;
-    }
 
     // Update is called once per frame
     void Update()
@@ -146,6 +137,16 @@ public class PlayerCombat : MonoBehaviour
     }
     #endregion
 
+    //Temp Potion logic
+    private void UsePotion()
+    {
+        if(_healthScript != null)
+        {
+            _healthScript.Heal(25f);
+            Debug.Log("Used Potion");
+        }
+    }
+
     private void ProcessCombatLogic()
     {
         if(_currentBuffer == CombatInput.None) return;
@@ -153,19 +154,29 @@ public class PlayerCombat : MonoBehaviour
 
         if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
 
+        //checking for a jump attack
         if(currentState == PlayerState.Airborne)
         {
-            AttemptAttack(JumpAttack);
+            AttemptAttack(JumpAttack, true);
             ConsumeBuffer();
             return;
         }
-        
-        if(currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running)
+
+        //checking for a running attack
+        if(currentState == PlayerState.Running)
+        {
+            Debug.Log("Test Running attack");
+            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light)
+                ? RunningLightAttack
+                : RunningHeavyAttack;
+            AttemptAttack(nodeToPlay, true);
+        }
+        else if(currentState == PlayerState.Idle || currentState == PlayerState.Walking)
         {
             AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) 
                 ? StartingLightAttack 
                 : StartingHeavyAttack;
-            AttemptAttack(nodeToPlay);
+            AttemptAttack(nodeToPlay, false);
         }
         else if(currentState == PlayerState.Attacking && _canCombo)
         {
@@ -174,28 +185,33 @@ public class PlayerCombat : MonoBehaviour
                 : _currentAttackNode.NextHeavyAttack;
 
             Debug.Log($"Attempting to chain from {_currentAttackNode.name} to {(nextNode != null ? nextNode.name : "NULL")}");
-            if(nextNode != null) AttemptAttack(nextNode);
+            if(nextNode != null) AttemptAttack(nextNode, false);
         }
     }
 
-    private void AttemptAttack(AttackNode node)
+    private void AttemptAttack(AttackNode node, bool keepMomentum)
     {
         if(node == null) return;
 
-        if(CurrentStamina < node.StaminaCost)
+        if (_stateManager.IsInCombat)
         {
-            ConsumeBuffer();
-            return;
+            // We ARE in combat: enforce stamina rules strictly
+            if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+            {
+                ConsumeBuffer();
+                return;
+            }
+            _staminaScript.ConsumeStamina(node.StaminaCost);
         }
 
+        _stateManager.CarryMomentum = keepMomentum;
         _isRotationLocked = true;
 
-        CurrentStamina -= node.StaminaCost;
         _currentAttackNode = node;
         _canCombo = false;
         _comboQueued = true;
         
-        _stateManager.CurrentLungeSpeed = node.LungeForce;
+        //_stateManager.CurrentLungeSpeed = node.LungeForce; Removed for Testing a better way
         _stateManager.CanCancelAttack = false;
         _stateManager.SetPlayerState(PlayerState.Attacking);
         _animator.SetTrigger(node.AnimationTrigger);
@@ -203,16 +219,48 @@ public class PlayerCombat : MonoBehaviour
     }
 
     private void ProcessAttackRotation()
+{
+    if (_stateManager.GetCurrentState() != PlayerState.Attacking) return;
+
+    // LOCK-ON
+    if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
     {
-        if(_stateManager.IsLockedOn || _isRotationLocked || _stateManager.GetCurrentState() != PlayerState.Attacking) return;
+        // Track the enemy during the wind-up phase (while _isRotationLocked is true).
+        // Once the hitbox is armed (_isRotationLocked = false), we stop tracking so the swing follows through naturally.
+        if (_isRotationLocked) 
+        {
+            Vector3 directionToTarget = PlayerCamera.Instance.currentLockOnTarget.position - transform.position;
+            directionToTarget.y = 0; // Keep the rotation strictly horizontal
+
+            if (directionToTarget != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
+                
+                // Check if we are performing a running attack
+                bool isRunningAttack = (_currentAttackNode == RunningLightAttack || _currentAttackNode == RunningHeavyAttack);
+                
+                // Use a slower turn speed (e.g., 5f) for running attacks to create U-turn arc, 
+                // and a fast snap (30f) for standing/walking attacks
+                float currentTurnSpeed = isRunningAttack ? 5f : 30f; 
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentTurnSpeed * Time.deltaTime);
+            }
+        }
+    }
+    // FREE-AIM BEHAVIOR
+    else
+    {
+        // Only allow free-aim snapping if the rotation is unlocked (hitbox is armed / active frames)
+        if (_isRotationLocked) return;
 
         Vector3 snapDir = _stateManager.MoveDirectionIntent;
-        if(snapDir != Vector3.zero)
+        if (snapDir != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(snapDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
         }
     }
+}
 
     private void HandleHeavyChargeTimer()
     {
@@ -228,20 +276,18 @@ public class PlayerCombat : MonoBehaviour
     public void ArmTargetHitbox()
     {
         _isRotationLocked = false;
-        RunTimeGauntlet activeWeapon = _leftGauntlet;
         _activeHitbox = _leftHitbox;
 
         if(_currentAttackNode.StrikingHand == StrikeHand.Right)
         {
-            activeWeapon = _rightGauntlet;
             _activeHitbox = _rightHitbox;
         }
         else if(_currentAttackNode.StrikingHand == StrikeHand.Both)
         {
             //future dual hand attack
         }
-        int currentDamage = activeWeapon.GetCurrentDamage();
-        int currentPoise = activeWeapon.GetCurrentPoise();
+        int currentDamage = Mathf.RoundToInt(_statsManager.CurrentDamage);
+        int currentPoise = Mathf.RoundToInt(_statsManager.CurrentPoiseDamage); // need to add poiseDamage to _statsManager
 
         float chargeBonus = 1.0f;
 
@@ -310,6 +356,11 @@ public class PlayerCombat : MonoBehaviour
         _animator.speed = 1f;
         _isCharging = false;
         _chargeTimer = 0f;
+    }
+
+    public void ApplyLungeForce()
+    {
+        _stateManager.CurrentLungeSpeed = _currentAttackNode.LungeForce;
     }
 #endregion
 }

@@ -86,6 +86,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected static readonly int AnimStunned = Animator.StringToHash("Stunned");
 
     private PlayerHealth playerHealth;
+    protected PlayerManager playerManager;
 
     protected virtual void Awake()
     {
@@ -99,6 +100,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (player != null)
             playerHealth = player.GetComponent<PlayerHealth>();
+            playerManager = player.GetComponent<PlayerManager>();
     }
 
     protected virtual void Start()
@@ -119,6 +121,11 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void Update()
     {
         if (currentHealth <= 0) return;
+
+        if (isAware || isEngaged)
+        {
+            playerManager?.SetInCombat();
+        }
 
         if (isHitImmune)
         {
@@ -210,6 +217,7 @@ public abstract class BaseEnemy : MonoBehaviour
         {
             isAware = true;
             navAgent.isStopped = false;
+            playerManager?.SetInCombat();
         }
     }
 
@@ -243,6 +251,9 @@ public abstract class BaseEnemy : MonoBehaviour
         if (isAttacking || isStunned || isCharging || isInHitStun || player == null) return;
         if (navAgent.isStopped) navAgent.isStopped = false;
         navAgent.speed = chaseSpeed;
+
+        playerManager?.SetInCombat();
+
         if (Vector3.SqrMagnitude(navAgent.destination - player.position) > 1.5f)
             navAgent.SetDestination(player.position);
     }
@@ -333,6 +344,8 @@ public abstract class BaseEnemy : MonoBehaviour
     public virtual void TakeDamage(float damage)
     {
         if (IsDead()) return;
+
+        playerManager?.SetInCombat();
         
         if (!isAware) { isAware = true; navAgent.isStopped = false; }
         if (!isEngaged) { isEngaged = true; hasOpenedWithCharge = true; }
@@ -400,6 +413,7 @@ public abstract class BaseEnemy : MonoBehaviour
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damage);
+                    playerManager?.SetInCombat();
                     return true;
                 }
             }

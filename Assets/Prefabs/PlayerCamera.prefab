@@ -244,19 +244,29 @@ MonoBehaviour:
   collideWithLayers:
     serializedVersion: 2
     m_Bits: 256
-  mouseSensitivityMultiplier: 0.001
+  mouseSensitivityMultiplier: 0.1
   controllerSensitivityMultiplier: 1.25
+  baseSmoothTime: 0.1
+  maxSmoothTimeSideways: 0.4
+  maxSmoothTimeForward: 0.15
+  lagTransitionSpeed: 3
   currentLockOnTarget: {fileID: 0}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
-  maximumLockOnDistance: 30
-  lockOnTrackingSpeed: 15
-  targetSwitchThreshold: 0.5
-  targetSwitchCooldown: 0.3
   environmentLayer:
     serializedVersion: 2
     m_Bits: 256
+  maximumLockOnDistance: 30
+  lockOnTrackingSpeed: 15
   timeBeforeLockOnBreaks: 3
+  controllerSwitchThreshold: 0.5
+  mouseSwitchThreshold: 30
+  targetSwitchCooldown: 0.3
+  closeFramingDistance: 2
+  farFramingDistance: 15
+  closeVerticalOffset: -0.25
+  farVerticalOffset: -1
+  closePivotHeight: 0.5
   lockOnReticle: {fileID: 0}
   targetHeightOffset: 0.5

@@ -16,10 +16,10 @@ public class HitboxController : MonoBehaviour
 
     private void Awake()
     {
-        if(bloodEffectPrefab == null)
+        /*if(bloodEffectPrefab == null)
         {
             Debug.LogError("Blood effect prefab not assigned in HitboxController.");
-        }
+        }*/
         _collider = GetComponent<Collider>();
         _collider.isTrigger = true;
         _collider.enabled = false;
@@ -27,6 +27,7 @@ public class HitboxController : MonoBehaviour
 
     public void EnableCollider(int damage, int poise)
     {
+        Debug.Log("hitbox enabled");
         _alreadyHit.Clear();
         _currentDamage = damage;
         _currentPoiseDamage = poise;
@@ -35,6 +36,7 @@ public class HitboxController : MonoBehaviour
 
     public void DisableCollider()
     {
+        Debug.Log("hitbox Disabled");
         _collider.enabled = false;
     }
 
@@ -47,17 +49,19 @@ public class HitboxController : MonoBehaviour
             if(_alreadyHit.Add(enemyRoot))
             {
                 enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
+                SpawnBlood(other);
             }
         }
-        Debug.Log($"Hit {other.name} for {_currentDamage} Damage and {_currentPoiseDamage} poise");
+        Debug.Log($"Hit {other.name} for {_currentDamage} Damage");
     }
 
     private void SpawnBlood(Collider target)
     {
-        Vector3 spawnPosition = transform.position;
+        Vector3 spawnPosition = target.ClosestPoint(transform.position);
         
-        Vector3 direction = (transform.position - target.transform.position).normalized;
-        Quaternion rotation = Quaternion.LookRotation(direction);
+        Vector3 punchDirection = (target.transform.position - transform.position).normalized;
+        punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));
+        Quaternion rotation = Quaternion.LookRotation(punchDirection);
 
         GameObject bloodEffect = Instantiate(bloodEffectPrefab, spawnPosition, rotation);
 

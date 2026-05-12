@@ -46,7 +46,9 @@ GameObject:
   - component: {fileID: 5221296846589769512}
   - component: {fileID: 2615825535877183288}
   - component: {fileID: 8214966954790734677}
-  - component: {fileID: 5525893233965115692}
+  - component: {fileID: 13187733473135032}
+  - component: {fileID: 1490983485963244258}
+  - component: {fileID: 7300029207042372441}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -148,6 +150,7 @@ MonoBehaviour:
   jumpHeight: 2
   _moveRollCancel: 0.6
   _combatRollCancel: 0.4
+  inputAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &3854530984177886396
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -175,16 +178,14 @@ MonoBehaviour:
   StartingLightAttack: {fileID: 11400000, guid: 662f57cf560788945a3c7bef5e62963c, type: 2}
   StartingHeavyAttack: {fileID: 11400000, guid: 781af64f39ab58d46be964c37affb995, type: 2}
   JumpAttack: {fileID: 11400000, guid: 59a4472fb937f54408511cec2e9ceb40, type: 2}
-  LeftGauntletData: {fileID: 11400000, guid: 960120bce33a6674ebabbd798d2ec07a, type: 2}
-  RightGauntletData: {fileID: 11400000, guid: a126c23a51e0625489897c1909206519, type: 2}
+  RunningLightAttack: {fileID: 11400000, guid: 74723694e66882a418df2fe76906c0da, type: 2}
+  RunningHeavyAttack: {fileID: 11400000, guid: 6f01a5b79fc084747b9f0a889d7dc51e, type: 2}
   _leftHitbox: {fileID: 6711534601265782201}
   _rightHitbox: {fileID: 235802254161317062}
   _pullBackSpeed: 0.12
   _normHeavyWindUp: 0.4
   MaxChargeDuration: 1
-  CurrentStamina: 100
-  MaxStamina: 100
-  BufferDuration: 0.3
+  BufferDuration: 0.5
 --- !u!114 &2615825535877183288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -198,11 +199,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   _currentState: 0
+  _bossRoomSpawn: {fileID: 0}
+  _characterController: {fileID: 5240817740675874060}
   MoveDirectionIntent: {x: 0, y: 0, z: 0}
   IsLockedOn: 0
   HasBufferedAttack: 0
   CanCancelAttack: 0
   RequestBufferClear: 0
+  CarryMomentum: 0
   CurrentLungeSpeed: 0
 --- !u!114 &8214966954790734677
 MonoBehaviour:
@@ -217,16 +221,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
-  currentHealth: 0
   healthRecoveryRate: 1
   healthRecoveryDelay: 5
   isBlocking: 0
-  maxStunMeter: 100
-  stunRecoveryRate: 5
-  stunRecoveryDelay: 2
   invincibilityDuration: 0.5
+  _maxPoise: 0
+  CurrentPoise: 0
+  PoiseRecoveryRate: 0
+  PoiseRecoveryDelay: 0
+  InstantKnockback: 0
+  OvercapKnockback: 0
   LastCheckPoint: {fileID: 0}
---- !u!114 &5525893233965115692
+  PlayerSpawn: {fileID: 0}
+--- !u!114 &13187733473135032
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -235,10 +242,52 @@ MonoBehaviour:
   m_GameObject: {fileID: 1682075080402086317}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40727dfa7b1c6bf4bbd6c11d74689818, type: 3}
+  m_Script: {fileID: 11500000, guid: 75ce6c7ee99bef2488f3f8821c3daf0a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HighContrastTarget
-  type: 0
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStamina
+  RegenRate: 60
+  RegenDelay: 3
+  _staminaBar: {fileID: 0}
+--- !u!136 &1490983485963244258
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 3
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7300029207042372441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f0be08bd281f343b3eae772cccd1ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsManager
+  BaseMaxHealth: 100
+  BaseDamage: 10
+  BaseStamina: 100
+  BasePoiseDamage: 10
+  BaseMaxPoise: 100
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0
@@ -250,7 +299,7 @@ GameObject:
   - component: {fileID: 2359436493398022220}
   - component: {fileID: 3035460180272627589}
   - component: {fileID: 6711534601265782201}
-  - component: {fileID: 6530822122259908648}
+  - component: {fileID: 7599233528456859533}
   m_Layer: 0
   m_Name: LeftFistHitbox
   m_TagString: Untagged
@@ -306,7 +355,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13eb31eeab2305d489be9b2ceef965f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitboxController
---- !u!54 &6530822122259908648
+  bloodEffectPrefab: {fileID: 982966250709117466, guid: a6411fcc75c2ae04298bd2d791ac6824, type: 3}
+--- !u!54 &7599233528456859533
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -344,7 +394,7 @@ GameObject:
   - component: {fileID: 4008724010860173095}
   - component: {fileID: 8577642113105457850}
   - component: {fileID: 235802254161317062}
-  - component: {fileID: 5230794629566503348}
+  - component: {fileID: 5233594212788826596}
   m_Layer: 0
   m_Name: RightFistHitbox
   m_TagString: Untagged
@@ -400,7 +450,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13eb31eeab2305d489be9b2ceef965f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitboxController
---- !u!54 &5230794629566503348
+  bloodEffectPrefab: {fileID: 982966250709117466, guid: a6411fcc75c2ae04298bd2d791ac6824, type: 3}
+--- !u!54 &5233594212788826596
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

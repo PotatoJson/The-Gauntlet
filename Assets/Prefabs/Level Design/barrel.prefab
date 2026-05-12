@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 5842572189562650306}
   - component: {fileID: 326491076435134721}
   - component: {fileID: 1099394247847995706}
-  - component: {fileID: 7393415648960931329}
-  - component: {fileID: -5742337533654512232}
+  - component: {fileID: 2884462074561780209}
+  - component: {fileID: -195646256388322345}
   m_Layer: 9
   m_Name: barrel
   m_TagString: Untagged
@@ -117,7 +117,7 @@ CapsuleCollider:
   m_Height: 0.017
   m_Direction: 2
   m_Center: {x: -0.00004814565, y: 0.000034980934, z: 0.0004926935}
---- !u!54 &7393415648960931329
+--- !u!54 &2884462074561780209
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -144,7 +144,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-5742337533654512232
+--- !u!114 &-195646256388322345
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,19 +158,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Fracture
   triggerOptions:
     triggerType: 1
-    minimumCollisionForce: 0.01
+    minimumCollisionForce: 0
     filterCollisionsByTag: 1
     triggerAllowedTags:
     - Player
     triggerKey: 0
   fractureOptions:
-    fragmentCount: 15
+    fragmentCount: 10
     xAxis: 1
     yAxis: 1
     zAxis: 1
     detectFloatingFragments: 0
     asynchronous: 0
-    insideMaterial: {fileID: 2100000, guid: 4476986c9df060f4891762d31ca010e1, type: 2}
+    insideMaterial: {fileID: -817919526289458203, guid: aca71c1811ce7634eb6d50b604c06a5c, type: 3}
     textureScale: {x: 1, y: 1}
     textureOffset: {x: 0, y: 0}
   refractureOptions:
