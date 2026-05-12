@@ -44,6 +44,17 @@ public class AnimationEventRelay : MonoBehaviour
         _stateManager.SetPlayerState(PlayerState.Idle);
     }
 
+    //used for when you shouldn't be able to move during anim but can still roll
+    public void CanRoll()
+    {
+        _stateManager.CanRoll = true;
+    }
+    
+    public void CantRoll()
+    {
+        _stateManager.CanRoll = false;
+    }
+
     public void CheckHeavyCharge()
     {
         _playerCombat.AttemptHeavyChargePause();

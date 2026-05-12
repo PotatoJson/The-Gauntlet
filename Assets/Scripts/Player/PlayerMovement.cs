@@ -208,7 +208,7 @@ public class PlayerMovement : MonoBehaviour
         if(_stateManager.GetCurrentState() == PlayerState.Staggered)
         {
             _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
-            _horizontalVelocity = -transform.forward * _stateManager.CurrentLungeSpeed;
+            _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
             _controller.Move(_horizontalVelocity * Time.deltaTime);
@@ -317,17 +317,22 @@ public class PlayerMovement : MonoBehaviour
     private void AttemptRoll()
     {
         PlayerState currentState = _stateManager.GetCurrentState();
-        
-        bool isAllowedToRoll = (currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running);
+        bool overrideRoll = _stateManager.CanRoll;
+        bool isNormalRoll = (currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running);
         bool isCombatCancel = (currentState == PlayerState.Attacking && _stateManager.CanCancelAttack);
         
-        if(!isAllowedToRoll && !isCombatCancel) {
+        if(!isNormalRoll && !isCombatCancel && !overrideRoll) {
             return;
         }
 
-        if(isAllowedToRoll)
+        if(isNormalRoll)
         {
             if(_isRolling || _rollCooldownTimer > 0 || !_controller.isGrounded) return;
+        }
+        else if(overrideRoll)
+        {
+            Debug.Log("Override Roll Activated");
+            //if(!_controller.isGrounded) return;
         }
         else if(isCombatCancel)
         {
@@ -371,6 +376,7 @@ public class PlayerMovement : MonoBehaviour
     private void HandleRoll()
     {
         _rollTimer += Time.deltaTime;
+        _stateManager.CanRoll = false; //Set back to false cause should only be used for animation breaking
         
         float normalizedTime = _rollTimer / rollDuration;
         float currentCurveValue = rollSpeedCurve.Evaluate(normalizedTime);

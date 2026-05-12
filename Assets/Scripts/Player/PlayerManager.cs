@@ -31,6 +31,7 @@ public class PlayerManager : MonoBehaviour
     public bool CanCancelAttack;
     public bool RequestBufferClear;
     public bool CarryMomentum;
+    public bool CanRoll;
     public float CurrentLungeSpeed;
     
     public void Awake()
