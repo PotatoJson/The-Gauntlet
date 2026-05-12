@@ -176,7 +176,7 @@ public class PlayerHealth : MonoBehaviour
     }
     #endregion
 
-    public void TakeDamage(float damage/*, int poiseDamage*/, GameObject attacker = null)
+    public void TakeDamage(float damage, int poiseDamage = 0, GameObject attacker = null)
     {
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
@@ -200,7 +200,11 @@ public class PlayerHealth : MonoBehaviour
             HandleDeath();
             return;
         }
-        //HandleStagger(poiseDamage);
+
+        if (poiseDamage > 0)
+        {
+            HandleStagger(poiseDamage);
+        }
     }
 
     #region Stagger Handling 

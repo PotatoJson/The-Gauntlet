@@ -9,6 +9,7 @@ public class SpinningEnemy : BaseEnemy
 
     [Header("Spin Damage Settings")]
     [SerializeField] private float spinDamage = 10f;
+    [SerializeField] private int spinPoiseDamage = 10;
     [SerializeField] private float damageRange = 2f;
     [SerializeField] private float damageTickRate = 0.5f; // How often the player takes damage while touching the enemy
 
@@ -58,6 +59,7 @@ public class SpinningEnemy : BaseEnemy
                 // Use BaseEnemy's existing hitbox-based damage helper.
                 TryDamagePlayerHitbox(
                     spinDamage,
+                    spinPoiseDamage,
                     new Vector3(0f, 1f, damageRange * 0.5f),
                     new Vector3(damageRange * 2f, 2f, damageRange * 2f));
 

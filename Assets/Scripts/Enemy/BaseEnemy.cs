@@ -24,6 +24,11 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected float heavyAttackDamage = 25f;
     [SerializeField] protected float chargeAttackDamage = 20f;
 
+    [Header("Attack Poise Damage")]
+    [SerializeField] protected int lightAttackPoiseDamage = 10;
+    [SerializeField] protected int heavyAttackPoiseDamage = 25;
+    [SerializeField] protected int chargeAttackPoiseDamage = 20;
+
     [Header("Hitbox Settings (Virtual Hitboxes)")]
     [Tooltip("Layer mask containing the Player")]
     [SerializeField] protected LayerMask playerLayerMask = ~0; // Default to all layers, but you should set this to 'Player' in inspector
@@ -395,11 +400,11 @@ public abstract class BaseEnemy : MonoBehaviour
     public bool IsDead() => currentHealth <= 0;
 
     // ============== UPDATED HITBOX LOGIC ==============
-    public void OnLightAttackHit() => TryDamagePlayerHitbox(lightAttackDamage, lightAttackHitboxOffset, lightAttackHitboxSize);
-    public void OnHeavyAttackHit() => TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize);
-    public void OnChargeAttackHit() => TryDamagePlayerHitbox(chargeAttackDamage, chargeAttackHitboxOffset, chargeAttackHitboxSize);
+    public void OnLightAttackHit() => TryDamagePlayerHitbox(lightAttackDamage, lightAttackPoiseDamage, lightAttackHitboxOffset, lightAttackHitboxSize);
+    public void OnHeavyAttackHit() => TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackPoiseDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize);
+    public void OnChargeAttackHit() => TryDamagePlayerHitbox(chargeAttackDamage, chargeAttackPoiseDamage, chargeAttackHitboxOffset, chargeAttackHitboxSize);
 
-    protected bool TryDamagePlayerHitbox(float damage, Vector3 localOffset, Vector3 boxSize)
+    protected bool TryDamagePlayerHitbox(float damage, int poiseDamage, Vector3 localOffset, Vector3 boxSize)
     {
         if (player == null) return false;
 
@@ -412,7 +417,7 @@ public abstract class BaseEnemy : MonoBehaviour
             {
                 if (playerHealth != null)
                 {
-                    playerHealth.TakeDamage(damage);
+                    playerHealth.TakeDamage(damage, poiseDamage);
                     playerManager?.SetInCombat();
                     return true;
                 }
