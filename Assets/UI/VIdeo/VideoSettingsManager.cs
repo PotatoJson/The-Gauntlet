@@ -14,11 +14,14 @@ public class VideoSettingsManager : MonoBehaviour
 
     void Start()
     {
+        // Load saved Fullscreen preference (Default to true/1 if no save exists)
+        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        fullscreenToggle.isOn = isFullscreen;
+        Screen.fullScreen = isFullscreen;
+
         SetupResolution();
         SetupFPS();
 
-        // Setup Fullscreen Toggle
-        fullscreenToggle.isOn = Screen.fullScreen;
         fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
     }
 
@@ -30,18 +33,22 @@ public class VideoSettingsManager : MonoBehaviour
         List<string> options = new List<string>();
         int currentResolutionIndex = 0;
 
+        // Load saved resolution preferences (Default to Screen.width/height if no save exists)
+        int savedWidth = PlayerPrefs.GetInt("ResWidth", Screen.width);
+        int savedHeight = PlayerPrefs.GetInt("ResHeight", Screen.height);
+
         for (int i = 0; i < _resolutions.Length; i++)
         {
             string option = _resolutions[i].width + " x " + _resolutions[i].height;
 
-            // Avoid adding duplicates (Unity lists resolutions for every refresh rate)
             if (!options.Contains(option))
             {
                 options.Add(option);
             }
 
-            if (_resolutions[i].width == Screen.currentResolution.width &&
-                _resolutions[i].height == Screen.currentResolution.height)
+            // THE FIX: Check against the saved width/height (or the actual game window size), 
+            // NOT the monitor's native Screen.currentResolution!
+            if (_resolutions[i].width == savedWidth && _resolutions[i].height == savedHeight)
             {
                 currentResolutionIndex = options.Count - 1;
             }
@@ -50,6 +57,9 @@ public class VideoSettingsManager : MonoBehaviour
         resolutionDropdown.AddOptions(options);
         resolutionDropdown.value = currentResolutionIndex;
         resolutionDropdown.RefreshShownValue();
+
+        // Apply the loaded resolution just to be sure it matches the dropdown
+        Screen.SetResolution(savedWidth, savedHeight, Screen.fullScreen);
 
         resolutionDropdown.onValueChanged.AddListener(SetResolution);
     }
@@ -60,8 +70,7 @@ public class VideoSettingsManager : MonoBehaviour
         List<string> fpsOptions = new List<string> { "30 FPS", "60 FPS", "120 FPS", "Unlimited" };
         fpsDropdown.AddOptions(fpsOptions);
 
-        // Load saved FPS or default to 60
-        int savedFPS = PlayerPrefs.GetInt("TargetFPS", 1); // Index 1 is 60 FPS
+        int savedFPS = PlayerPrefs.GetInt("TargetFPS", 1);
         fpsDropdown.value = savedFPS;
         SetFPS(savedFPS);
 
@@ -70,12 +79,16 @@ public class VideoSettingsManager : MonoBehaviour
 
     public void SetResolution(int resolutionIndex)
     {
-        // Find the matching resolution from the array
         string[] splitRes = resolutionDropdown.options[resolutionIndex].text.Split('x');
         int width = int.Parse(splitRes[0].Trim());
         int height = int.Parse(splitRes[1].Trim());
 
         Screen.SetResolution(width, height, Screen.fullScreen);
+
+        // Save the player's choice!
+        PlayerPrefs.SetInt("ResWidth", width);
+        PlayerPrefs.SetInt("ResHeight", height);
+        PlayerPrefs.Save();
     }
 
     public void SetFPS(int index)
@@ -85,15 +98,20 @@ public class VideoSettingsManager : MonoBehaviour
             0 => 30,
             1 => 60,
             2 => 120,
-            _ => -1 // -1 tells Unity to run as fast as possible
+            _ => -1
         };
 
         Application.targetFrameRate = target;
         PlayerPrefs.SetInt("TargetFPS", index);
+        PlayerPrefs.Save();
     }
 
     public void SetFullscreen(bool isFullscreen)
     {
         Screen.fullScreen = isFullscreen;
+
+        // Save the player's choice! (1 for true, 0 for false)
+        PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
+        PlayerPrefs.Save();
     }
 }
