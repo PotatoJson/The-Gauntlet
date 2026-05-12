@@ -207,6 +207,16 @@ public class Fracture : MonoBehaviour
         obj.name = "Fragment";
         obj.tag = this.tag;
 
+        int debrisLayer = LayerMask.NameToLayer("Debris");
+        if (debrisLayer > -1)
+        {
+            obj.layer = debrisLayer;
+        }
+        else
+        {
+            Debug.LogWarning("Debris layer does not exist. Please create it in the Tags and Layers manager.");
+        }
+
         // Update mesh to the new sliced mesh
         obj.AddComponent<MeshFilter>();
 
@@ -234,6 +244,10 @@ public class Fracture : MonoBehaviour
         fragmentRigidBody.linearDamping = thisRigidBody.linearDamping;
         fragmentRigidBody.angularDamping = thisRigidBody.angularDamping;
         fragmentRigidBody.useGravity = thisRigidBody.useGravity;
+
+        var cleanup = obj.AddComponent<DestroyAfterTime>();
+        cleanup.minLifetime = 5f;
+        cleanup.maxLifetime = 10f;
 
         // If refracturing is enabled, create a copy of this component and add it to the template fragment object
         if (refractureOptions.enableRefracturing &&
