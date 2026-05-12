@@ -208,7 +208,9 @@ public class ShieldEnemy : BaseEnemy
 
     public void OnShieldBashHit()
     {
-        TryDamagePlayerHitbox(shieldBashDamage, shieldBashHitboxOffset, shieldBashHitboxSize);
+        // Assuming the second parameter is an int (e.g., layerMask or hitboxId).
+        // If you have a specific value for this parameter, replace '0' with the correct value.
+        TryDamagePlayerHitbox(shieldBashDamage, 20, shieldBashHitboxOffset, shieldBashHitboxSize);
     }
 
     public void OnShieldBashEnd()
