@@ -215,16 +215,40 @@ public class PlayerCombat : MonoBehaviour
     }
 
     private void ProcessAttackRotation()
+{
+    if (_stateManager.GetCurrentState() != PlayerState.Attacking) return;
+
+    // LOCK-ON
+    if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
     {
-        if(_stateManager.IsLockedOn || _isRotationLocked || _stateManager.GetCurrentState() != PlayerState.Attacking) return;
+        // Track the enemy during the wind-up phase (while _isRotationLocked is true).
+        // Once the hitbox is armed (_isRotationLocked = false), we stop tracking so the swing follows through naturally.
+        if (_isRotationLocked) 
+        {
+            Vector3 directionToTarget = PlayerCamera.Instance.currentLockOnTarget.position - transform.position;
+            directionToTarget.y = 0; // Keep the rotation strictly horizontal
+
+            if (directionToTarget != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
+            }
+        }
+    }
+    // FREE-AIM BEHAVIOR
+    else
+    {
+        // Only allow free-aim snapping if the rotation is unlocked (hitbox is armed / active frames)
+        if (_isRotationLocked) return;
 
         Vector3 snapDir = _stateManager.MoveDirectionIntent;
-        if(snapDir != Vector3.zero)
+        if (snapDir != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(snapDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
         }
     }
+}
 
     private void HandleHeavyChargeTimer()
     {

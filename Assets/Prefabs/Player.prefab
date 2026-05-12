@@ -46,6 +46,7 @@ GameObject:
   - component: {fileID: 5221296846589769512}
   - component: {fileID: 2615825535877183288}
   - component: {fileID: 8214966954790734677}
+  - component: {fileID: 13187733473135032}
   - component: {fileID: 1490983485963244258}
   - component: {fileID: 7300029207042372441}
   m_Layer: 6
@@ -179,16 +180,11 @@ MonoBehaviour:
   JumpAttack: {fileID: 11400000, guid: 59a4472fb937f54408511cec2e9ceb40, type: 2}
   RunningLightAttack: {fileID: 11400000, guid: 74723694e66882a418df2fe76906c0da, type: 2}
   RunningHeavyAttack: {fileID: 11400000, guid: 6f01a5b79fc084747b9f0a889d7dc51e, type: 2}
-  _healthScript: {fileID: 8214966954790734677}
   _leftHitbox: {fileID: 6711534601265782201}
   _rightHitbox: {fileID: 235802254161317062}
   _pullBackSpeed: 0.12
   _normHeavyWindUp: 0.4
   MaxChargeDuration: 1
-  _staminaBar: {fileID: 0}
-  RegenRate: 60
-  RegenDelay: 3
-  MaxStamina: 100
   BufferDuration: 0.5
 --- !u!114 &2615825535877183288
 MonoBehaviour:
@@ -225,15 +221,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
-  currentHealth: 0
   healthRecoveryRate: 1
   healthRecoveryDelay: 5
   isBlocking: 0
-  maxStunMeter: 100
-  stunRecoveryRate: 5
-  stunRecoveryDelay: 2
   invincibilityDuration: 0.5
-  MaxPoise: 0
+  _maxPoise: 0
   CurrentPoise: 0
   PoiseRecoveryRate: 0
   PoiseRecoveryDelay: 0
@@ -241,6 +233,21 @@ MonoBehaviour:
   OvercapKnockback: 0
   LastCheckPoint: {fileID: 0}
   PlayerSpawn: {fileID: 0}
+--- !u!114 &13187733473135032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75ce6c7ee99bef2488f3f8821c3daf0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStamina
+  RegenRate: 60
+  RegenDelay: 3
+  _staminaBar: {fileID: 0}
 --- !u!136 &1490983485963244258
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -278,9 +285,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsManager
   BaseMaxHealth: 100
   BaseDamage: 10
-  CurrentMaxHealth: 0
-  CurrentDamage: 0
-  _healthScript: {fileID: 8214966954790734677}
+  BaseStamina: 100
+  BasePoiseDamage: 10
+  BaseMaxPoise: 100
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0
