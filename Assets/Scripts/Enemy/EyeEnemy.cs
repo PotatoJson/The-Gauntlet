@@ -154,7 +154,13 @@ public class EyeEnemy : BaseEnemy
             Vector3 directionToPlayer = (player.position + Vector3.up * 1.5f) - fireballSpawnPoint.position;
             Quaternion rotationToPlayer = Quaternion.LookRotation(directionToPlayer);
 
-            Instantiate(fireballPrefab, fireballSpawnPoint.position, rotationToPlayer);
+            GameObject fireballObject = Instantiate(fireballPrefab, fireballSpawnPoint.position, rotationToPlayer);
+
+            EnemyProjectile projectile = fireballObject.GetComponent<EnemyProjectile>();
+            if (projectile != null)
+            {
+                projectile.Initialize(gameObject);
+            }
         }
         else
         {

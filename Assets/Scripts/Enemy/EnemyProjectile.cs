@@ -7,10 +7,32 @@ public class EnemyProjectile : MonoBehaviour
     [SerializeField] private float damage = 15f;
     [SerializeField] private float lifetime = 5f;
 
+    private Collider _projectileCollider;
+
+    private void Awake()
+    {
+        _projectileCollider = GetComponent<Collider>();
+    }
+
     private void Start()
     {
+        Debug.Log($"[EnemyProjectile] Spawned: {name} at {transform.position} (lifetime={lifetime})");
         // Destroy the fireball after a few seconds so it doesn't clutter the scene forever if it misses
         Destroy(gameObject, lifetime);
+    }
+
+    public void Initialize(GameObject owner)
+    {
+        if (owner == null || _projectileCollider == null) return;
+
+        Collider[] ownerColliders = owner.GetComponentsInChildren<Collider>();
+        foreach (Collider ownerCollider in ownerColliders)
+        {
+            if (ownerCollider != null)
+            {
+                Physics.IgnoreCollision(_projectileCollider, ownerCollider);
+            }
+        }
     }
 
     private void Update()
@@ -22,19 +44,28 @@ public class EnemyProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"[EnemyProjectile] Trigger enter: {name} hit {other.name} (tag={other.tag}, isTrigger={other.isTrigger})");
+
         // Check if we hit the player (supports child colliders)
         PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();
         if (playerHealth != null)
         {
+            Debug.Log($"[EnemyProjectile] Damaging player for {damage} and destroying projectile.");
             playerHealth.TakeDamage(damage);
             Destroy(gameObject);
             return;
         }
 
         // Destroy if it hits environment like a wall or floor (ignores enemies and other triggers)
-        if (!other.CompareTag("Enemy") && !other.CompareTag("EliteEnemy") && !other.isTrigger)
+        if (!other.CompareTag("BasicEnemy") && !other.CompareTag("EliteEnemy") && !other.isTrigger)
         {
+            Debug.Log("[EnemyProjectile] Hit environment, destroying projectile.");
             Destroy(gameObject);
         }
+    }
+
+    private void OnDestroy()
+    {
+        Debug.Log($"[EnemyProjectile] Destroyed: {name}");
     }
 }

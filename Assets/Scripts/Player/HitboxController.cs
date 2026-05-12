@@ -8,6 +8,7 @@ public class HitboxController : MonoBehaviour
 
 
     //states passed from combat manager
+    public int CurrentDamage => _currentDamage;
     private int _currentDamage;
     private int _currentPoiseDamage;
 
