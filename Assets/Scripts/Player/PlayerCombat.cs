@@ -34,6 +34,7 @@ public class PlayerCombat : MonoBehaviour
 
     [Header("Combat Tracking")]
     private AttackNode _currentAttackNode;
+    private CombatInput _currentAttackType = CombatInput.None;
     private bool _canCombo = false;
     private bool _comboQueued = false;
     private bool _isHoldingHeavy = false;
@@ -144,6 +145,11 @@ public class PlayerCombat : MonoBehaviour
         {
             _healthScript.Heal(25f);
             Debug.Log("Used Potion");
+
+            if (MetricsTracker.Instance != null)
+            {
+                MetricsTracker.Instance.RecordPotionUsed();
+            }
         }
     }
 
@@ -154,68 +160,59 @@ public class PlayerCombat : MonoBehaviour
 
         if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
 
-        //checking for a jump attack
         if(currentState == PlayerState.Airborne)
         {
-            AttemptAttack(JumpAttack, true);
-            ConsumeBuffer();
+            AttemptAttack(JumpAttack, true, _currentBuffer);
             return;
         }
 
-        //checking for a running attack
         if(currentState == PlayerState.Running)
         {
-            Debug.Log("Test Running attack");
-            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light)
-                ? RunningLightAttack
-                : RunningHeavyAttack;
-            AttemptAttack(nodeToPlay, true);
+            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) ? RunningLightAttack : RunningHeavyAttack;
+            AttemptAttack(nodeToPlay, true, _currentBuffer);
         }
         else if(currentState == PlayerState.Idle || currentState == PlayerState.Walking)
         {
-            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) 
-                ? StartingLightAttack 
-                : StartingHeavyAttack;
-            AttemptAttack(nodeToPlay, false);
+            AttackNode nodeToPlay = (_currentBuffer == CombatInput.Light) ? StartingLightAttack : StartingHeavyAttack;
+            AttemptAttack(nodeToPlay, false, _currentBuffer);
         }
         else if(currentState == PlayerState.Attacking && _canCombo)
         {
-            AttackNode nextNode = (_currentBuffer == CombatInput.Light) 
-                ? _currentAttackNode.NextLightAttack 
-                : _currentAttackNode.NextHeavyAttack;
-
-            Debug.Log($"Attempting to chain from {_currentAttackNode.name} to {(nextNode != null ? nextNode.name : "NULL")}");
-            if(nextNode != null) AttemptAttack(nextNode, false);
+            AttackNode nextNode = (_currentBuffer == CombatInput.Light) ? _currentAttackNode.NextLightAttack : _currentAttackNode.NextHeavyAttack;
+            if(nextNode != null) AttemptAttack(nextNode, false, _currentBuffer);
         }
     }
 
-    private void AttemptAttack(AttackNode node, bool keepMomentum)
+    private void AttemptAttack(AttackNode node, bool keepMomentum, CombatInput attackType)
     {
-        if(node == null) return;
-
-        if (_stateManager.IsInCombat)
         {
-            // We ARE in combat: enforce stamina rules strictly
-            if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+            if(node == null) return;
+
+            if (_stateManager.IsInCombat)
             {
-                ConsumeBuffer();
-                return;
+                // We ARE in combat: enforce stamina rules strictly
+                if(!_staminaScript.HasEnoughStamina(node.StaminaCost))
+                {
+                    ConsumeBuffer();
+                    return;
+                }
+                _staminaScript.ConsumeStamina(node.StaminaCost);
             }
-            _staminaScript.ConsumeStamina(node.StaminaCost);
+
+            _stateManager.CarryMomentum = keepMomentum;
+            _isRotationLocked = true;
+
+            _currentAttackNode = node;
+            _currentAttackType = attackType;
+            _canCombo = false;
+            _comboQueued = true;
+            
+            //_stateManager.CurrentLungeSpeed = node.LungeForce; Removed for Testing a better way
+            _stateManager.CanCancelAttack = false;
+            _stateManager.SetPlayerState(PlayerState.Attacking);
+            _animator.SetTrigger(node.AnimationTrigger);
+            ConsumeBuffer();
         }
-
-        _stateManager.CarryMomentum = keepMomentum;
-        _isRotationLocked = true;
-
-        _currentAttackNode = node;
-        _canCombo = false;
-        _comboQueued = true;
-        
-        //_stateManager.CurrentLungeSpeed = node.LungeForce; Removed for Testing a better way
-        _stateManager.CanCancelAttack = false;
-        _stateManager.SetPlayerState(PlayerState.Attacking);
-        _animator.SetTrigger(node.AnimationTrigger);
-        ConsumeBuffer();
     }
 
     private void ProcessAttackRotation()
@@ -301,7 +298,7 @@ public class PlayerCombat : MonoBehaviour
 
         if(_activeHitbox != null)
         {
-            _activeHitbox.EnableCollider(finalDamage, finalPoise);
+            _activeHitbox.EnableCollider(finalDamage, finalPoise, _currentAttackType);
         }
     }
 

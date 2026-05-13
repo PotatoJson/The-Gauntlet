@@ -74,6 +74,11 @@ public class PlayerStamina : MonoBehaviour
     public void ConsumeStamina(float amount)
     {
         _currentStamina -= amount;
+        // Metrics: Check if stamina just bottomed out
+        if (_currentStamina <= 0 && MetricsTracker.Instance != null)
+        {
+            MetricsTracker.Instance.RecordStaminaExhaustion();
+        }
         _currentStamina = Mathf.Max(0, _currentStamina);
         _regenTimer = RegenDelay; // Reset the delay before it starts regenerating
         UpdateUI();

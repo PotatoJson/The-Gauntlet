@@ -417,7 +417,7 @@ public abstract class BaseEnemy : MonoBehaviour
             {
                 if (playerHealth != null)
                 {
-                    playerHealth.TakeDamage(damage, poiseDamage);
+                    playerHealth.TakeDamage(damage, poiseDamage, gameObject);
                     playerManager?.SetInCombat();
                     return true;
                 }

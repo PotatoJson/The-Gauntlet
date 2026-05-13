@@ -99,6 +99,17 @@ public class EnemySpawner : MonoBehaviour
     {
         chamber.hasSpawned = true;
 
+        if (MetricsTracker.Instance != null)
+        {
+            // Updated to Unity 6 syntax: FindFirstObjectByType
+            PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
+            
+            // Now we just directly read CurrentHealth instead of doing math!
+            int startingHealth = playerHealth != null ? Mathf.RoundToInt(playerHealth.CurrentHealth) : 100;
+            
+            MetricsTracker.Instance.StartChamber(chamber.chamberName, startingHealth);
+        }
+
         // Spawn standard enemy types from their containers
         SpawnEnemyType(gruntPrefab, chamber.gruntSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
@@ -156,6 +167,18 @@ public class EnemySpawner : MonoBehaviour
     private void ClearChamber(ChamberData chamber)
     {
         chamber.isCleared = true;
+
+        if (MetricsTracker.Instance != null)
+        {
+            // Updated to Unity 6 syntax: FindFirstObjectByType
+            PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
+            
+            // Now we just directly read CurrentHealth
+            int endingHealth = playerHealth != null ? Mathf.RoundToInt(playerHealth.CurrentHealth) : 0;
+            
+            // Pass ending health, 'false' (because they survived), and "None" for the killer
+            MetricsTracker.Instance.EndChamber(endingHealth, false, "None");
+        }
 
         //Made changes for multiple gates to open.
         if (chamber.chamberDoorAnimators.Count > 0)

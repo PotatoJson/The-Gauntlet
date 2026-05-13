@@ -49,7 +49,11 @@ public class SwordHitbox : MonoBehaviour
         PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
         if (playerHealth == null) return;
 
-        playerHealth.TakeDamage(pendingDamage);
+        // METRICS FIX: Pass the owner's GameObject
+        // We pass 0 for poise damage, and the ownerEnemy's gameObject so the Metrics Tracker knows who swung the sword!
+        GameObject attackerRoot = ownerEnemy != null ? ownerEnemy.gameObject : transform.root.gameObject;
+        playerHealth.TakeDamage(pendingDamage, 0, attackerRoot);
+
         Debug.Log($"{ownerEnemy?.gameObject.name}: Sword collider hit player for {pendingDamage} damage!");
 
         // Disable after hitting so we don't multi-hit in one swing

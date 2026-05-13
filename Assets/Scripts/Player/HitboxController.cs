@@ -11,6 +11,7 @@ public class HitboxController : MonoBehaviour
     public int CurrentDamage => _currentDamage;
     private int _currentDamage;
     private int _currentPoiseDamage;
+    private CombatInput _currentAttackType;
 
     private HashSet<GameObject> _alreadyHit = new HashSet<GameObject>();
 
@@ -25,12 +26,13 @@ public class HitboxController : MonoBehaviour
         _collider.enabled = false;
     }
 
-    public void EnableCollider(int damage, int poise)
+    public void EnableCollider(int damage, int poise, CombatInput attackType)
     {
         Debug.Log("hitbox enabled");
         _alreadyHit.Clear();
         _currentDamage = damage;
         _currentPoiseDamage = poise;
+        _currentAttackType = attackType;
         _collider.enabled = true;
     }
 
@@ -50,6 +52,11 @@ public class HitboxController : MonoBehaviour
             {
                 enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
                 SpawnBlood(other);
+
+                if (MetricsTracker.Instance != null)
+                {
+                    MetricsTracker.Instance.RecordMeleeHit(_currentAttackType, _currentDamage);
+                }
             }
         }
         Debug.Log($"Hit {other.name} for {_currentDamage} Damage");
