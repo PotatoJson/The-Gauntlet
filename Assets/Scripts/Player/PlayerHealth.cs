@@ -48,7 +48,13 @@ public class PlayerHealth : MonoBehaviour
     public int MaxPotions = 5;
     public int CurrentPotions;
     public float PotionHealAmount = 35f;
-    public event Action<int, int> OnPotionCountChanged; //For UI later
+    public event Action<int, int> OnPotionCountChanged;
+
+    [Header("VFX")]
+    [Tooltip("Drag your healing VFX prefab here.")]
+    [SerializeField] private GameObject healingVfxPrefab;
+    [Tooltip("Optional: Drag a specific transform here (like the chest/feet). If empty, spawns at the player's base.")]
+    [SerializeField] private Transform vfxSpawnPoint;
 
     [Header("Haptic Feedback")]
     [Tooltip("Low frequency motor (left side). Heavy, deep rumble.")]
@@ -179,6 +185,16 @@ public class PlayerHealth : MonoBehaviour
     {
         Heal(PotionHealAmount);
         Debug.Log($"Healed Potions remaining: {CurrentPotions}");
+
+        if (healingVfxPrefab != null)
+        {
+            // Figure out where to spawn it (use the custom point, or just the player's position)
+            Transform spawnLocation = (vfxSpawnPoint != null) ? vfxSpawnPoint : transform;
+
+            // Spawn the prefab as a child of the player so it moves WITH the player!
+            GameObject spawnedVFX = Instantiate(healingVfxPrefab, spawnLocation.position, spawnLocation.rotation, transform);
+        }
+
     }
 #endregion
 
