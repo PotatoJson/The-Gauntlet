@@ -50,7 +50,17 @@ public class PlayerCombat : MonoBehaviour
     [Header("Input Buffer Things")]
     public float BufferDuration;
     private CombatInput _currentBuffer = CombatInput.None;
-    private float BufferTimer = 0f;    
+    private float BufferTimer = 0f;
+
+    [Header("Input Setup")]
+    [SerializeField] private InputActionAsset inputAsset;
+
+    private InputActionMap _playerMap;
+    private InputAction _lightAttackAction;
+    private InputAction _heavyAttackAction;
+    private InputAction _healAction;
+
+    private InputAction _debugTeleportAction;
     #endregion
 
     #region Setup
@@ -62,22 +72,26 @@ public class PlayerCombat : MonoBehaviour
         _staminaScript = GetComponent<PlayerStamina>();
         _healthScript = GetComponent<PlayerHealth>();
 
-        _input = new PlayerControls();
+        _playerMap = inputAsset.FindActionMap("Player");
+        _lightAttackAction = _playerMap.FindAction("LightAttack");
+        _heavyAttackAction = _playerMap.FindAction("HeavyAttack");
+        _healAction = _playerMap.FindAction("Heal");
+        _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
 
-        _input.Player.LightAttack.started += ctx => OnLightAttackInput();
-        _input.Player.HeavyAttack.started += ctx => 
+        _lightAttackAction.started += ctx => OnLightAttackInput();
+        _heavyAttackAction.started += ctx => 
         {
             _isHoldingHeavy = true;
             OnHeavyAttackInput();
         };
-        _input.Player.HeavyAttack.canceled += ctx => OnHeavyAttackReleased();
-        _input.Player.Heal.started += ctx => UsePotion();
-        _input.Player.DebugTeleport.started += ctx => _stateManager.DebugTeleport();
+        _heavyAttackAction.canceled += ctx => OnHeavyAttackReleased();
+        _healAction.started += ctx => UsePotion();
+        _debugTeleportAction.started += ctx => _stateManager.DebugTeleport();
     }
 
-    private void OnEnable() => _input.Enable();
+    private void OnEnable() => _playerMap.Enable();
     
-    private void OnDisable() => _input.Disable();
+    private void OnDisable() => _playerMap.Disable();
 
     // Update is called once per frame
     void Update()
