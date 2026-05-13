@@ -22,6 +22,11 @@ public class PlayerStatsManager : MonoBehaviour
     public RunTimeGauntlet PrimaryGauntlet;
     public RunTimeGauntlet SecondaryGauntlet;
 
+    [Header("Starter Equipment")]
+    public GauntletData DefaultPrimary;
+    public GauntletData DefaultSecondary;
+
+
     //safe gaurd that holds the sum of all active bonuses making sure there are no duplicating stats
     private Dictionary<StatModifierType, float> _activeBonuses = new Dictionary<StatModifierType, float>();
 
@@ -30,6 +35,14 @@ public class PlayerStatsManager : MonoBehaviour
 
     private void Start()
     {
+        if(PrimaryGauntlet == null && DefaultPrimary != null)
+        {
+            PrimaryGauntlet = new RunTimeGauntlet(DefaultPrimary, EquipSlot.Primary);
+        }
+        if(SecondaryGauntlet == null && DefaultSecondary != null)
+        {
+            SecondaryGauntlet = new RunTimeGauntlet(DefaultSecondary, EquipSlot.Secondary);
+        }
         RecalculateGlobalStats();
     }
 
@@ -55,7 +68,14 @@ public class PlayerStatsManager : MonoBehaviour
             //check for valid gem
             if(gemUI != null && gemUI.LinkedGemData is StatGemData statGem)
             {
-                newGauntlet.SocketedStatGems[i] = statGem;
+                if(newGauntlet.SocketedStatGems != null && i < newGauntlet.SocketedStatGems.Length)
+                {
+                    newGauntlet.SocketedStatGems[i] = statGem;
+                }
+                else
+                {
+                    Debug.LogError($"[Backend Mismatch] UI slot {i} has a gem, but the backend array only has room for {newGauntlet.SocketedStatGems?.Length}! Check RunTimeGauntlet.cs");
+                }
             }
         }
         return newGauntlet;

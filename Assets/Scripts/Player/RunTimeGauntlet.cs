@@ -16,7 +16,7 @@ public class RunTimeGauntlet
 
         //always creating an array based on the max number of slots to prevent gems from being destroyed
         //if we allow the player to swap gauntlets back and forth.
-        SocketedStatGems = new StatGemData[BaseGauntlet.MaxPrimaryGemSlots];
+        SocketedStatGems = new StatGemData[5];
     }
 
     //Hand gem slot Restriction logic
@@ -24,12 +24,7 @@ public class RunTimeGauntlet
     {
         List<StatGemData> activeGems = new List<StatGemData>();
 
-        //secondary hand gets reduced gem slots
-        int activeSlotCount = (CurrentSlot == EquipSlot.Primary)
-            ? BaseGauntlet.MaxPrimaryGemSlots
-            : BaseGauntlet.MaxSecondaryGemSlots;
-
-        for(int i = 0; i < activeSlotCount; i++)
+        for(int i = 0; i < SocketedStatGems.Length; i++)
         {
             if(SocketedStatGems[i] != null) activeGems.Add(SocketedStatGems[i]);
         }

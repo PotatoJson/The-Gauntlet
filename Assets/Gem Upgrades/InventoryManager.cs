@@ -38,6 +38,10 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private GameObject primaryTitleButton;
     [SerializeField] private GameObject secondaryTitleButton;
 
+    [Header("Starter Equipment UI")]
+    public GameObject DefaultPrimaryPrefab;
+    public GameObject DefaultSecondaryPrefab;
+
     private GameObject _lastSelectedSlot;
     private GameObject _pendingGauntletPrefab;
     private bool _isWarningActive = false;
@@ -54,7 +58,15 @@ public class InventoryManager : MonoBehaviour
 
     private void Start()
     {
+        if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultPrimaryPrefab != null)
+        {
+            TryEquipNewGauntlet(DefaultPrimaryPrefab, GauntletRarity.Common);
+        }
 
+        if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultSecondaryPrefab != null)
+        {
+            TryEquipNewGauntlet(DefaultSecondaryPrefab, GauntletRarity.Common);
+        }
     }
 
     public void TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletRarity rarity)

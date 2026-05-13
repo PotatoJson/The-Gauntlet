@@ -58,8 +58,10 @@ public class PlayerStamina : MonoBehaviour
 
     private void HandleMaxStaminaChange()
     {
+        Debug.Log("Pre gem stamina - " + _maxStamina);
         _maxStamina = _statsManager.CurrentStamina;
         _currentStamina = Mathf.Min(_currentStamina, _maxStamina);
+        Debug.Log("Post gem stamina - " + _maxStamina);
         UpdateUI();
     }
 
