@@ -110,7 +110,7 @@ public class MetricsTracker : MonoBehaviour
         if (died) 
         {
             // If they died, the run is over. Generate a new Run ID for the next attempt.
-            currentRunID = System.Guid.NewGuid().ToString();
+            // currentRunID = System.Guid.NewGuid().ToString();
         }
     }
 
