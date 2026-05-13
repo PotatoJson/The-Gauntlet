@@ -9,6 +9,7 @@ public class EnemyProjectile : MonoBehaviour
 
     private Collider _projectileCollider;
     private GameObject _instigator;
+    private Vector3 _moveDirection = Vector3.forward;
 
     private void Awake()
     {
@@ -38,6 +39,14 @@ public class EnemyProjectile : MonoBehaviour
         }
     }
 
+    public void SetDirection(Vector3 direction)
+    {
+        if (direction.sqrMagnitude < 0.0001f) return;
+
+        _moveDirection = direction.normalized;
+        transform.rotation = Quaternion.LookRotation(_moveDirection);
+    }
+
     public void SetSpeed(float newSpeed)
     {
         speed = newSpeed;
@@ -45,9 +54,7 @@ public class EnemyProjectile : MonoBehaviour
 
     private void Update()
     {
-        // The EyeEnemy spawns the fireball already rotated to face the player.
-        // This makes it continuously fly straight ahead in that direction.
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        transform.position += _moveDirection * speed * Time.deltaTime;
     }
 
     private void OnTriggerEnter(Collider other)

@@ -18,6 +18,7 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private float buffDamageMultiplier = 1.25f;
     [SerializeField] private float buffAttackSpeedMultiplier = 1.2f;
     [SerializeField] private GameObject buffVfxPrefab;
+    [SerializeField] private float buffInterval = 10f;
 
     [Header("Sword Hitbox")]
     [SerializeField] private SwordHitbox swordHitbox;
@@ -28,7 +29,7 @@ public class EliteEnemy : BaseEnemy
 
     private float aiDecisionTimer;
     private float aiDecisionInterval = 0.4f;
-    private bool hasBuffed;
+    private float buffTimer;
 
     protected override void Update()
     {
@@ -36,6 +37,16 @@ public class EliteEnemy : BaseEnemy
 
         // Don't continue if dead, stunned, or in hit stun
         if (IsDead() || isStunned || isInHitStun) return;
+
+        if (isEngaged && buffInterval > 0f)
+        {
+            buffTimer -= Time.deltaTime;
+            if (buffTimer <= 0f)
+            {
+                BuffNearbyEnemies();
+                buffTimer = buffInterval;
+            }
+        }
 
         // Don't make decisions until engaged and opener is done
         if (!isEngaged || !hasOpenedWithCharge || isCharging || isAttacking) return;
@@ -59,6 +70,11 @@ public class EliteEnemy : BaseEnemy
             bool justEngaged = !isEngaged;
             isEngaged = true;
 
+            if (justEngaged)
+            {
+                buffTimer = 0f;
+            }
+
             if (!hasOpenedWithCharge)
             {
                 if (CanPerformAction())
@@ -66,11 +82,6 @@ public class EliteEnemy : BaseEnemy
                     ChargeAttack();
                     hasOpenedWithCharge = true;
                 }
-            }
-
-            if (justEngaged && !hasBuffed && !IsDead())
-            {
-                BuffNearbyEnemies();
             }
         }
         else if (isAware && !isAttacking && !isCharging)
@@ -247,8 +258,6 @@ public class EliteEnemy : BaseEnemy
 
     private void BuffNearbyEnemies()
     {
-        hasBuffed = true;
-
         if (buffRadius <= 0f || maxBuffTargets <= 0)
         {
             Debug.LogWarning($"{gameObject.name}: Buff skipped (buffRadius={buffRadius}, maxBuffTargets={maxBuffTargets}).");

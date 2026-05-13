@@ -24,6 +24,7 @@ public class CasterEnemy : BaseEnemy
     [SerializeField] private float buffDamageMultiplier = 1.25f;
     [SerializeField] private float buffAttackSpeedMultiplier = 1.2f;
     [SerializeField] private GameObject buffVfxPrefab;
+    [SerializeField] private float buffInterval = 10f;
 
     [Header("Caster Settings - Targeting")]
     [SerializeField] private LayerMask groundMask = ~0;
@@ -34,8 +35,8 @@ public class CasterEnemy : BaseEnemy
     // State flags
     private bool isChanneling = false;
     private bool isRepositioning = false;
-    private bool hasBuffed = false;
     private float castTimer = 0f;
+    private float buffTimer;
     private Vector3 repositionTarget;
 
     // Animation parameter hash
@@ -44,6 +45,16 @@ public class CasterEnemy : BaseEnemy
     protected override void Update()
     {
         base.Update();
+
+        if (isEngaged && !IsDead() && !isStunned && !isInHitStun && buffInterval > 0f)
+        {
+            buffTimer -= Time.deltaTime;
+            if (buffTimer <= 0f)
+            {
+                BuffNearbyEnemies();
+                buffTimer = buffInterval;
+            }
+        }
 
         // Handle the continuous casting intervals if actively channeling
         if (isChanneling && !isStunned && !isInHitStun && !IsDead())
@@ -77,9 +88,9 @@ public class CasterEnemy : BaseEnemy
             isEngaged = true;
             hasOpenedWithCharge = true; // Act like it's already done so it doesn't try to charge
 
-            if (justEngaged && !hasBuffed && !IsDead())
+            if (justEngaged)
             {
-                BuffNearbyEnemies();
+                buffTimer = 0f;
             }
         }
         else if (isAware && !isAttacking)
@@ -214,8 +225,6 @@ public class CasterEnemy : BaseEnemy
 
     private void BuffNearbyEnemies()
     {
-        hasBuffed = true;
-
         if (buffRadius <= 0f || maxBuffTargets <= 0)
         {
             Debug.LogWarning($"{gameObject.name}: Buff skipped (buffRadius={buffRadius}, maxBuffTargets={maxBuffTargets}).");

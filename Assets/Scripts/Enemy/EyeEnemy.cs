@@ -5,6 +5,9 @@ public class EyeEnemy : BaseEnemy
     [Header("Eye Enemy Settings")]
     [SerializeField] private float preferredDistance = 10f;
     [SerializeField] private float fireballCooldown = 5f;
+    [SerializeField] private float rangedAttackDuration = 0.6f;
+    [SerializeField] private float recoilDistance = 2f;
+    [SerializeField] private float recoilDuration = 0.15f;
 
     [Header("Projectile")]
     [SerializeField] private GameObject fireballPrefab;
@@ -13,6 +16,9 @@ public class EyeEnemy : BaseEnemy
     private float fireballTimer = 0f;
     private float aiDecisionTimer;
     private float aiDecisionInterval = 0.4f;
+    private Coroutine recoilRoutine;
+    private bool hasFiredThisAttack;
+    private Coroutine deathRoutine;
 
     // Animation hash for shooting (matching base class light attack if applicable, or custom)
     protected static readonly int AnimShoot = Animator.StringToHash("LightAttack");
@@ -126,8 +132,12 @@ public class EyeEnemy : BaseEnemy
         if (!CanPerformAction()) return;
 
         isAttacking = true;
+        hasFiredThisAttack = false;
         fireballTimer = fireballCooldown;
         if (navAgent != null) navAgent.isStopped = true;
+
+        CancelInvoke(nameof(OnRangedAttackEnd));
+        Invoke(nameof(OnRangedAttackEnd), Mathf.Max(0.05f, rangedAttackDuration));
 
         if (animator != null)
         {
@@ -138,7 +148,6 @@ public class EyeEnemy : BaseEnemy
         {
             // Fallback if there is no animator setup
             SpawnFireballProjectile();
-            Invoke(nameof(OnRangedAttackEnd), 0.5f);
         }
     }
 
@@ -148,10 +157,18 @@ public class EyeEnemy : BaseEnemy
     /// </summary>
     public void SpawnFireballProjectile()
     {
+        if (hasFiredThisAttack) return;
+        hasFiredThisAttack = true;
+
         if (fireballPrefab != null && fireballSpawnPoint != null)
         {
             // Calculate direction to player aiming slightly upwards or at center mass
             Vector3 directionToPlayer = (player.position + Vector3.up * 1.5f) - fireballSpawnPoint.position;
+            if (directionToPlayer.sqrMagnitude < 0.0001f)
+            {
+                directionToPlayer = transform.forward;
+            }
+
             Quaternion rotationToPlayer = Quaternion.LookRotation(directionToPlayer);
 
             GameObject fireballObject = Instantiate(fireballPrefab, fireballSpawnPoint.position, rotationToPlayer);
@@ -160,12 +177,96 @@ public class EyeEnemy : BaseEnemy
             if (projectile != null)
             {
                 projectile.Initialize(gameObject);
+                projectile.SetDirection(directionToPlayer);
             }
+
+            ApplyRecoil();
         }
         else
         {
             Debug.LogWarning($"{gameObject.name}: Fireball Prefab or Spawn Point is missing!");
         }
+    }
+
+    private void ApplyRecoil()
+    {
+        if (recoilDistance <= 0f || recoilDuration <= 0f) return;
+
+        Vector3 recoilOffset = -transform.forward * recoilDistance;
+
+        if (recoilRoutine != null)
+        {
+            StopCoroutine(recoilRoutine);
+        }
+
+        recoilRoutine = StartCoroutine(ApplyRecoilRoutine(recoilOffset));
+    }
+
+    private System.Collections.IEnumerator ApplyRecoilRoutine(Vector3 recoilOffset)
+    {
+        Vector3 startPosition = transform.position;
+        Vector3 targetPosition = startPosition + recoilOffset;
+        float elapsed = 0f;
+
+        while (elapsed < recoilDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / recoilDuration);
+            float easedT = t * t * (3f - 2f * t);
+            Vector3 newPosition = Vector3.Lerp(startPosition, targetPosition, easedT);
+
+            if (navAgent != null && navAgent.isOnNavMesh)
+            {
+                navAgent.Move(newPosition - transform.position);
+                navAgent.nextPosition = transform.position;
+            }
+            else
+            {
+                transform.position = newPosition;
+            }
+
+            yield return null;
+        }
+
+        recoilRoutine = null;
+    }
+
+    protected override void Die()
+    {
+        if (deathRoutine != null) return;
+
+        StopAllCoroutines();
+        isAttacking = false;
+        isCharging = false;
+        isRecovering = false;
+        isInHitStun = false;
+        isHitImmune = false;
+
+        if (navAgent != null)
+        {
+            navAgent.isStopped = true;
+            navAgent.velocity = Vector3.zero;
+            navAgent.enabled = false;
+        }
+
+        animator?.SetTrigger(AnimDie);
+        gameObject.layer = LayerMask.NameToLayer("Default");
+
+        var col = GetComponent<Collider>();
+        if (col != null) col.enabled = false;
+
+        var healthBar = GetComponentInChildren<EnemyHealthBar>();
+        if (healthBar != null) healthBar.gameObject.SetActive(false);
+
+        if (animator == null)
+        {
+            Destroy(gameObject, 3f);
+        }
+    }
+
+    public void OnDieAnimationEnd()
+    {
+        Destroy(gameObject);
     }
 
     /// <summary>
