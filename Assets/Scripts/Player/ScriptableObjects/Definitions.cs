@@ -35,6 +35,7 @@ public enum StatModifierType
     HealthRegen,
     StaminaRegen,
     CritChance,
+    LifeSteal,
 
     //Stat Flags (checked during specific events) These are examples and subject to change
     //These will require more interconnected code within the player scripts so for now these are on the backburner
@@ -42,7 +43,9 @@ public enum StatModifierType
     DamageTakeMult, //+10% damage taken
     HeavyHitStamRestore, //stamina restored on succesful heavy attacks
     DodgeIFrameBonus, //increased I frames on dodge
-    ParryAttackBuff //LOL no parry yet but this could be cool
+    ParryAttackBuff, //LOL no parry yet but this could be cool
+    Retaliation, //Damage Increases as health lowers
+    Executioner //Killing an enemy gives stamina back
 }
 
 public enum SkillCategory

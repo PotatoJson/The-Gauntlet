@@ -141,11 +141,14 @@ public class PlayerCombat : MonoBehaviour
     //Temp Potion logic
     private void UsePotion()
     {
-        if(_healthScript != null)
-        {
-            _healthScript.Heal(25f);
-            Debug.Log("Used Potion");
+        PlayerState currentState = _stateManager.GetCurrentState();
+        if(currentState != PlayerState.Idle && currentState != PlayerState.Walking) return;
 
+        if(_healthScript != null && _healthScript.TryConsumePotion())
+        {
+            ConsumeBuffer();
+            _stateManager.SetPlayerState(PlayerState.Healing);
+            _animator.SetTrigger("DrinkPotion");
             if (MetricsTracker.Instance != null)
             {
                 MetricsTracker.Instance.RecordPotionUsed();

@@ -44,6 +44,12 @@ public class PlayerHealth : MonoBehaviour
     public float InstantKnockback;
     public float OvercapKnockback;
 
+    [Header("Potion Settings")]
+    public int MaxPotions = 5;
+    public int CurrentPotions;
+    public float PotionHealAmount = 35f;
+    //public event Action<int, int> OnPotionCountChanged; //For UI later
+
     [Header("Haptic Feedback")]
     [Tooltip("Low frequency motor (left side). Heavy, deep rumble.")]
     [Range(0f, 1f)] [SerializeField] private float damageRumbleLow = 0.5f;
@@ -100,12 +106,21 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
+        CurrentPotions = MaxPotions;
         _currentHealth = maxHealth;
         CurrentPoise = 0;
         OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
 
+    private void Update()
+    {
+        HandleInvincibility();
+        HandlePoiseRecovery();
+        HandleHealthRecovery();
+    }
+
+#region StatChangesFromGems
     private void HandleMaxPoiseChange()
     {
         _maxPoise = _statsManager.CurrentMaxPoise;
@@ -125,14 +140,25 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Post Health gem - " + maxHealth);
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
+#endregion
 
-
-    private void Update()
+#region PotionHandling
+    public bool TryConsumePotion()
     {
-        HandleInvincibility();
-        HandlePoiseRecovery();
-        HandleHealthRecovery();
+        if(CurrentPotions > 0 && _currentHealth < maxHealth)
+        {
+            CurrentPotions--;
+            return true;
+        }
+        return false;
     }
+
+    public void ExecutePotionHeal()
+    {
+        Heal(PotionHealAmount);
+        Debug.Log($"Healed Potions remaining: {CurrentPotions}");
+    }
+#endregion
 
     #region UpdateClarity
     private void HandleInvincibility()
@@ -250,13 +276,15 @@ public class PlayerHealth : MonoBehaviour
     private void TriggerKnockback()
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.Play("Empty", 1);
         _animator.SetTrigger("KnockbackHit");
-        _stateManager.CurrentLungeSpeed = -20;
+        _stateManager.CurrentLungeSpeed = -15;
     }
 
     private void TriggerLargeStumble()
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.Play("Empty", 1);
         _animator.SetTrigger("LargeStumble");
         _stateManager.CurrentLungeSpeed = -4f;
     }
@@ -283,7 +311,6 @@ public class PlayerHealth : MonoBehaviour
     public void Heal(float amount)
     {
         //if (IsDead) return;
-
         _currentHealth += amount;
         _currentHealth = Mathf.Min(_currentHealth, maxHealth);
 

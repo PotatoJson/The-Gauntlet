@@ -248,17 +248,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        if(!_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Airborne);
+        PlayerState currentState = _stateManager.GetCurrentState();
+        bool isHealing = (currentState == PlayerState.Healing);
+
+        if(!_controller.isGrounded && !isHealing) _stateManager.SetPlayerState(PlayerState.Airborne);
 
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
             _horizontalVelocity = Vector3.zero; // Stop horizontal movement
-            if(_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Idle);
+            if(_controller.isGrounded && !isHealing) _stateManager.SetPlayerState(PlayerState.Idle);
             return;
         }
 
-        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f && !isHealing;
 
         if (actualSprint && _stateManager.IsInCombat)
         {
@@ -274,7 +277,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (_controller.isGrounded)
+        if (_controller.isGrounded && !isHealing)
         {
             _stateManager.SetPlayerState(actualSprint ? PlayerState.Running : PlayerState.Walking);
         }
@@ -307,6 +310,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _targetSpeed = actualSprint ? sprintSpeed : walkSpeed;
+
+        if(isHealing) _targetSpeed = walkSpeed * 0.65f;
         _smoothSpeed = Mathf.Lerp(_smoothSpeed, _targetSpeed, 10f * Time.deltaTime);
         
         // Save the speed instead of moving directly
