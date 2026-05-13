@@ -79,10 +79,15 @@ public class RewardMenuManager : MonoBehaviour
     {
         Time.timeScale = 0f;
 
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         characterScreenRoot.SetActive(true);
         leftSideGauntlets.SetActive(true);
         rightSideDetails.SetActive(false);
         rightSideRewards.SetActive(true);
+
+        if (expBarRoot != null) expBarRoot.SetActive(false);
 
         if (warningPanel != null) warningPanel.SetActive(false);
         _isWarningActive = false;
@@ -146,10 +151,15 @@ public class RewardMenuManager : MonoBehaviour
     {
         Time.timeScale = 0f;
 
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         characterScreenRoot.SetActive(true);
         leftSideGauntlets.SetActive(true);
         rightSideDetails.SetActive(false);
         rightSideRewards.SetActive(true);
+
+        if(expBarRoot != null) expBarRoot.SetActive(false);
 
         if (warningPanel != null) warningPanel.SetActive(false);
         _isWarningActive = false;
@@ -385,7 +395,7 @@ public class RewardMenuManager : MonoBehaviour
 
         if (expBarRoot != null)
         {
-            expBarRoot.SetActive(false);
+            expBarRoot.SetActive(true);
         }
 
         Cursor.visible = false;

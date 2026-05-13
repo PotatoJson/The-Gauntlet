@@ -3,10 +3,14 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 [ExecuteInEditMode]
 public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHandler
 {
+
+    public static ProgressBarCircle Instance {get; private set;}
+
     [Header("UI References (Drag & Drop)")]
     [SerializeField] private Image fillBar;
     [SerializeField] private TMPro.TMP_Text txtLevel;
@@ -28,8 +32,11 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
     [Header("Reward Menu Link")]
     public UnityEvent onRewardReadyClicked;
+    [Tooltip("Drag Reward Menu Input Here")]
+    public InputActionReference rewardMenuInput;
 
     private int _pendingLevelUps = 0;
+    public bool HasPendingLevelUps => _pendingLevelUps > 0;
 
     // Animation Tracking
     private Tween _pulseTween;
@@ -38,8 +45,21 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
     private Vector3 _originalBarScale = Vector3.one;
     private Vector2 _originalArrowPos;
 
+    private void OnEnable()
+    {
+        if(rewardMenuInput != null) rewardMenuInput.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if(rewardMenuInput != null) rewardMenuInput.action.Disable();
+    }
+
     private void Awake()
     {
+        if(Instance == null) Instance = this;
+        else if(Instance != this && Application.isPlaying) Destroy(gameObject);
+
         if (txtLevel != null) _originalTextScale = txtLevel.transform.localScale;
         _originalBarScale = transform.localScale;
 
@@ -65,6 +85,8 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         {
             newExp -= expToNextLevel;
             levelsGained++;
+
+            expToNextLevel = Mathf.Round(expToNextLevel * 1.5f);
         }
 
         currentExp = newExp;
@@ -102,7 +124,7 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
         // Keep the normal EXP fill animation running regardless of level up
         _expSequence?.Kill();
-        _expSequence = DOTween.Sequence();
+        _expSequence = DOTween.Sequence().SetUpdate(true);
 
         if (levelsGained == 0)
         {
@@ -202,6 +224,16 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             if (txtLevel != null) _originalTextScale = txtLevel.transform.localScale;
             _originalBarScale = transform.localScale;
         }
+        else
+        {
+            if(HasPendingLevelUps && rewardMenuInput != null)
+            {
+                if (rewardMenuInput.action.WasPressedThisFrame())
+                {
+                    TryOpenRewardMenu();
+                }
+            }
+        }
     }
 
     private void OnDestroy()
@@ -244,6 +276,11 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             }
 
             onRewardReadyClicked?.Invoke();
+            //hard link 
+            if(RewardMenuManager.Instance != null && Application.isPlaying)
+            {
+                RewardMenuManager.Instance.OpenRewardMenu();
+            }
         }
     }
 }

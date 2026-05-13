@@ -15,15 +15,17 @@ public class CombatHUDFader : MonoBehaviour
     [Tooltip("How many seconds it takes to fade in or out")]
     public float fadeDuration = 0.5f;
 
-    private bool _wasInCombat;
+    private bool _wasVisible;
 
     private void Start()
     {
         if (playerManager != null)
         {
             // Set the initial state instantly when the game starts
-            _wasInCombat = playerManager.IsInCombat;
-            ForceAlpha(_wasInCombat ? 1f : 0f);
+            bool hasLevelUp = (ProgressBarCircle.Instance != null && ProgressBarCircle.Instance.HasPendingLevelUps);
+            _wasVisible = playerManager.IsInCombat || hasLevelUp;
+            
+            ForceAlpha(_wasVisible ? 1f : 0f);
         }
     }
 
@@ -31,12 +33,21 @@ public class CombatHUDFader : MonoBehaviour
     {
         if (playerManager == null) return;
 
-        // If the player's combat state just changed this frame...
-        if (playerManager.IsInCombat != _wasInCombat)
+        bool inCombat = playerManager.IsInCombat;
+        
+        bool hasLevelUp = false;
+        if(ProgressBarCircle.Instance != null)
         {
-            _wasInCombat = playerManager.IsInCombat;
+            hasLevelUp = ProgressBarCircle.Instance.HasPendingLevelUps;
+        }
+        
+        bool shouldBeVisible = (inCombat || hasLevelUp);
+        // If visibility changed this frame then fade
+        if (shouldBeVisible != _wasVisible)
+        {
+            _wasVisible = shouldBeVisible;
 
-            if (_wasInCombat)
+            if (_wasVisible)
             {
                 FadeAllTo(1f); // Fade IN
             }
