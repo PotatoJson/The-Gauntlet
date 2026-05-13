@@ -196,7 +196,22 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogWarning($"Chamber '{chamber.chamberName}' cleared, but no Door Animator is assigned!");
         }
     }
+
+    public void ForceClearChamber(int chamberIndex)
+    {
+        // Safety check to make sure the index actually exists
+        if (chamberIndex < 0 || chamberIndex >= chambers.Count) return;
+
+        ChamberData chamber = chambers[chamberIndex];
+
+        // Only clear it if it hasn't been cleared already
+        if (!chamber.isCleared)
+        {
+            ClearChamber(chamber);
+        }
+    }
 }
+
 
 // -----------------------------------------------------------------------------------------
 // Helper Component: Automatically attached to each trigger at runtime.
@@ -220,4 +235,6 @@ public class ChamberTriggerListener : MonoBehaviour
             manager.TriggerChamber(chamberIndex, other);
         }
     }
+
+    
 }
