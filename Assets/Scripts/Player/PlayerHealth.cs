@@ -3,6 +3,7 @@ using System;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using System.Collections;
+using Unity.VisualScripting;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -60,6 +61,7 @@ public class PlayerHealth : MonoBehaviour
 
     public bool IsDead => _currentHealth <= 0;
     public float HealthPercentage => _currentHealth / maxHealth;
+    public float CurrentHealth => _currentHealth;
 
     public GameObject LastCheckPoint;
     public GameObject PlayerSpawn;
@@ -197,6 +199,16 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("TakeDamage Test " + _currentHealth);
         if (_currentHealth <= 0)
         {
+            if (MetricsTracker.Instance != null)
+            {
+                // Fallback to "Unknown" if the attacker wasn't passed or was a trap
+                string killerName = attacker != null ? attacker.name : "Unknown/Environment";
+                
+                // Clean up clone tags in the name (e.g., "BasicEnemy(Clone)" -> "BasicEnemy")
+                killerName = killerName.Replace("(Clone)", "").Trim(); 
+
+                MetricsTracker.Instance.EndChamber(Mathf.RoundToInt(_currentHealth), true, killerName);
+            }
             HandleDeath();
             return;
         }

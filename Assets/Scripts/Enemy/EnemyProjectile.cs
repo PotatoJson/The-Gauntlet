@@ -8,6 +8,7 @@ public class EnemyProjectile : MonoBehaviour
     [SerializeField] private float lifetime = 5f;
 
     private Collider _projectileCollider;
+    private GameObject _instigator;
 
     private void Awake()
     {
@@ -24,6 +25,8 @@ public class EnemyProjectile : MonoBehaviour
     public void Initialize(GameObject owner)
     {
         if (owner == null || _projectileCollider == null) return;
+
+        _instigator = owner;
 
         Collider[] ownerColliders = owner.GetComponentsInChildren<Collider>();
         foreach (Collider ownerCollider in ownerColliders)
@@ -51,7 +54,7 @@ public class EnemyProjectile : MonoBehaviour
         if (playerHealth != null)
         {
             Debug.Log($"[EnemyProjectile] Damaging player for {damage} and destroying projectile.");
-            playerHealth.TakeDamage(damage);
+            playerHealth.TakeDamage(damage, 0, _instigator);
             Destroy(gameObject);
             return;
         }

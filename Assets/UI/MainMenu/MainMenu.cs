@@ -75,6 +75,12 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnPlayClicked()
     {
+
+        if (MetricsTracker.Instance != null)
+        {
+            MetricsTracker.Instance.StartNewRun();
+        }
+        
         Time.timeScale = 1f;
         SceneManager.LoadScene("Dungeon Level");
     }
