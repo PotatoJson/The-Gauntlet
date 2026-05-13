@@ -608,7 +608,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -6.3692627
+      value: -7.11
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -616,7 +616,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 136.5702
+      value: 139.84
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       propertyPath: m_LocalRotation.w
@@ -948,11 +948,14 @@ MonoBehaviour:
   attackRange: 4
   chargeSpeed: 5
   chargeStopDistance: 3
-  awarenessRange: 10
+  awarenessRange: 15
   engagementRange: 10
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
+  lightAttackPoiseDamage: 10
+  heavyAttackPoiseDamage: 25
+  chargeAttackPoiseDamage: 20
   playerLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -977,6 +980,11 @@ MonoBehaviour:
   attackDistance: 3
   chargeDistance: 10
   chargeChance: 1
+  buffRadius: 10
+  maxBuffTargets: 2
+  buffDamageMultiplier: 1.25
+  buffAttackSpeedMultiplier: 1.2
+  buffVfxPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
   swordHitbox: {fileID: 8807914873845759311}
 --- !u!136 &6273309387744488970
 CapsuleCollider:

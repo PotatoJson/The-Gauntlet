@@ -38,6 +38,11 @@ public class EnemyProjectile : MonoBehaviour
         }
     }
 
+    public void SetSpeed(float newSpeed)
+    {
+        speed = newSpeed;
+    }
+
     private void Update()
     {
         // The EyeEnemy spawns the fireball already rotated to face the player.

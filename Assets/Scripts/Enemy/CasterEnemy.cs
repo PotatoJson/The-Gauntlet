@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CasterEnemy : BaseEnemy
 {
@@ -12,16 +13,30 @@ public class CasterEnemy : BaseEnemy
     [SerializeField] private float castInterval = 0.5f;
     [SerializeField] private float impactDelay = 1.5f;
     [SerializeField] private float fireballSpawnHeight = 15f; // How high up they spawn
+    [SerializeField] private float fireballSpeed = 8f;
 
     [Header("Caster Settings - Movement")]
-    [SerializeField] private float evadeDistance = 5f;
-    [SerializeField] private float dashDistance = 8f;
-    [SerializeField] private float dashSpeed = 15f;
+    [SerializeField] private float repositionTolerance = 0.5f;
+
+    [Header("Caster Settings - Buffing")]
+    [SerializeField] private float buffRadius = 10f;
+    [SerializeField] private int maxBuffTargets = 2;
+    [SerializeField] private float buffDamageMultiplier = 1.25f;
+    [SerializeField] private float buffAttackSpeedMultiplier = 1.2f;
+    [SerializeField] private GameObject buffVfxPrefab;
+
+    [Header("Caster Settings - Targeting")]
+    [SerializeField] private LayerMask groundMask = ~0;
+    [SerializeField] private float groundProbeHeight = 10f;
+    [SerializeField] private float groundProbeDistance = 30f;
+    [SerializeField] private float warningSurfaceOffset = 0.02f;
 
     // State flags
     private bool isChanneling = false;
-    private bool isDashing = false;
+    private bool isRepositioning = false;
+    private bool hasBuffed = false;
     private float castTimer = 0f;
+    private Vector3 repositionTarget;
 
     // Animation parameter hash
     private static readonly int AnimDash = Animator.StringToHash("Dash");
@@ -40,6 +55,13 @@ public class CasterEnemy : BaseEnemy
                 castTimer = castInterval;
             }
         }
+
+        if (isChanneling)
+        {
+            navAgent.isStopped = true;
+            navAgent.velocity = Vector3.zero;
+            FacePlayer();
+        }
     }
 
     // Override engagement to completely skip the base "Opener Charge" logic
@@ -51,8 +73,14 @@ public class CasterEnemy : BaseEnemy
 
         if (distance <= engagementRange)
         {
+            bool justEngaged = !isEngaged;
             isEngaged = true;
             hasOpenedWithCharge = true; // Act like it's already done so it doesn't try to charge
+
+            if (justEngaged && !hasBuffed && !IsDead())
+            {
+                BuffNearbyEnemies();
+            }
         }
         else if (isAware && !isAttacking)
         {
@@ -70,35 +98,54 @@ public class CasterEnemy : BaseEnemy
     protected override void ContinueCombat()
     {
         // Don't act if we are already doing a heavy action
-        if (isAttacking || isStunned || isInHitStun || isDashing) return;
+        if (isAttacking || isStunned || isInHitStun) return;
 
-        float distance = GetDistanceToPlayer();
-
-        // 1. Evade if player gets too close
-        if (distance <= evadeDistance)
+        if (isRepositioning)
         {
-            StartDash();
+            UpdateRepositioning();
             return;
         }
 
-        // 2. Channel spells if outside evade distance
-        if (!isChanneling)
+        if (isChanneling)
         {
-            StartChanneling();
-        }
-        else
-        {
-            // Stop moving while channeling and face the player
             navAgent.isStopped = true;
             FacePlayer();
+            return;
         }
+
+        float distance = GetDistanceToPlayer();
+
+        if (IsOutsideAttackRange(distance))
+        {
+            BeginRepositioning();
+            return;
+        }
+
+        StartChanneling();
+    }
+
+    public override void OnAttackEnd()
+    {
+        base.OnAttackEnd();
+
+        if (IsDead()) return;
+
+        StopChanneling();
+        BeginRepositioning();
     }
 
     private void StartChanneling()
     {
+        if (!CanPerformAction()) return;
+
         Debug.Log($"{gameObject.name}: Starting Channel!");
         isChanneling = true;
+        isAttacking = true;
         castTimer = 0f; // Cast immediately on start
+
+        navAgent.isStopped = true;
+        navAgent.velocity = Vector3.zero;
+        navAgent.ResetPath();
 
         // Re-using the LightAttack trigger for the channeling animation as requested
         animator?.SetTrigger(AnimLightAttack);
@@ -109,6 +156,120 @@ public class CasterEnemy : BaseEnemy
         isChanneling = false;
     }
 
+    private void BeginRepositioning()
+    {
+        if (player == null || !navAgent.isOnNavMesh) return;
+
+        Vector3 playerPosition = player.position;
+        Vector3 directionFromPlayer = transform.position - playerPosition;
+        directionFromPlayer.y = 0f;
+
+        if (directionFromPlayer.sqrMagnitude < 0.001f)
+        {
+            directionFromPlayer = -transform.forward;
+            directionFromPlayer.y = 0f;
+        }
+
+        Vector3 desiredPosition = playerPosition + directionFromPlayer.normalized * attackRange;
+
+        if (NavMesh.SamplePosition(desiredPosition, out NavMeshHit hit, attackRange, NavMesh.AllAreas))
+        {
+            repositionTarget = hit.position;
+        }
+        else
+        {
+            repositionTarget = desiredPosition;
+        }
+
+        isRepositioning = true;
+        navAgent.speed = chaseSpeed;
+        navAgent.isStopped = false;
+        navAgent.SetDestination(repositionTarget);
+    }
+
+    private void UpdateRepositioning()
+    {
+        if (navAgent.pathPending) return;
+
+        if (navAgent.remainingDistance <= navAgent.stoppingDistance + repositionTolerance)
+        {
+            EndRepositioning();
+            StartChanneling();
+        }
+    }
+
+    private void EndRepositioning()
+    {
+        if (!isRepositioning) return;
+
+        isRepositioning = false;
+        navAgent.isStopped = true;
+        navAgent.velocity = Vector3.zero;
+    }
+
+    private bool IsOutsideAttackRange(float distance)
+    {
+        return Mathf.Abs(distance - attackRange) > repositionTolerance;
+    }
+
+    private void BuffNearbyEnemies()
+    {
+        hasBuffed = true;
+
+        if (buffRadius <= 0f || maxBuffTargets <= 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: Buff skipped (buffRadius={buffRadius}, maxBuffTargets={maxBuffTargets}).");
+            return;
+        }
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, buffRadius);
+        List<BaseEnemy> candidates = new List<BaseEnemy>();
+
+        foreach (Collider hit in hits)
+        {
+            BaseEnemy enemy = hit.GetComponentInParent<BaseEnemy>();
+            if (enemy == null)
+            {
+                Debug.Log($"{gameObject.name}: Buff scan ignored {hit.name} (no BaseEnemy).");
+                continue;
+            }
+
+            if (enemy == this || enemy.IsDead() || enemy.IsBuffed())
+            {
+                Debug.Log($"{gameObject.name}: Buff scan ignored {enemy.gameObject.name} (self/dead/buffed).");
+                continue;
+            }
+
+            if (!candidates.Contains(enemy)) candidates.Add(enemy);
+        }
+
+        Debug.Log($"{gameObject.name}: Buff candidates found = {candidates.Count}.");
+
+        int maxTargets = Mathf.Min(maxBuffTargets, candidates.Count);
+        if (maxTargets <= 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: Buff aborted (no valid targets in range).");
+            return;
+        }
+
+        int targetCount = Random.Range(1, maxTargets + 1);
+        Debug.Log($"{gameObject.name}: Buffing {targetCount} enemies (maxTargets={maxTargets}).");
+
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            int swapIndex = Random.Range(i, candidates.Count);
+            BaseEnemy temp = candidates[i];
+            candidates[i] = candidates[swapIndex];
+            candidates[swapIndex] = temp;
+        }
+
+        for (int i = 0; i < targetCount; i++)
+        {
+            Debug.Log($"{gameObject.name}: Applying buff to {candidates[i].gameObject.name}.");
+            candidates[i].ApplyPermanentBuff(buffDamageMultiplier, buffAttackSpeedMultiplier, buffVfxPrefab);
+        }
+    }
+
     private void CastFireballWave()
     {
         if (player == null) return;
@@ -117,7 +278,13 @@ public class CasterEnemy : BaseEnemy
         {
             // Find a random point within a circle around the player
             Vector2 randomCirclePoint = Random.insideUnitCircle * fireballSpawnRadius;
-            Vector3 targetPosition = player.position + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
+            Vector3 basePosition = player.position + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
+
+            Vector3 targetPosition = basePosition;
+            if (TryGetGroundPosition(basePosition, out Vector3 groundPosition))
+            {
+                targetPosition = groundPosition;
+            }
 
             // Start the sequence to show warning -> wait -> spawn fireball
             StartCoroutine(FireballSequenceRoutine(targetPosition));
@@ -149,6 +316,7 @@ public class CasterEnemy : BaseEnemy
             Quaternion downwardRotation = Quaternion.LookRotation(Vector3.down);
             
             fireballInstance = Instantiate(fireballPrefab, skySpawnPosition, downwardRotation);
+            fireballInstance.GetComponent<EnemyProjectile>()?.SetSpeed(fireballSpeed);
         }
         else
         {
@@ -171,59 +339,20 @@ public class CasterEnemy : BaseEnemy
         }
     }
 
-    private void StartDash()
+    private bool TryGetGroundPosition(Vector3 position, out Vector3 groundPosition)
     {
-        Debug.Log($"{gameObject.name}: Player too close, Dashing away!");
+        Vector3 rayOrigin = position + Vector3.up * groundProbeHeight;
+        float rayDistance = groundProbeHeight + groundProbeDistance;
 
-        StopChanneling();
-        isDashing = true;
-
-        // Trigger dash animation
-        animator?.SetTrigger(AnimDash);
-
-        // Find a destination directly away from the player
-        Vector3 directionAway = (transform.position - player.position).normalized;
-        Vector3 targetDashPos = transform.position + (directionAway * dashDistance);
-
-        // Ensure the dash position is actually on the NavMesh
-        if (NavMesh.SamplePosition(targetDashPos, out NavMeshHit hit, dashDistance, NavMesh.AllAreas))
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, groundMask, QueryTriggerInteraction.Ignore))
         {
-            navAgent.speed = dashSpeed;
-            navAgent.isStopped = false;
-            navAgent.SetDestination(hit.position);
-
-            StartCoroutine(WaitUntilDashCompletes());
-        }
-        else
-        {
-            // Failsafe if we're backed into a corner and can't dash further
-            isDashing = false;
-        }
-    }
-
-    private IEnumerator WaitUntilDashCompletes()
-    {
-        // Wait until distance to destination is small, or we get stunned/die
-        while (isDashing && !isStunned && !isInHitStun && !IsDead())
-        {
-            if (!navAgent.pathPending && navAgent.remainingDistance <= navAgent.stoppingDistance)
-            {
-                break;
-            }
-            yield return null;
+            groundPosition = hit.point;
+            groundPosition.y += warningSurfaceOffset;
+            return true;
         }
 
-        EndDash();
-    }
-
-    private void EndDash()
-    {
-        if (isDashing)
-        {
-            isDashing = false;
-            navAgent.speed = chaseSpeed; // Reset agent speed back to normal
-            navAgent.isStopped = true;
-        }
+        groundPosition = position;
+        return false;
     }
 
     /// <summary>
@@ -234,7 +363,7 @@ public class CasterEnemy : BaseEnemy
         Debug.Log($"{gameObject.name} was hit by a throwable! Stunned for {stunDuration} seconds.");
 
         StopChanneling();
-        EndDash();
+        StopRepositioning();
         ApplyStun(stunDuration);
     }
 
@@ -245,7 +374,7 @@ public class CasterEnemy : BaseEnemy
         if (!isHitImmune)
         {
             StopChanneling();
-            EndDash();
+            StopRepositioning();
         }
 
         base.TakeDamage(damage);
@@ -254,19 +383,31 @@ public class CasterEnemy : BaseEnemy
     public override void ApplyStun(float duration)
     {
         StopChanneling();
-        EndDash();
+        StopRepositioning();
         base.ApplyStun(duration);
     }
 
     protected override void Die()
     {
         StopChanneling();
-        EndDash();
+        StopRepositioning();
         base.Die();
+    }
+
+    private void StopRepositioning()
+    {
+        isRepositioning = false;
+
+        if (navAgent.isOnNavMesh)
+        {
+            navAgent.isStopped = true;
+            navAgent.velocity = Vector3.zero;
+            navAgent.ResetPath();
+        }
     }
 
     protected override bool CanPerformAction()
     {
-        return base.CanPerformAction() && !isChanneling && !isDashing;
+        return base.CanPerformAction() && !isChanneling && !isRepositioning;
     }
 }

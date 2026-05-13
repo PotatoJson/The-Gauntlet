@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EliteEnemy : BaseEnemy
@@ -11,6 +12,13 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private float chargeDistance = 10f;
     [SerializeField][Range(0f, 1f)] private float chargeChance = 0.5f;
 
+    [Header("Elite Buffing")]
+    [SerializeField] private float buffRadius = 10f;
+    [SerializeField] private int maxBuffTargets = 2;
+    [SerializeField] private float buffDamageMultiplier = 1.25f;
+    [SerializeField] private float buffAttackSpeedMultiplier = 1.2f;
+    [SerializeField] private GameObject buffVfxPrefab;
+
     [Header("Sword Hitbox")]
     [SerializeField] private SwordHitbox swordHitbox;
 
@@ -20,6 +28,7 @@ public class EliteEnemy : BaseEnemy
 
     private float aiDecisionTimer;
     private float aiDecisionInterval = 0.4f;
+    private bool hasBuffed;
 
     protected override void Update()
     {
@@ -36,6 +45,38 @@ public class EliteEnemy : BaseEnemy
         {
             aiDecisionTimer = aiDecisionInterval + Random.Range(-0.1f, 0.1f);
             MakeDecision();
+        }
+    }
+
+    protected override void CheckEngagement()
+    {
+        if (player == null) return;
+
+        float distance = GetDistanceToPlayer();
+
+        if (distance <= engagementRange)
+        {
+            bool justEngaged = !isEngaged;
+            isEngaged = true;
+
+            if (!hasOpenedWithCharge)
+            {
+                if (CanPerformAction())
+                {
+                    ChargeAttack();
+                    hasOpenedWithCharge = true;
+                }
+            }
+
+            if (justEngaged && !hasBuffed && !IsDead())
+            {
+                BuffNearbyEnemies();
+            }
+        }
+        else if (isAware && !isAttacking && !isCharging)
+        {
+            ChasePlayer();
+            FacePlayer();
         }
     }
 
@@ -64,7 +105,6 @@ public class EliteEnemy : BaseEnemy
     private void MakeDecision()
     {
         if (isAttacking || isStunned) return;
-
 
         float distance = GetDistanceToPlayer();
 
@@ -204,4 +244,62 @@ public class EliteEnemy : BaseEnemy
         OnAttackEnd();
     }
     #endregion
+
+    private void BuffNearbyEnemies()
+    {
+        hasBuffed = true;
+
+        if (buffRadius <= 0f || maxBuffTargets <= 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: Buff skipped (buffRadius={buffRadius}, maxBuffTargets={maxBuffTargets}).");
+            return;
+        }
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, buffRadius);
+        List<BaseEnemy> candidates = new List<BaseEnemy>();
+
+        foreach (Collider hit in hits)
+        {
+            BaseEnemy enemy = hit.GetComponentInParent<BaseEnemy>();
+            if (enemy == null)
+            {
+                Debug.Log($"{gameObject.name}: Buff scan ignored {hit.name} (no BaseEnemy).");
+                continue;
+            }
+
+            if (enemy == this || enemy.IsDead() || enemy.IsBuffed())
+            {
+                Debug.Log($"{gameObject.name}: Buff scan ignored {enemy.gameObject.name} (self/dead/buffed).");
+                continue;
+            }
+
+            if (!candidates.Contains(enemy)) candidates.Add(enemy);
+        }
+
+        Debug.Log($"{gameObject.name}: Buff candidates found = {candidates.Count}.");
+
+        int maxTargets = Mathf.Min(maxBuffTargets, candidates.Count);
+        if (maxTargets <= 0)
+        {
+            Debug.LogWarning($"{gameObject.name}: Buff aborted (no valid targets in range).");
+            return;
+        }
+
+        int targetCount = Random.Range(1, maxTargets + 1);
+        Debug.Log($"{gameObject.name}: Buffing {targetCount} enemies (maxTargets={maxTargets}).");
+
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            int swapIndex = Random.Range(i, candidates.Count);
+            BaseEnemy temp = candidates[i];
+            candidates[i] = candidates[swapIndex];
+            candidates[swapIndex] = temp;
+        }
+
+        for (int i = 0; i < targetCount; i++)
+        {
+            Debug.Log($"{gameObject.name}: Applying buff to {candidates[i].gameObject.name}.");
+            candidates[i].ApplyPermanentBuff(buffDamageMultiplier, buffAttackSpeedMultiplier, buffVfxPrefab);
+        }
+    }
 }

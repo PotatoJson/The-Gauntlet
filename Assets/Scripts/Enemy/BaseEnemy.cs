@@ -79,6 +79,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected bool isEngaged;
     protected bool hasOpenedWithCharge;
     protected float attackCooldownTimer;
+    private bool isBuffed;
 
     // Animation parameter hashes
     protected static readonly int AnimLightAttack = Animator.StringToHash("LightAttack");
@@ -426,7 +427,7 @@ public abstract class BaseEnemy : MonoBehaviour
         return false;
     }
 
-    public void OnAttackEnd()
+    public virtual void OnAttackEnd()
     {
         isAttacking = false;
         isCharging = false;
@@ -439,6 +440,47 @@ public abstract class BaseEnemy : MonoBehaviour
             navAgent.speed = chaseSpeed;
             navAgent.isStopped = false;
         }
+    }
+
+    public void ApplyPermanentBuff(float damageMultiplier, float attackSpeedMultiplier, GameObject buffVfxPrefab)
+    {
+        if (isBuffed)
+        {
+            Debug.Log($"{gameObject.name}: Buff ignored (already buffed).");
+            return;
+        }
+
+        isBuffed = true;
+        Debug.Log($"{gameObject.name}: Buff applied (damageMultiplier={damageMultiplier}, attackSpeedMultiplier={attackSpeedMultiplier}).");
+
+        if (damageMultiplier > 0f)
+        {
+            lightAttackDamage *= damageMultiplier;
+            heavyAttackDamage *= damageMultiplier;
+            chargeAttackDamage *= damageMultiplier;
+        }
+
+        if (attackSpeedMultiplier > 0f)
+        {
+            attackCooldown = Mathf.Max(0.05f, attackCooldown / attackSpeedMultiplier);
+        }
+
+        if (buffVfxPrefab != null)
+        {
+            GameObject vfxInstance = Instantiate(buffVfxPrefab, transform);
+            vfxInstance.transform.localPosition = Vector3.zero;
+            vfxInstance.transform.localRotation = Quaternion.identity;
+            Debug.Log($"{gameObject.name}: Buff VFX spawned ({buffVfxPrefab.name}).");
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name}: Buff VFX prefab is null.");
+        }
+    }
+
+    public bool IsBuffed()
+    {
+        return isBuffed;
     }
     #endregion
 
