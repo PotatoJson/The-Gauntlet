@@ -3,42 +3,74 @@ using UnityEngine.InputSystem;
 
 public class AltCursorReveal : MonoBehaviour
 {
+    [Header("Player References")]
+    [Tooltip("Drag the Player (or whoever holds PlayerManager) here!")]
+    [SerializeField] private PlayerManager playerManager;
+
     [Header("Input References")]
     [Tooltip("Drag your Player's 'Look' input action here so we can freeze the camera!")]
     [SerializeField] private InputActionReference lookAction;
 
+    [Header("UI References")]
+    [Tooltip("Drag the CanvasGroup of the HUD/Menu you want to toggle here!")]
+    [SerializeField] private CanvasGroup altMenuCanvasGroup;
+
+    private bool _isMenuOpen = false;
+
+    private void Start()
+    {
+        // Ensure the menu starts hidden and unclickable when the game loads!
+        if (altMenuCanvasGroup != null)
+        {
+            altMenuCanvasGroup.alpha = 0f;
+            altMenuCanvasGroup.blocksRaycasts = false;
+        }
+    }
+
     private void Update()
     {
-        // Safety check to ensure a keyboard is actually plugged in
         if (Keyboard.current == null) return;
-
-
-        // hide the cursor while the player is trying to pick a reward!
         if (Time.timeScale == 0f) return;
 
-        // SHOW CURSOR & FREEZE CAMERA
+        // --- ATTEMPT TO SHOW CURSOR & HUD ---
         if (Keyboard.current.altKey.wasPressedThisFrame)
         {
+            if (playerManager != null && playerManager.IsInCombat)
+            {
+                Debug.Log("Alt Menu blocked: Player is in combat!");
+                return;
+            }
+
+            _isMenuOpen = true;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
-            // Turn off the camera's ability to read mouse movement
-            if (lookAction != null)
+            if (lookAction != null) lookAction.action.Disable();
+
+            // Turn ON the HUD via CanvasGroup
+            if (altMenuCanvasGroup != null)
             {
-                lookAction.action.Disable();
+                altMenuCanvasGroup.alpha = 1f;
+                altMenuCanvasGroup.blocksRaycasts = true;
             }
         }
 
-        // HIDE CURSOR & UNFREEZE CAMERA
+        // --- ATTEMPT TO HIDE CURSOR & HUD ---
         else if (Keyboard.current.altKey.wasReleasedThisFrame)
         {
+            if (!_isMenuOpen) return;
+
+            _isMenuOpen = false;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
 
-            // Turn the camera back on
-            if (lookAction != null)
+            if (lookAction != null) lookAction.action.Enable();
+
+            // Turn OFF the HUD via CanvasGroup
+            if (altMenuCanvasGroup != null)
             {
-                lookAction.action.Enable();
+                altMenuCanvasGroup.alpha = 0f;
+                altMenuCanvasGroup.blocksRaycasts = false;
             }
         }
     }
