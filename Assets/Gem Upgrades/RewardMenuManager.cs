@@ -36,6 +36,10 @@ public class RewardMenuManager : MonoBehaviour
     [SerializeField] private GameObject primaryTitleButton;
     [SerializeField] private GameObject secondaryTitleButton; // NEW: Added this so it knows both gauntlets!
 
+    [Header("Cleanup References")]
+    [SerializeField] private GameObject expBarRoot;
+    [SerializeField] private InputActionReference lookAction;
+
     private GameObject _lastSelectedReward;
     private bool _isWarningActive = false;
     private DraggableGem _currentlySlottedGem;
@@ -378,6 +382,20 @@ public class RewardMenuManager : MonoBehaviour
     private void CloseRewardMenu()
     {
         characterScreenRoot.SetActive(false);
+
+        if (expBarRoot != null)
+        {
+            expBarRoot.SetActive(false);
+        }
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        if (lookAction != null)
+        {
+            lookAction.action.Enable();
+        }
+
         Time.timeScale = 1f;
     }
 }
