@@ -8,7 +8,6 @@ using Unity.VisualScripting;
 public class PlayerHealth : MonoBehaviour
 {
     private PlayerStatsManager _statsManager;
-    
 
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
@@ -186,6 +185,8 @@ public class PlayerHealth : MonoBehaviour
         Heal(PotionHealAmount);
         Debug.Log($"Healed Potions remaining: {CurrentPotions}");
 
+        _stateManager.SetInCombat();
+
         if (healingVfxPrefab != null)
         {
             // Figure out where to spawn it (use the custom point, or just the player's position)
@@ -336,14 +337,24 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleDeath()
     {
+        // 1. Turn off the Character Controller so the player is frozen in place where they died
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
-        transform.position = PlayerSpawn.transform.position;
-        if (cc != null) cc.enabled = true;
 
-        if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
+        // (Optional) If you have a death animation, trigger it here!
+        // _animator.SetTrigger("Die");
 
-        Debug.Log("Death Test");
+
+        // 3. Trigger the screen falling apart and the Game Over menu!
+        DeathScreenShatter.Instance.TriggerDeathShatter();
+
+        Debug.Log("Player died. Awaiting Restart...");
+
+        //transform.position = PlayerSpawn.transform.position;
+        //if (cc != null) cc.enabled = true; // Re-enable the Character Controller so it can move again after respawn
+        //if (playerCamera != null) playerCamera.SnapToTarget();
+
+        // Notice we completely deleted the transform.position teleport code!
     }
 
     public void Heal(float amount)

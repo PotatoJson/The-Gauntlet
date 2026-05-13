@@ -94,7 +94,7 @@ public class PlayerMovement : MonoBehaviour
         _moveAction = _playerMap.FindAction("Move");
         _lookAction = _playerMap.FindAction("Look");
 
-        InputAction rollAction = _playerMap.FindAction("Roll");
+        /*InputAction rollAction = _playerMap.FindAction("Roll");
         InputAction lockOnAction = _playerMap.FindAction("LockOn");
         InputAction jumpAction = _playerMap.FindAction("Jump");
 
@@ -107,20 +107,49 @@ public class PlayerMovement : MonoBehaviour
 
         lockOnAction.started += ctx => ToggleLockOn();
 
-        jumpAction.started += ctx => OnJumpInput();
+        jumpAction.started += ctx => OnJumpInput();*/
 
     }
 
-    private void OnEnable() => _playerMap.Enable();
-    private void OnDisable() => _playerMap.Disable();
+    private void OnMovePerformed(InputAction.CallbackContext ctx) => _moveInput = ctx.ReadValue<Vector2>();
+    private void OnMoveCanceled(InputAction.CallbackContext ctx) => _moveInput = Vector2.zero;
 
-    private void OnRollButtonDown()
+    private void OnEnable()
+    {
+        _playerMap.Enable();
+
+        // Subscribe to events explicitly
+        _moveAction.performed += OnMovePerformed;
+        _moveAction.canceled += OnMoveCanceled;
+
+        _playerMap.FindAction("Roll").started += OnRollButtonDown;
+        _playerMap.FindAction("Roll").canceled += OnRollButtonUp;
+
+        _playerMap.FindAction("LockOn").started += ToggleLockOn;
+        _playerMap.FindAction("Jump").started += OnJumpInput;
+    }
+    private void OnDisable()
+    {
+        _playerMap.Disable();
+
+        // THIS CURES THE MEMORY LEAK! Unsubscribe from the global asset when disabled/dead.
+        _moveAction.performed -= OnMovePerformed;
+        _moveAction.canceled -= OnMoveCanceled;
+
+        _playerMap.FindAction("Roll").started -= OnRollButtonDown;
+        _playerMap.FindAction("Roll").canceled -= OnRollButtonUp;
+
+        _playerMap.FindAction("LockOn").started -= ToggleLockOn;
+        _playerMap.FindAction("Jump").started -= OnJumpInput;
+    }
+
+    private void OnRollButtonDown(InputAction.CallbackContext ctx)
     {
         _isRollButtonHeld = true;
         _rollButtonHoldTimer = 0f;
     }
 
-    private void OnRollButtonUp()
+    private void OnRollButtonUp(InputAction.CallbackContext ctx)
     {
         _isRollButtonHeld = false;
 
@@ -152,6 +181,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (!_controller.enabled) return;
+
         _stateManager.IsLockedOn = isTargetLocked;
         _stateManager.MoveDirectionIntent = GetWorldSpaceMovementDirection();
 
@@ -456,7 +487,7 @@ public class PlayerMovement : MonoBehaviour
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
     }
     
-    private void ToggleLockOn()
+    private void ToggleLockOn(InputAction.CallbackContext ctx)
     {
         if (PlayerCamera.Instance == null) return;
 
@@ -476,7 +507,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void OnJumpInput()
+    private void OnJumpInput(InputAction.CallbackContext ctx)
     {
         PlayerState currentState = _stateManager.GetCurrentState();
 
