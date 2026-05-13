@@ -48,7 +48,7 @@ public class PlayerHealth : MonoBehaviour
     public int MaxPotions = 5;
     public int CurrentPotions;
     public float PotionHealAmount = 35f;
-    //public event Action<int, int> OnPotionCountChanged; //For UI later
+    public event Action<int, int> OnPotionCountChanged; //For UI later
 
     [Header("Haptic Feedback")]
     [Tooltip("Low frequency motor (left side). Heavy, deep rumble.")]
@@ -111,6 +111,7 @@ public class PlayerHealth : MonoBehaviour
         CurrentPoise = 0;
         OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
     }
 
     private void Update()
@@ -148,9 +149,30 @@ public class PlayerHealth : MonoBehaviour
         if(CurrentPotions > 0 && _currentHealth < maxHealth)
         {
             CurrentPotions--;
+
+            OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
+
             return true;
         }
         return false;
+    }
+
+    public void AddPotion()
+    {
+        // Only add a potion if we aren't already at the maximum limit!
+        if (CurrentPotions < MaxPotions)
+        {
+            CurrentPotions++;
+
+            // Tell the UI to draw a new potion bottle!
+            OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
+
+            Debug.Log($"Debug: Added 1 Potion! Total: {CurrentPotions}");
+        }
+        else
+        {
+            Debug.Log("Debug: Potion count is already at max!");
+        }
     }
 
     public void ExecutePotionHeal()
