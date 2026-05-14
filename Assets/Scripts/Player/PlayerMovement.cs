@@ -132,6 +132,15 @@ public class PlayerMovement : MonoBehaviour
     {
         _playerMap.Disable();
 
+        _moveInput = Vector2.zero;
+        _smoothSpeed = 0f;
+        _horizontalVelocity = Vector3.zero;
+
+        if (_stateManager != null)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+
+        }
         // THIS CURES THE MEMORY LEAK! Unsubscribe from the global asset when disabled/dead.
         _moveAction.performed -= OnMovePerformed;
         _moveAction.canceled -= OnMoveCanceled;
