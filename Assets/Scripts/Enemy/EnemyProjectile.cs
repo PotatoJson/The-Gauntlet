@@ -5,7 +5,7 @@ public class EnemyProjectile : MonoBehaviour
     [Header("Projectile Settings")]
     [SerializeField] private float speed = 15f;
     [SerializeField] private float damage = 15f;
-    [SerializeField] private float lifetime = 5f;
+    [SerializeField] private float lifetime = 10f;
 
     private Collider _projectileCollider;
     private GameObject _instigator;
@@ -68,14 +68,6 @@ public class EnemyProjectile : MonoBehaviour
         {
             Debug.Log($"[EnemyProjectile] Damaging player for {damage} and destroying projectile.");
             playerHealth.TakeDamage(damage, 0, _instigator);
-            Destroy(gameObject);
-            return;
-        }
-
-        // Destroy if it hits environment like a wall or floor (ignores enemies and other triggers)
-        if (!other.CompareTag("BasicEnemy") && !other.CompareTag("EliteEnemy") && !other.isTrigger)
-        {
-            Debug.Log("[EnemyProjectile] Hit environment, destroying projectile.");
             Destroy(gameObject);
         }
     }
