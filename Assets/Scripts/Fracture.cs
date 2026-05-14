@@ -23,6 +23,10 @@ public class Fracture : MonoBehaviour
     /// </summary>
     private GameObject fragmentRoot;
 
+    private readonly List<GameObject> spawnedFragments = new List<GameObject>();
+
+    public IReadOnlyList<GameObject> SpawnedFragments => this.spawnedFragments;
+
     [ContextMenu("Print Mesh Info")]
     public void PrintMeshInfo()
     {
@@ -150,6 +154,8 @@ public class Fracture : MonoBehaviour
                     this.fragmentRoot.transform,
                     () =>
                     {
+                        this.CacheFragments();
+
                         // Done with template, destroy it
                         GameObject.Destroy(fragmentTemplate);
 
@@ -175,6 +181,8 @@ public class Fracture : MonoBehaviour
                                     fragmentTemplate,
                                     this.fragmentRoot.transform);
 
+                this.CacheFragments();
+
                 // Done with template, destroy it
                 GameObject.Destroy(fragmentTemplate);
 
@@ -191,6 +199,21 @@ public class Fracture : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    private void CacheFragments()
+    {
+        this.spawnedFragments.Clear();
+
+        if (this.fragmentRoot == null)
+        {
+            return;
+        }
+
+        foreach (Transform child in this.fragmentRoot.transform)
+        {
+            this.spawnedFragments.Add(child.gameObject);
         }
     }
 

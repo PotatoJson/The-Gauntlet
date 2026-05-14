@@ -14,6 +14,7 @@ public class EnemyProjectile : MonoBehaviour
     private void Awake()
     {
         _projectileCollider = GetComponent<Collider>();
+        _moveDirection = transform.forward;
     }
 
     private void Start()

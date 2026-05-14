@@ -36,20 +36,29 @@ public class HellLord : BaseEnemy
 
     [Header("Hell Lord - AI")]
     [SerializeField] private float aiDecisionInterval = 0.4f;
+    [SerializeField, Range(0f, 1f)] private float beamAttackChance = 0.10f;
+
+    [Header("Hell Lord - Rotation")]
+    [SerializeField] private float facePlayerTurnSpeed = 4f;
 
     private float aiDecisionTimer;
     private bool isCasting;
     private bool isBeamActive;
     private int nextCastChunk = 2;
+    private int lastMeleeIndex = -1;
 
     private Coroutine beamRoutine;
     private Coroutine castRoutine;
     private GameObject beamInstance;
 
+    private Vector3 beamDirection;
+    private Quaternion beamRotation;
+
     private static readonly int AnimMeleeAttack = Animator.StringToHash("MeleeAttack");
     private static readonly int AnimBeamAttack = Animator.StringToHash("Blast");
     private static readonly int AnimCastAttack = Animator.StringToHash("Cast");
-    private static readonly int AnimLightRandom = Animator.StringToHash("LightRandom");
+
+    private bool skipBeamUntilMelee;
 
     protected override void Start()
     {
@@ -60,6 +69,12 @@ public class HellLord : BaseEnemy
     protected override void Update()
     {
         base.Update();
+
+        if (isAttacking || isCasting || isBeamActive)
+        {
+            navAgent.isStopped = true;
+            navAgent.velocity = Vector3.zero;
+        }
 
         if (IsDead() || isStunned || isInHitStun) return;
 
@@ -132,16 +147,36 @@ public class HellLord : BaseEnemy
         if (!CanPerformAction() || player == null) return;
 
         float distance = GetDistanceToPlayer();
-        if (distance > attackDistance) return;
 
-        if (Random.value < 0.20f)
+        if (skipBeamUntilMelee)
+        {
+            if (distance > attackDistance)
+            {
+                ChasePlayer();
+                FacePlayer();
+                return;
+            }
+
+            LightAttack();
+            return;
+        }
+
+        if (Random.value < beamAttackChance)
         {
             BeamAttack();
+            return;
         }
-        else
+
+        skipBeamUntilMelee = true;
+
+        if (distance > attackDistance)
         {
-            LightAttack();
+            ChasePlayer();
+            FacePlayer();
+            return;
         }
+
+        LightAttack();
     }
 
     public override void LightAttack()
@@ -153,9 +188,31 @@ public class HellLord : BaseEnemy
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        float randomIndex = Random.Range(0, 3) / 2f;
+        skipBeamUntilMelee = false;
+
+        int meleeIndex = GetNextMeleeIndex();
+        float randomIndex = meleeIndex / 2f;
         animator?.SetFloat(AnimLightRandom, randomIndex);
         animator?.SetTrigger(AnimMeleeAttack);
+    }
+
+    private int GetNextMeleeIndex()
+    {
+        int nextIndex = Random.Range(0, 2);
+
+        if (lastMeleeIndex < 0)
+        {
+            lastMeleeIndex = Random.Range(0, 3);
+            return lastMeleeIndex;
+        }
+
+        if (nextIndex >= lastMeleeIndex)
+        {
+            nextIndex++;
+        }
+
+        lastMeleeIndex = nextIndex;
+        return nextIndex;
     }
 
     private void BeamAttack()
@@ -180,6 +237,18 @@ public class HellLord : BaseEnemy
         if (isBeamActive) return;
 
         isBeamActive = true;
+
+        if (beamSpawnPoint != null && player != null)
+        {
+            Vector3 targetPosition = player.position + Vector3.up * 1.2f;
+            beamDirection = (targetPosition - beamSpawnPoint.position).normalized;
+            if (beamDirection.sqrMagnitude < 0.0001f)
+            {
+                beamDirection = transform.forward;
+            }
+
+            beamRotation = Quaternion.LookRotation(beamDirection);
+        }
 
         if (beamRoutine != null)
         {
@@ -233,34 +302,21 @@ public class HellLord : BaseEnemy
 
     private void UpdateBeamTransform()
     {
-        if (beamSpawnPoint == null || player == null) return;
+        if (beamSpawnPoint == null) return;
 
-        Vector3 directionToPlayer = (player.position + Vector3.up * 1.2f) - beamSpawnPoint.position;
-        if (directionToPlayer.sqrMagnitude < 0.0001f)
-        {
-            directionToPlayer = transform.forward;
-        }
-
-        Quaternion rotation = Quaternion.LookRotation(directionToPlayer.normalized);
-        beamSpawnPoint.SetPositionAndRotation(beamSpawnPoint.position, rotation);
+        beamSpawnPoint.SetPositionAndRotation(beamSpawnPoint.position, beamRotation);
 
         if (beamInstance != null)
         {
-            beamInstance.transform.SetPositionAndRotation(beamSpawnPoint.position, rotation);
+            beamInstance.transform.SetPositionAndRotation(beamSpawnPoint.position, beamRotation);
         }
     }
 
     private void TryDamageBeamTarget()
     {
-        if (beamSpawnPoint == null || player == null) return;
+        if (beamSpawnPoint == null) return;
 
-        Vector3 direction = (player.position + Vector3.up * 1.2f) - beamSpawnPoint.position;
-        if (direction.sqrMagnitude < 0.0001f)
-        {
-            direction = transform.forward;
-        }
-
-        if (Physics.Raycast(beamSpawnPoint.position, direction.normalized, out RaycastHit hit, beamRange, beamHitMask, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(beamSpawnPoint.position, beamDirection, out RaycastHit hit, beamRange, beamHitMask, QueryTriggerInteraction.Ignore))
         {
             PlayerHealth playerHealth = hit.collider.GetComponentInParent<PlayerHealth>();
             if (playerHealth != null)
@@ -290,6 +346,8 @@ public class HellLord : BaseEnemy
 
         if (healthPercent <= threshold)
         {
+            if (!CanPerformAction()) return;
+
             nextCastChunk--;
             StartCastSequence();
         }

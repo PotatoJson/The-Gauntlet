@@ -146,11 +146,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   lightAttackHitboxOffset: {x: 0, y: 1, z: 1}
-  lightAttackHitboxSize: {x: 2, y: 2, z: 2}
+  lightAttackHitboxSize: {x: 0, y: 0, z: 0}
   heavyAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
-  heavyAttackHitboxSize: {x: 2.5, y: 2, z: 3}
+  heavyAttackHitboxSize: {x: 0, y: 0, z: 0}
   chargeAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
-  chargeAttackHitboxSize: {x: 3, y: 2, z: 3}
+  chargeAttackHitboxSize: {x: 0, y: 0, z: 0}
   stunDuration: 2
   attackCooldown: 1.5
   maxHitStunDuration: 5
@@ -175,9 +175,10 @@ MonoBehaviour:
   buffDamageMultiplier: 1.25
   buffAttackSpeedMultiplier: 1.2
   buffVfxPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
+  buffInterval: 10
   groundMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 3383
   groundProbeHeight: 10
   groundProbeDistance: 30
   warningSurfaceOffset: 0.02
@@ -188,7 +189,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8018765667397676023}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: b3a55ecdd02afb24f8231702983d5084, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

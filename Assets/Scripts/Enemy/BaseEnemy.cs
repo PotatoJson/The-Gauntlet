@@ -15,6 +15,13 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected float chargeSpeed = 5f;
     [SerializeField] protected float chargeStopDistance = 2f;
 
+    [Header("Idle Wandering")]
+    [SerializeField] private bool enableIdleWander = true;
+    [SerializeField] private float idleWanderRadius = 4f;
+    [SerializeField] private float idleWanderSpeed = 1.5f;
+    [SerializeField] private float idleWanderInterval = 2.5f;
+    [SerializeField] private float idleWanderIntervalVariance = 0.5f;
+
     [Header("Awareness & Engagement")]
     [SerializeField] protected float awarenessRange = 25f;
     [SerializeField] protected float engagementRange = 15f;
@@ -81,6 +88,10 @@ public abstract class BaseEnemy : MonoBehaviour
     protected float attackCooldownTimer;
     private bool isBuffed;
 
+    private Vector3 idleWanderCenter;
+    private float idleWanderTimer;
+    private bool isIdleWandering;
+
     // Animation parameter hashes
     protected static readonly int AnimLightAttack = Animator.StringToHash("LightAttack");
     protected static readonly int AnimHeavyAttack = Animator.StringToHash("HeavyAttack");
@@ -120,6 +131,9 @@ public abstract class BaseEnemy : MonoBehaviour
         isEngaged = false;
         hasOpenedWithCharge = false;
 
+        idleWanderCenter = transform.position;
+        idleWanderTimer = GetNextIdleWanderDelay();
+
         if (animator != null)
             animator.applyRootMotion = false;
     }
@@ -157,6 +171,20 @@ public abstract class BaseEnemy : MonoBehaviour
         if (!isAware) CheckAwareness();
         else if (!isEngaged || !hasOpenedWithCharge) CheckEngagement();
         else ContinueCombat();
+
+        if (!isAware && !isEngaged && !isStunned && !isAttacking && !isCharging && !isInHitStun)
+        {
+            UpdateIdleWander();
+
+            if (isIdleWandering)
+            {
+                FaceMovementDirection();
+            }
+        }
+        else
+        {
+            StopIdleWander(false);
+        }
 
         if (isCharging) UpdateChargeAttack();
 
@@ -222,6 +250,7 @@ public abstract class BaseEnemy : MonoBehaviour
         if (GetDistanceToPlayer() <= awarenessRange)
         {
             isAware = true;
+            StopIdleWander(true);
             navAgent.isStopped = false;
             playerManager?.SetInCombat();
         }
@@ -264,13 +293,28 @@ public abstract class BaseEnemy : MonoBehaviour
             navAgent.SetDestination(player.position);
     }
 
+    protected virtual float FacePlayerTurnSpeed => 10f;
+
     protected void FacePlayer()
     {
         if (player == null) return;
         Vector3 direction = (player.position - transform.position).normalized;
         direction.y = 0f;
         if (direction.sqrMagnitude > 0.001f)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), FacePlayerTurnSpeed * Time.deltaTime);
+    }
+
+    private void FaceMovementDirection()
+    {
+        if (!navAgent.isOnNavMesh) return;
+
+        Vector3 velocity = navAgent.velocity;
+        velocity.y = 0f;
+
+        if (velocity.sqrMagnitude <= 0.001f) return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(velocity.normalized);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
     }
 
     protected void FacePlayerImmediate()
@@ -280,6 +324,64 @@ public abstract class BaseEnemy : MonoBehaviour
         direction.y = 0f;
         if (direction.sqrMagnitude > 0.001f)
             transform.rotation = Quaternion.LookRotation(direction);
+    }
+
+    private float GetNextIdleWanderDelay()
+    {
+        if (idleWanderIntervalVariance <= 0f) return idleWanderInterval;
+        return idleWanderInterval + Random.Range(-idleWanderIntervalVariance, idleWanderIntervalVariance);
+    }
+
+    private void UpdateIdleWander()
+    {
+        if (!enableIdleWander || !navAgent.isOnNavMesh) return;
+
+        idleWanderTimer -= Time.deltaTime;
+
+        bool reachedDestination = isIdleWandering &&
+            !navAgent.pathPending &&
+            navAgent.remainingDistance <= navAgent.stoppingDistance + 0.05f;
+
+        if (idleWanderTimer <= 0f || reachedDestination)
+        {
+            Vector3 target = idleWanderCenter + Random.insideUnitSphere * idleWanderRadius;
+            target.y = idleWanderCenter.y;
+
+            if (NavMesh.SamplePosition(target, out NavMeshHit hit, idleWanderRadius, NavMesh.AllAreas))
+            {
+                navAgent.speed = idleWanderSpeed;
+                navAgent.isStopped = false;
+                navAgent.SetDestination(hit.position);
+                isIdleWandering = true;
+            }
+            else if (isIdleWandering)
+            {
+                navAgent.isStopped = true;
+                navAgent.ResetPath();
+                isIdleWandering = false;
+            }
+
+            idleWanderTimer = GetNextIdleWanderDelay();
+        }
+    }
+
+    private void StopIdleWander(bool resetPath)
+    {
+        if (!isIdleWandering) return;
+
+        isIdleWandering = false;
+        idleWanderTimer = GetNextIdleWanderDelay();
+
+        if (resetPath && navAgent.isOnNavMesh)
+        {
+            navAgent.ResetPath();
+            navAgent.velocity = Vector3.zero;
+        }
+
+        if (!isCharging)
+        {
+            navAgent.speed = chaseSpeed;
+        }
     }
 
     #region Combat Actions
@@ -355,6 +457,8 @@ public abstract class BaseEnemy : MonoBehaviour
         
         if (!isAware) { isAware = true; navAgent.isStopped = false; }
         if (!isEngaged) { isEngaged = true; hasOpenedWithCharge = true; }
+
+        StopIdleWander(true);
 
         currentHealth -= damage;
         GetComponentInChildren<EnemyHealthBar>()?.ShowHealthBar();
