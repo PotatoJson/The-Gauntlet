@@ -13,6 +13,11 @@ public class LevelTransition : MonoBehaviour
         {
             Debug.Log("Player reached the exit! Loading next level...");
 
+            if (PersistentEquipment.Instance != null && InventoryManager.Instance != null)
+            {
+                PersistentEquipment.Instance.SaveEquipment(InventoryManager.Instance);
+            }
+
             // Load the scene specified in the inspector
             SceneManager.LoadScene(nextLevelName);
         }

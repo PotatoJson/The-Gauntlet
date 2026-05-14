@@ -56,6 +56,11 @@ public class InventoryManager : MonoBehaviour
     private GameObject _pendingGauntletPrefab;
     private bool _isWarningActive = false;
 
+    [HideInInspector] public GameObject activePrimaryPrefab;
+    [HideInInspector] public GauntletRarity activePrimaryRarity;
+    [HideInInspector] public GameObject activeSecondaryPrefab;
+    [HideInInspector] public GauntletRarity activeSecondaryRarity;
+
     private GauntletRarity _pendingGauntletRarity;
 
     private void Awake()
@@ -69,14 +74,56 @@ public class InventoryManager : MonoBehaviour
 
     private void Start()
     {
-        if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultPrimaryPrefab != null)
+        // 1. Does the backpack have saved items from the previous level?
+        if (PersistentEquipment.Instance != null && PersistentEquipment.Instance.hasSavedData)
         {
-            TryEquipNewGauntlet(DefaultPrimaryPrefab, GauntletRarity.Common);
-        }
+            // Equip Gauntlets
+            if (PersistentEquipment.Instance.primaryGauntletPrefab != null)
+                TryEquipNewGauntlet(PersistentEquipment.Instance.primaryGauntletPrefab, PersistentEquipment.Instance.primaryRarity);
 
-        if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultSecondaryPrefab != null)
+            if (PersistentEquipment.Instance.secondaryGauntletPrefab != null)
+                TryEquipNewGauntlet(PersistentEquipment.Instance.secondaryGauntletPrefab, PersistentEquipment.Instance.secondaryRarity);
+
+            // Load Gems
+            LoadSavedGems(primaryGauntlet, PersistentEquipment.Instance.primaryGems);
+            LoadSavedGems(secondaryGauntlet, PersistentEquipment.Instance.secondaryGems);
+
+            // Sync Stats immediately so the player starts with their buffs!
+            PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+            if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+        }
+        else
         {
-            TryEquipNewGauntlet(DefaultSecondaryPrefab, GauntletRarity.Common);
+            // 2. No saved data? Hand out the default starter gear!
+            if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultPrimaryPrefab != null)
+            {
+                TryEquipNewGauntlet(DefaultPrimaryPrefab, GauntletRarity.Common);
+            }
+
+            if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultSecondaryPrefab != null)
+            {
+                TryEquipNewGauntlet(DefaultSecondaryPrefab, GauntletRarity.Common);
+            }
+        }
+    }
+
+    private void LoadSavedGems(Transform gauntletParent, List<GameObject> savedGemPrefabs)
+    {
+        GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>();
+        if (gm != null)
+        {
+            for (int i = 0; i < savedGemPrefabs.Count; i++)
+            {
+                if (i < gm.currentActiveSlots)
+                {
+                    GameObject newlySpawnedGem = Instantiate(savedGemPrefabs[i], gm.fingerSlots[i].transform);
+                    newlySpawnedGem.GetComponent<RectTransform>().sizeDelta = gm.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+
+                    Image slotImage = gm.fingerSlots[i].GetComponent<Image>();
+                    Image gemImage = newlySpawnedGem.GetComponent<Image>();
+                    if (slotImage != null && gemImage != null) slotImage.color = gemImage.color;
+                }
+            }
         }
     }
 
@@ -86,6 +133,11 @@ public class InventoryManager : MonoBehaviour
         {
             GameObject newGauntlet = Instantiate(gauntletPrefab, primaryGauntlet);
             newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(true, rarity);
+
+            // Track what we just equipped!
+            activePrimaryPrefab = gauntletPrefab;
+            activePrimaryRarity = rarity;
+
             SetupHoverEvents(primaryGauntlet);
             return;
         }
@@ -94,6 +146,11 @@ public class InventoryManager : MonoBehaviour
         {
             GameObject newGauntlet = Instantiate(gauntletPrefab, secondaryGauntlet);
             newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(false, rarity);
+
+            // Track what we just equipped!
+            activeSecondaryPrefab = gauntletPrefab;
+            activeSecondaryRarity = rarity;
+
             SetupHoverEvents(secondaryGauntlet);
             return;
         }
@@ -154,6 +211,18 @@ public class InventoryManager : MonoBehaviour
 
         newManager.InitializeGauntlet(isPrimary, _pendingGauntletRarity);
 
+        // Track the swapped gauntlet!
+        if (isPrimary)
+        {
+            activePrimaryPrefab = _pendingGauntletPrefab;
+            activePrimaryRarity = _pendingGauntletRarity;
+        }
+        else
+        {
+            activeSecondaryPrefab = _pendingGauntletPrefab;
+            activeSecondaryRarity = _pendingGauntletRarity;
+        }
+
         List<GameObject> overflowGems = new List<GameObject>();
         int availableSlots = newManager.currentActiveSlots;
 
@@ -184,7 +253,6 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("RewardMenuManager Instance is missing! Closing menu instead.");
             TryCloseCharacterScreen();
         }
     }

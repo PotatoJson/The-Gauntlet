@@ -27,6 +27,8 @@ public class DeathScreenShatter : MonoBehaviour
     public float fallDuration = 1.5f;
     public float fallDistance = 1500f;
 
+    public GameObject hudPanel;
+
     public static DeathScreenShatter Instance { get; private set; }
 
     private void Awake()
@@ -124,6 +126,7 @@ public class DeathScreenShatter : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
