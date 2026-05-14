@@ -136,7 +136,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleMaxHealthChange()
     {
-        Debug.Log("Pre Health gem - " + maxHealth);
+        //Debug.Log("Pre Health gem - " + maxHealth);
         float newMax = _statsManager.CurrentMaxHealth;
         float differnece = newMax - maxHealth;
 

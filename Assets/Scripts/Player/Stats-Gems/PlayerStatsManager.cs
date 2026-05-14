@@ -145,7 +145,7 @@ public class PlayerStatsManager : MonoBehaviour
 
         retaliationTotal = 0f;
         executionerTotal = 0f;
-
+        Debug.Log($"[Backend Check] The Stats Manager found {allMods.Count} total modifiers equipped!");
         foreach (GemModifier mod in allMods)
         {
             if (mod.StatType == StatModifierType.Retaliation)
