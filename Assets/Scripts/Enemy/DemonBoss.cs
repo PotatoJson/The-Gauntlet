@@ -17,6 +17,10 @@ public class DemonBoss : BaseEnemy
     [SerializeField, Tooltip("The sword attached to the boss's right hand")]
     private GameObject rightSword;
 
+    [Header("Rotation")]
+    [SerializeField, Tooltip("How quickly the boss rotates toward the player")]
+    private float facePlayerTurnSpeed = 4f;
+
     // Boss States
     private bool isPhase2 = false;
     private bool isIntermission = false;
@@ -287,4 +291,6 @@ public class DemonBoss : BaseEnemy
         }
         return baseCheck && !isIntermission && !isDodging;
     }
+
+    protected override float FacePlayerTurnSpeed => facePlayerTurnSpeed;
 }

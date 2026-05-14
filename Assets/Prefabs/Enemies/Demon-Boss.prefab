@@ -317,6 +317,10 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5142027932127913151, guid: 11fb92184b8b6b241b7a826df3430491, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2850074755327657584, guid: f465d8c03f958c04a96c8af5f00c05b5, type: 3}
+    - target: {fileID: 5142027932127913151, guid: 11fb92184b8b6b241b7a826df3430491, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f1e544a95eb7f09478d356106f7bfc19, type: 2}
@@ -541,9 +545,9 @@ MonoBehaviour:
   chargeAttackPoiseDamage: 20
   playerLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
-  lightAttackHitboxOffset: {x: 0, y: 1, z: 1}
-  lightAttackHitboxSize: {x: 2, y: 2, z: 2}
+    m_Bits: 64
+  lightAttackHitboxOffset: {x: 0, y: 1, z: 2.34}
+  lightAttackHitboxSize: {x: 4.12, y: 3, z: 3}
   heavyAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
   heavyAttackHitboxSize: {x: 2.5, y: 2, z: 3}
   chargeAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
@@ -650,6 +654,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: -1522025331998818383, guid: 5d8f4629b7867f3459df70e8ec5d2f5c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 47e0a031a6318e14c8110236ae1260f9, type: 2}
     - target: {fileID: 919132149155446097, guid: 5d8f4629b7867f3459df70e8ec5d2f5c, type: 3}
       propertyPath: m_Name
       value: Berserker-Blade
@@ -745,6 +753,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: -1522025331998818383, guid: 5d8f4629b7867f3459df70e8ec5d2f5c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 47e0a031a6318e14c8110236ae1260f9, type: 2}
     - target: {fileID: 919132149155446097, guid: 5d8f4629b7867f3459df70e8ec5d2f5c, type: 3}
       propertyPath: m_Name
       value: Berserker-Blade
