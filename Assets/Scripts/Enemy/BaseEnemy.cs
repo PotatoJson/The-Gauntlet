@@ -97,6 +97,9 @@ public abstract class BaseEnemy : MonoBehaviour
     private PlayerHealth playerHealth;
     protected PlayerManager playerManager;
 
+    //death event
+    public static event System.Action<BaseEnemy> OnAnyEnemyDied;
+
     protected virtual void Awake()
     {
         navAgent = GetComponent<NavMeshAgent>();
@@ -385,6 +388,8 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         navAgent.enabled = false;
+        //enemy death event for gem event manager
+        OnAnyEnemyDied?.Invoke(this);
 
         animator?.SetTrigger(AnimDie);
         gameObject.layer = LayerMask.NameToLayer("Default");

@@ -264,9 +264,10 @@ public class PlayerCamera : MonoBehaviour
             float dynamicVerticalOffset = Mathf.Lerp(closeVerticalOffset, farVerticalOffset, distancePercent);
             float dynamicPivotHeight = Mathf.Lerp(closePivotHeight, _originalPivotHeight, distancePercent);
 
-            Vector3 pivotPos = cameraPivotTransform.localPosition;
-            pivotPos.y = Mathf.Lerp(pivotPos.y, dynamicPivotHeight, 5f * Time.deltaTime);
-            cameraPivotTransform.localPosition = pivotPos;
+            // Adjust pivot height dynamically based on distance
+            Vector3 lockOnPivotPos = cameraPivotTransform.localPosition;
+            lockOnPivotPos.y = Mathf.Lerp(lockOnPivotPos.y, dynamicPivotHeight, 5f * Time.deltaTime);
+            cameraPivotTransform.localPosition = lockOnPivotPos;
 
             Vector3 lookAtPoint = Vector3.Lerp(playerPosition, enemyPosition, 0.7f);
             lookAtPoint.y += dynamicVerticalOffset;
@@ -302,6 +303,15 @@ public class PlayerCamera : MonoBehaviour
         }
 
         // NORMAL ROTATION
+        
+        // FIX: Smoothly return the pivot back to its original height when not locked on!
+        Vector3 normalPivotPos = cameraPivotTransform.localPosition;
+        if (Mathf.Abs(normalPivotPos.y - _originalPivotHeight) > 0.001f)
+        {
+            normalPivotPos.y = Mathf.Lerp(normalPivotPos.y, _originalPivotHeight, 5f * Time.deltaTime);
+            cameraPivotTransform.localPosition = normalPivotPos;
+        }
+
         float leftRightRotationAmount = 0f;
         float upDownRotationAmount = 0f;
 

@@ -112,6 +112,9 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 9
   holdToSprintTime: 0.2
+  rollStaminaCost: 15
+  jumpStaminaCost: 10
+  sprintStaminaDrainRate: 15
   isTargetLocked: 0
   rollSpeedCurve:
     serializedVersion: 2
@@ -186,6 +189,7 @@ MonoBehaviour:
   _normHeavyWindUp: 0.4
   MaxChargeDuration: 1
   BufferDuration: 0.5
+  inputAsset: {fileID: 0}
 --- !u!114 &2615825535877183288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,12 +205,15 @@ MonoBehaviour:
   _currentState: 0
   _bossRoomSpawn: {fileID: 0}
   _characterController: {fileID: 5240817740675874060}
+  IsInCombat: 0
+  CombatTimeout: 5
   MoveDirectionIntent: {x: 0, y: 0, z: 0}
   IsLockedOn: 0
   HasBufferedAttack: 0
   CanCancelAttack: 0
   RequestBufferClear: 0
   CarryMomentum: 0
+  CanRoll: 0
   CurrentLungeSpeed: 0
 --- !u!114 &8214966954790734677
 MonoBehaviour:
@@ -231,6 +238,14 @@ MonoBehaviour:
   PoiseRecoveryDelay: 0
   InstantKnockback: 0
   OvercapKnockback: 0
+  MaxPotions: 5
+  CurrentPotions: 0
+  PotionHealAmount: 35
+  healingVfxPrefab: {fileID: 0}
+  vfxSpawnPoint: {fileID: 0}
+  damageRumbleLow: 0.5
+  damageRumbleHigh: 0.8
+  damageRumbleDuration: 0.25
   LastCheckPoint: {fileID: 0}
   PlayerSpawn: {fileID: 0}
 --- !u!114 &13187733473135032
@@ -288,6 +303,8 @@ MonoBehaviour:
   BaseStamina: 100
   BasePoiseDamage: 10
   BaseMaxPoise: 100
+  DefaultPrimary: {fileID: 0}
+  DefaultSecondary: {fileID: 0}
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0
@@ -632,6 +649,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: -9165797768001435688, guid: 579e3fe56932d49479901ccfce805052, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b2a8cc7dac020524597dde90338911b5, type: 2}
     - target: {fileID: -9043891314168273004, guid: 579e3fe56932d49479901ccfce805052, type: 3}
       propertyPath: m_Layer
       value: 6

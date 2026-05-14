@@ -5,9 +5,9 @@ public class PlayerStamina : MonoBehaviour
 {
     private PlayerStatsManager _statsManager;
 
-    [Header("Stamina Settings")]
+    /*[Header("Stamina Settings")]
     public float RegenRate = 60f;
-    public float RegenDelay = 3f;
+    public float RegenDelay = 3f;*/
     
     private float _currentStamina;
     private float _maxStamina;
@@ -47,13 +47,25 @@ public class PlayerStamina : MonoBehaviour
             {
                 _regenTimer -= Time.deltaTime;
             }
-            else
+            else if(_statsManager != null)
             {
-                _currentStamina += RegenRate * Time.deltaTime;
+                _currentStamina += _statsManager.CurrentStaminaRegen * Time.deltaTime;
                 _currentStamina = Mathf.Min(_currentStamina, _maxStamina);
                 UpdateUI();
             }
         }
+    }
+
+    //used by gem effects manager
+    public void RestoreStamina(float amount)
+    {
+        _currentStamina += amount;
+        
+        // Clamp to max so it doesn't overflow
+        _currentStamina = Mathf.Min(_currentStamina, _maxStamina);
+        
+        // Force the UI bar to update instantly
+        UpdateUI(); 
     }
 
     private void HandleMaxStaminaChange()
@@ -80,7 +92,7 @@ public class PlayerStamina : MonoBehaviour
             MetricsTracker.Instance.RecordStaminaExhaustion();
         }
         _currentStamina = Mathf.Max(0, _currentStamina);
-        _regenTimer = RegenDelay; // Reset the delay before it starts regenerating
+        _regenTimer = _statsManager.CurrentStaminaDelay; // Reset the delay before it starts regenerating
         UpdateUI();
     }
 
