@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using DG.Tweening;
+using UnityEngine.InputSystem;
 
 public class TutorialManager : MonoBehaviour
 {
@@ -328,6 +329,29 @@ public class TutorialManager : MonoBehaviour
             case TutorialStep.Punching: CheckPunchingProgress(); break;
             case TutorialStep.Potions: CheckPotionProgress(); break;
             case TutorialStep.EquippingGem: CheckEquipGemProgress(); break;
+        }
+
+        if (dialoguePanel != null && dialoguePanel.gameObject.activeInHierarchy && dialoguePanelButton.interactable)
+        {
+            bool advancePressed = false;
+
+            // Check Gamepad (South Button = A / Cross)
+            if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
+            {
+                advancePressed = true;
+            }
+
+            // Check Keyboard (Space or Enter)
+            if (Keyboard.current != null && (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame))
+            {
+                advancePressed = true;
+            }
+
+            // If any of those were pressed, simulate a click!
+            if (advancePressed)
+            {
+                OnDialogueClicked();
+            }
         }
     }
 

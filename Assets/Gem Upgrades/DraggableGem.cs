@@ -2,13 +2,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
 {
     [Header("Back End Stuff")]
     public GemData LinkedGemData;
-    
+
     [HideInInspector] public Transform parentAfterDrag;
 
     [Tooltip("Can be null in the new Reward System!")]
@@ -36,7 +37,6 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _rectTransform = GetComponent<RectTransform>();
         _canvasGroup = GetComponent<CanvasGroup>();
         _originalSizeDelta = _rectTransform.sizeDelta;
-
     }
 
     private void Start()
@@ -54,14 +54,12 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             return;
         }
 
-        // Check if we are in reward mode and if this gem is locked!
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
         {
             if (!RewardMenuManager.Instance.CanDragGem(this))
             {
                 _canDrag = false;
 
-                // Play the denied "Shake" animation
                 transform.DOKill();
                 transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true);
                 return;
@@ -99,11 +97,10 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         if (originalInventoryGrid != null)
         {
-            // THE FIX: Tell OnEndDrag that the new home is the inventory grid!
             parentAfterDrag = originalInventoryGrid;
 
             transform.SetParent(originalInventoryGrid);
-            _rectTransform.sizeDelta = _originalSizeDelta; // Reset to full size!
+            _rectTransform.sizeDelta = _originalSizeDelta;
             AnimateToNewHome();
         }
         else
@@ -121,13 +118,16 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         if (eventData.button == PointerEventData.InputButton.Left)
         {
+            if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+            if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+
             if (!IsEquipped())
             {
                 if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
                 {
                     if (!RewardMenuManager.Instance.CanDragGem(this))
                     {
-                        return; // Block the click
+                        return;
                     }
                 }
             }
@@ -140,9 +140,22 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
     }
 
-    // --- NEW: A public bridge for the Gauntlet Slots to call! ---
+    // --- UPDATED: Block the gamepad's submit button if the gem is locked! ---
     public void ForceOpenPopUI()
     {
+        if (!IsEquipped())
+        {
+            if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+            {
+                if (!RewardMenuManager.Instance.CanDragGem(this))
+                {
+                    transform.DOKill();
+                    transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true);
+                    return;
+                }
+            }
+        }
+
         if (GemPopupMenu.Instance != null)
         {
             GemPopupMenu.Instance.OpenMenu(this, _rectTransform);

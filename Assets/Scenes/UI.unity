@@ -5729,6 +5729,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 189ca7b8a0010d74ba0e08e693eb65b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+--- !u!114 &1028990016 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2615825535877183288, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+  m_PrefabInstance: {fileID: 45563032}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60a7053f4f275ae4bb03d3a4e3454833, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
 --- !u!1001 &1032773158
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6735,6 +6746,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 8898767717318183677, guid: 49c2cebbf5034c443a65bd1855504cc3, type: 3}
   m_PrefabInstance: {fileID: 1246369056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1255232846 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2651694721818954785, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 595452098167335230}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1256330555
 PrefabInstance:
@@ -11451,6 +11467,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 809021339637959330, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerManager
+      value: 
+      objectReference: {fileID: 1028990016}
+    - target: {fileID: 1125904845653065177, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: expBarRoot
+      value: 
+      objectReference: {fileID: 1255232846}
+    - target: {fileID: 1125904845653065177, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: lookAction
+      value: 
+      objectReference: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     - target: {fileID: 1575995725666900783, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerHealth
       value: 
@@ -11539,6 +11567,14 @@ PrefabInstance:
       propertyPath: playerHealth
       value: 
       objectReference: {fileID: 1028990007}
+    - target: {fileID: 3623618742436872314, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_BlocksRaycasts
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3623618742436872314, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_IgnoreParentGroups
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6283543031277195622, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerMovement
       value: 
@@ -11547,6 +11583,10 @@ PrefabInstance:
       propertyPath: playerHealth
       value: 
       objectReference: {fileID: 1028990007}
+    - target: {fileID: 7089661116387275593, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_BlocksRaycasts
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8420259944261759690, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_Name
       value: Canvas

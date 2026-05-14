@@ -2463,6 +2463,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 13187733473135032, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+      propertyPath: _staminaBar
+      value: 
+      objectReference: {fileID: 1596476026}
     - target: {fileID: 1682075080402086317, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_Name
       value: Player
@@ -4941,6 +4945,10 @@ PrefabInstance:
       propertyPath: lookAction
       value: 
       objectReference: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    - target: {fileID: 1575995725666900783, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerHealth
+      value: 
+      objectReference: {fileID: 558673803}
     - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerHealth
       value: 
@@ -5029,6 +5037,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2940110805874837393, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerHealth
+      value: 
+      objectReference: {fileID: 558673803}
     - target: {fileID: 3623618742436872314, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_BlocksRaycasts
       value: 0
@@ -5093,6 +5105,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ecc6f42c0212b843a7166e8c77981ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProgressBarCircle
+--- !u!114 &1596476026 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4097676181216249138, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 1596476022}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 722ed72330951c44ca9f95b2e43b6644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StaminaBar
 --- !u!43 &1796413212
 Mesh:
   m_ObjectHideFlags: 0
@@ -5462,6 +5485,8 @@ MonoBehaviour:
   playerMovement: {fileID: 558673805}
   playerHealth: {fileID: 558673803}
   expBar: {fileID: 1596476025}
+  primaryGauntletContainer: {fileID: 1531949059}
+  secondaryGauntletContainer: {fileID: 601948489}
   portalPrefab: {fileID: 4752457369876416285, guid: 5ad33d58a66ab154a89c9e88255601e5, type: 3}
   portalSpawnPoint: {fileID: 723627704}
   textSpeed: 0.001
@@ -5469,8 +5494,6 @@ MonoBehaviour:
   targetRadius: 2
   enemyPrefab: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
   enemySpawnPoint: {fileID: 1414340597}
-  primaryGauntletContainer: {fileID: 1531949059}
-  secondaryGauntletContainer: {fileID: 601948489}
 --- !u!224 &1905552037 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2141713174327206360, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
