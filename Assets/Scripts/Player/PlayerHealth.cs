@@ -289,24 +289,29 @@ public class PlayerHealth : MonoBehaviour
     #region Stagger Handling 
     private void HandleStagger(int poiseDamage)
     {
+        PoiseRecoveryTimer = PoiseRecoveryDelay;
         //see if player gets thrown from attack
+        Debug.Log($"[POISE] Took {poiseDamage} poise damage! (Poise before hit: {CurrentPoise}/{_maxPoise})");
+
         bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (_maxPoise + OvercapKnockback);
-        //check for large stagger for player stumble+staggered state
         bool isHeavyStagger = (CurrentPoise + poiseDamage) >= _maxPoise;
 
         if (isKnockBack)
         {
             CurrentPoise = 0;
+            Debug.Log("[POISE] BREAK! Knockback triggered. Poise reset to 0.");
             TriggerKnockback();
         }
         else if (isHeavyStagger)
         {
             CurrentPoise = 0;
+            Debug.Log("[POISE] BREAK! Large Stumble triggered. Poise reset to 0.");
             TriggerLargeStumble();
         }
         else
         {
             CurrentPoise += poiseDamage;
+            Debug.Log($"[POISE] Absorbed hit (Small Flinch). Poise is now {CurrentPoise}/{_maxPoise}");
             TriggerSmallFlinch();
         }
 

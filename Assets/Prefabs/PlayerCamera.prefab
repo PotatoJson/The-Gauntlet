@@ -76,7 +76,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
+  m_TargetTexture: {fileID: 8400000, guid: d80cb4543eb8dc642b0e1639edfb59b7, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -117,7 +117,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -197,6 +197,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3719050260812512982}
   - component: {fileID: 4675767399827168151}
+  - component: {fileID: 2226799859482116679}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -267,6 +268,18 @@ MonoBehaviour:
   farFramingDistance: 15
   closeVerticalOffset: -0.25
   farVerticalOffset: -1
-  closePivotHeight: 0.5
+  closePivotHeight: 1
   lockOnReticle: {fileID: 0}
   targetHeightOffset: 0.5
+--- !u!114 &2226799859482116679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2624657894431077044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5208754432b3baa42ae08e49dc7ba6eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraPersistence
