@@ -298,6 +298,11 @@ MonoBehaviour:
   attackRange: 2
   chargeSpeed: 5
   chargeStopDistance: 2
+  enableIdleWander: 1
+  idleWanderRadius: 4
+  idleWanderSpeed: 1.5
+  idleWanderInterval: 2.5
+  idleWanderIntervalVariance: 0.5
   awarenessRange: 25
   engagementRange: 15
   lightAttackDamage: 10
@@ -342,6 +347,7 @@ MonoBehaviour:
   fireballSpawnRadius: 5
   fireballsPerTick: 3
   castInterval: 0.5
+  castDuration: 10
   impactDelay: 1.5
   fireballSpawnHeight: 15
   fireballSpeed: 8
@@ -354,6 +360,9 @@ MonoBehaviour:
   warningSurfaceOffset: 0.02
   aiDecisionInterval: 0.4
   beamAttackChance: 0.145
+  facePlayerTurnSpeed: 4
+  enableDebugLogs: 1
+  debugLogInterval: 1
 --- !u!136 &5987606836702575877
 CapsuleCollider:
   m_ObjectHideFlags: 0

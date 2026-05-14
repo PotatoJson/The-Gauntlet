@@ -11,7 +11,8 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private float attackDistance = 3f;
     [SerializeField] private float chargeDistance = 10f;
     [SerializeField][Range(0f, 1f)] private float chargeChance = 0.5f;
-
+    [Header("Tutorial Override")]
+    public bool isTutorialDummy = false;
     [Header("Elite Buffing")]
     [SerializeField] private float buffRadius = 10f;
     [SerializeField] private int maxBuffTargets = 2;

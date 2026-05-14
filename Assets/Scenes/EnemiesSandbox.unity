@@ -619,6 +619,11 @@ MonoBehaviour:
   PoiseRecoveryDelay: 0
   InstantKnockback: 0
   OvercapKnockback: 0
+  MaxPotions: 5
+  CurrentPotions: 0
+  PotionHealAmount: 35
+  healingVfxPrefab: {fileID: 0}
+  vfxSpawnPoint: {fileID: 0}
   damageRumbleLow: 0.5
   damageRumbleHigh: 0.8
   damageRumbleDuration: 0.25
@@ -968,14 +973,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 384633957049844834, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
-      propertyPath: maxHealth
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 384633957049844834, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
-      propertyPath: enableDebugLogs
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
       propertyPath: m_Name
       value: HellLord-anims
