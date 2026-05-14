@@ -50,6 +50,7 @@ public class DeathScreenShatter : MonoBehaviour
     public void TriggerDeathShatter()
     {
         Debug.Log("DEATH TRIGGERED: Starting Shatter Coroutine!");
+        shatterCanvasGroup.blocksRaycasts = true;
         StartCoroutine(CaptureAndShatter());
     }
 

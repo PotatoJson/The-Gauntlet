@@ -11,6 +11,9 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private float chargeDistance = 10f;
     [SerializeField][Range(0f, 1f)] private float chargeChance = 0.5f;
 
+    [Header("Tutorial Override")]
+    public bool isTutorialDummy = false;
+
     [Header("Sword Hitbox")]
     [SerializeField] private SwordHitbox swordHitbox;
 
@@ -29,7 +32,7 @@ public class EliteEnemy : BaseEnemy
         if (IsDead() || isStunned || isInHitStun) return;
 
         // Don't make decisions until engaged and opener is done
-        if (!isEngaged || !hasOpenedWithCharge || isCharging || isAttacking) return;
+        if (!isEngaged || !hasOpenedWithCharge || isCharging || isAttacking || isTutorialDummy) return;
 
         aiDecisionTimer -= Time.deltaTime;
         if (aiDecisionTimer <= 0f)
@@ -45,7 +48,7 @@ public class EliteEnemy : BaseEnemy
     /// </summary>
     protected override void ContinueCombat()
     {
-        if (isAttacking || isCharging || isStunned || isInHitStun) return;
+        if (isAttacking || isCharging || isStunned || isInHitStun || isTutorialDummy) return;
 
         float distance = GetDistanceToPlayer();
 
@@ -164,7 +167,7 @@ public class EliteEnemy : BaseEnemy
     }
     #endregion
 
-    #region Animation Events — Sword Hitbox Enable/Disable
+    #region Animation Events ?Sword Hitbox Enable/Disable
     // Call these from animation events to toggle the sword collider.
     // Use EnableSwordSwingHitbox / EnableSwordSlamHitbox
     // at the start of the active frames, and DisableSwordHitbox at the end.
@@ -185,7 +188,7 @@ public class EliteEnemy : BaseEnemy
     }
     #endregion
 
-    #region Animation Events — Attack End
+    #region Animation Events ?Attack End
     /// <summary>
     /// Call at end of sword swing animation
     /// </summary>

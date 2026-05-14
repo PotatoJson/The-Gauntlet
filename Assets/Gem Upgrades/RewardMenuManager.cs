@@ -7,18 +7,17 @@ using UnityEngine.UI;
 
 public class RewardMenuManager : MonoBehaviour
 {
-    private static RewardMenuManager _instance; //needed this approach since object is turned off initally
-    public static RewardMenuManager Instance 
-    { 
-        get 
+    private static RewardMenuManager _instance;
+    public static RewardMenuManager Instance
+    {
+        get
         {
-            // If it's null (because it's turned off), find it anyway!
-            if (_instance == null) 
+            if (_instance == null)
                 _instance = FindFirstObjectByType<RewardMenuManager>(FindObjectsInactive.Include);
-            
             return _instance;
-        } 
+        }
     }
+
     [Header("Screen References")]
     [SerializeField] private GameObject characterScreenRoot;
     [SerializeField] private GameObject leftSideGauntlets;
@@ -44,7 +43,7 @@ public class RewardMenuManager : MonoBehaviour
 
     [Header("Navigation Anchors")]
     [SerializeField] private GameObject primaryTitleButton;
-    [SerializeField] private GameObject secondaryTitleButton; // NEW: Added this so it knows both gauntlets!
+    [SerializeField] private GameObject secondaryTitleButton;
 
     [Header("Cleanup References")]
     [SerializeField] private GameObject expBarRoot;
@@ -58,7 +57,7 @@ public class RewardMenuManager : MonoBehaviour
 
     private void Awake()
     {
-        if(_instance == null) _instance = this;
+        if (_instance == null) _instance = this;
     }
 
     public bool IsRewardModeActive()
@@ -75,6 +74,7 @@ public class RewardMenuManager : MonoBehaviour
     public void OnGemSlotted(DraggableGem gem)
     {
         _currentlySlottedGem = gem;
+        UpdateGemInteractability(false); // --- NEW: Lock the other gems! ---
     }
 
     public void OnGemReturned(DraggableGem gem)
@@ -82,6 +82,31 @@ public class RewardMenuManager : MonoBehaviour
         if (_currentlySlottedGem == gem)
         {
             _currentlySlottedGem = null;
+            UpdateGemInteractability(true); // --- NEW: Unlock the gems! ---
+        }
+    }
+
+    // --- NEW: Fades out and disables navigation to remaining gems ---
+    private void UpdateGemInteractability(bool isInteractable)
+    {
+        if (_isOverflowMode) return;
+
+        // Loop through whatever gems are still sitting in the choice pool
+        foreach (Transform child in gemHolder)
+        {
+            Button btn = child.GetComponent<Button>();
+            if (btn != null)
+            {
+                // Disabling the button automatically removes it from Gamepad navigation!
+                btn.interactable = isInteractable;
+            }
+
+            CanvasGroup cg = child.GetComponent<CanvasGroup>();
+            if (cg != null)
+            {
+                // Visually fade them out so the player knows they are locked
+                cg.alpha = isInteractable ? 1f : 0.4f;
+            }
         }
     }
 
@@ -128,6 +153,9 @@ public class RewardMenuManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {
+                    if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+                    if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+
                     if (!CanDragGem(dragScript)) return;
 
                     if (GemPopupMenu.Instance != null)
@@ -169,7 +197,7 @@ public class RewardMenuManager : MonoBehaviour
         rightSideDetails.SetActive(false);
         rightSideRewards.SetActive(true);
 
-        if(expBarRoot != null) expBarRoot.SetActive(false);
+        if (expBarRoot != null) expBarRoot.SetActive(false);
 
         if (warningPanel != null) warningPanel.SetActive(false);
         _isWarningActive = false;
@@ -213,6 +241,9 @@ public class RewardMenuManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {
+                    if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+                    if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+
                     if (!CanDragGem(dragScript)) return;
 
                     if (GemPopupMenu.Instance != null)
@@ -293,7 +324,6 @@ public class RewardMenuManager : MonoBehaviour
 
                     if (currentSel != null)
                     {
-                        // 1. If focused on a gem -> Step back to Primary Title
                         if (currentSel.transform.IsChildOf(gemHolder))
                         {
                             if (primaryTitleButton != null)
@@ -302,7 +332,6 @@ public class RewardMenuManager : MonoBehaviour
                                 EventSystem.current.SetSelectedGameObject(primaryTitleButton);
                             }
                         }
-                        // 2. THE FIX 1: If focused on a SLOT (after equipping!) -> Step back to the matching Gauntlet Title
                         else if (currentSel.name.Contains("Slot") && InventoryManager.Instance != null)
                         {
                             if (currentSel.transform.IsChildOf(InventoryManager.Instance.primaryGauntlet) && primaryTitleButton != null)
@@ -354,7 +383,6 @@ public class RewardMenuManager : MonoBehaviour
         _isWarningActive = true;
         warningPanel.SetActive(true);
 
-        // THE FIX: Dynamically check the player's status right before the panel appears!
         if (warningBodyText != null)
         {
             if (_isOverflowMode)
@@ -363,12 +391,10 @@ public class RewardMenuManager : MonoBehaviour
             }
             else if (_currentlySlottedGem != null)
             {
-                // If they have successfully slotted a gem!
                 warningBodyText.text = "Reward equipped! Ready to leave?";
             }
             else
             {
-                // If they haven't picked anything yet!
                 warningBodyText.text = "Leave without taking a reward?";
             }
         }
@@ -385,10 +411,19 @@ public class RewardMenuManager : MonoBehaviour
         _isWarningActive = false;
         warningPanel.SetActive(false);
 
-        if (Gamepad.current != null && _lastSelectedReward != null && EventSystem.current != null)
+        if (Gamepad.current != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
+
+            // --- UPDATED: Snap focus to the equipped gem so the player isn't stranded! ---
+            if (_currentlySlottedGem != null)
+            {
+                EventSystem.current.SetSelectedGameObject(_currentlySlottedGem.gameObject);
+            }
+            else if (_lastSelectedReward != null)
+            {
+                EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
+            }
         }
     }
 

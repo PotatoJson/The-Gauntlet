@@ -2,20 +2,24 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using UnityEngine.UI; // --- NEW: Needed for the Button component! ---
 
 public class GemPopupMenu : MonoBehaviour
 {
     public static GemPopupMenu Instance;
 
     [Header("Dynamic UI Panels")]
-    [SerializeField] private GameObject unslottedPanel; // Holds Equip / Return
-    [SerializeField] private GameObject slottedPanel;   // Holds Swap / Unequip
-    [SerializeField] private GameObject subPanel;       // Holds Primary / Secondary
+    [SerializeField] private GameObject unslottedPanel;
+    [SerializeField] private GameObject slottedPanel;
+    [SerializeField] private GameObject subPanel;
 
     [Header("Controller Focus Anchors")]
     [SerializeField] private GameObject equipButton;
     [SerializeField] private GameObject swapButton;
     [SerializeField] private GameObject primaryButton;
+
+    // --- NEW: Reference to the actual Unequip button! ---
+    [SerializeField] private Button unequipButton;
 
     [Header("Gauntlet Slot Containers")]
     [SerializeField] private Transform primaryGauntlet;
@@ -51,7 +55,6 @@ public class GemPopupMenu : MonoBehaviour
 
             if (cancelPressed)
             {
-                // LAYER 1: Close the Sub Panel and return to the correct Main Panel
                 if (subPanel != null && subPanel.activeSelf)
                 {
                     subPanel.SetActive(false);
@@ -66,7 +69,6 @@ public class GemPopupMenu : MonoBehaviour
                         EventSystem.current.SetSelectedGameObject(isEquipped ? swapButton : equipButton);
                     }
                 }
-                // LAYER 2: Close the whole menu
                 else
                 {
                     CloseMenu();
@@ -88,15 +90,20 @@ public class GemPopupMenu : MonoBehaviour
         transform.position = gemRect.position;
         _rectTransform.anchoredPosition += new Vector2(gemRect.rect.width / 2f, -gemRect.rect.height / 2f);
 
-        // THE FIX: Check the gem's state to show the correct menu!
         bool isEquipped = gem.IsEquipped();
         unslottedPanel.SetActive(!isEquipped);
         slottedPanel.SetActive(isEquipped);
         subPanel.SetActive(false);
 
+        // --- THE FIX: Disable "Unequip" if we aren't in the Reward Menu! ---
+        if (unequipButton != null)
+        {
+            bool isRewardMode = RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive();
+            unequipButton.interactable = isRewardMode;
+        }
+
         gameObject.SetActive(true);
 
-        // Snap controller focus to the correct starting button
         if (Gamepad.current != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -110,32 +117,31 @@ public class GemPopupMenu : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // --- BUTTON METHODS: UNSLOTTED PANEL ---
-
     public void OnEquipClicked()
     {
         subPanel.SetActive(true);
-
         if (Gamepad.current != null && primaryButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
             EventSystem.current.SetSelectedGameObject(primaryButton);
         }
-
     }
 
     public void OnReturnClicked()
     {
         if (_targetGem != null) _targetGem.ReturnToInventory();
         CloseMenu();
-    }
 
-    // --- BUTTON METHODS: SLOTTED PANEL ---
+        if (EventSystem.current != null && _targetGem != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(_targetGem.gameObject);
+        }
+    }
 
     public void OnSwapClicked()
     {
         subPanel.SetActive(true);
-
         if (Gamepad.current != null && primaryButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -147,12 +153,10 @@ public class GemPopupMenu : MonoBehaviour
     {
         if (_targetGem != null)
         {
-            // If we unequip while in the Reward Menu, we MUST tell the manager to free up the 1-Gem Limit!
             if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             {
                 RewardMenuManager.Instance.OnGemReturned(_targetGem);
             }
-
             _targetGem.ReturnToInventory();
         }
         CloseMenu();
@@ -164,26 +168,17 @@ public class GemPopupMenu : MonoBehaviour
         }
     }
 
-    // --- BUTTON METHODS: SUB PANEL ---
-
     public void OnPrimaryClicked() { TryEquipToGauntlet(primaryGauntlet); }
     public void OnSecondaryClicked() { TryEquipToGauntlet(secondaryGauntlet); }
-
-
-    // --- UNIVERSAL PLACEMENT MODE LOGIC ---
-    // (Everything below this line remains exactly the same as your previous version!)
 
     private void TryEquipToGauntlet(Transform gauntletParent)
     {
         GauntletManager gauntlet = gauntletParent.GetComponentInChildren<GauntletManager>();
-
         if (gauntlet == null)
         {
-            Debug.Log("No gauntlet equipped in this slot!");
             CloseMenu();
             return;
         }
-
         StartPlacementMode(gauntlet);
     }
 
