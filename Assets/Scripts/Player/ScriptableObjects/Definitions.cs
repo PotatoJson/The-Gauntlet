@@ -1,6 +1,12 @@
 using UnityEngine;
 /*-- Used for goblal enums that will be used by other scripts (mainly Scriptable Objects) --*/
 
+public enum ModifierMathType
+{
+    Flat,
+    Percentage
+}
+
 public enum GauntletRarity
 {
     Common,
@@ -33,9 +39,10 @@ public enum StatModifierType
     MaxStamina,
     MaxPoise,
     HealthRegen,
-    StaminaRegen,
     CritChance,
     LifeSteal,
+    StaminaDelay, //same gem
+    StaminaRecovery, //same gem
 
     //Stat Flags (checked during specific events) These are examples and subject to change
     //These will require more interconnected code within the player scripts so for now these are on the backburner
@@ -45,7 +52,7 @@ public enum StatModifierType
     DodgeIFrameBonus, //increased I frames on dodge
     ParryAttackBuff, //LOL no parry yet but this could be cool
     Retaliation, //Damage Increases as health lowers
-    Executioner //Killing an enemy gives stamina back
+    Executioner, //Killing an enemy gives stamina back
 }
 
 public enum SkillCategory
