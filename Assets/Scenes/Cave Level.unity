@@ -2302,6 +2302,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 149445541}
+  - component: {fileID: 149445542}
   m_Layer: 0
   m_Name: Chamber 2
   m_TagString: Untagged
@@ -2380,6 +2381,38 @@ Transform:
   - {fileID: 524610068}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &149445542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 149445540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: b2c26786d3704ad41a975eb3e676e882, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &153112454
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19672,6 +19705,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1237392735}
+  - component: {fileID: 1237392736}
   m_Layer: 0
   m_Name: Chamber 4
   m_TagString: Untagged
@@ -19791,6 +19825,38 @@ Transform:
   - {fileID: 423520836}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1237392736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1237392734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 834d9aadfa0b6d049900577ddce90a18, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &1239047367
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20659,6 +20725,132 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8566562010762888771, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
   m_PrefabInstance: {fileID: 1292809244}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1293063540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1293063542}
+  - component: {fileID: 1293063541}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1293063541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293063540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1827facf7b816e049962a9b2fa0c46eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
+  gruntPrefab: {fileID: 8709935683431744970, guid: 3a263926772f426428d99aef77e3d1dc, type: 3}
+  elitePrefab: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
+  peeperPrefab: {fileID: 6769150171900720745, guid: e176cd6a272654048a5d48f73746e972, type: 3}
+  casterPrefab: {fileID: 8018765667397676023, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
+  bossPrefab: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
+  chambers:
+  - chamberName: Chamber1
+    spawnOnStart: 1
+    chamberTriggers: []
+    gruntSpawnPoints: {fileID: 1537506435}
+    eliteSpawnPoints: {fileID: 932243702}
+    peeperSpawnPoints: {fileID: 1276226030}
+    casterSpawnPoints: {fileID: 706549851}
+    bossSpawnPoint: {fileID: 0}
+    chamberDoorAnimators:
+    - {fileID: 410800431}
+    - {fileID: 910904381}
+    doorOpenTrigger: Trigger
+    hasSpawned: 0
+    isCleared: 0
+    activeEnemies: []
+  - chamberName: Chamber2
+    spawnOnStart: 0
+    chamberTriggers:
+    - {fileID: 649263029}
+    gruntSpawnPoints: {fileID: 923444525}
+    eliteSpawnPoints: {fileID: 1617546018}
+    peeperSpawnPoints: {fileID: 0}
+    casterSpawnPoints: {fileID: 314830384}
+    bossSpawnPoint: {fileID: 0}
+    chamberDoorAnimators:
+    - {fileID: 2098358003}
+    doorOpenTrigger: Trigger
+    hasSpawned: 0
+    isCleared: 0
+    activeEnemies: []
+  - chamberName: Chamber3
+    spawnOnStart: 0
+    chamberTriggers:
+    - {fileID: 661004890}
+    gruntSpawnPoints: {fileID: 1372034370}
+    eliteSpawnPoints: {fileID: 228093683}
+    peeperSpawnPoints: {fileID: 136816610}
+    casterSpawnPoints: {fileID: 447035450}
+    bossSpawnPoint: {fileID: 0}
+    chamberDoorAnimators:
+    - {fileID: 1277039473}
+    doorOpenTrigger: Trigger
+    hasSpawned: 0
+    isCleared: 0
+    activeEnemies: []
+  - chamberName: Chamber4
+    spawnOnStart: 0
+    chamberTriggers:
+    - {fileID: 528266048}
+    - {fileID: 116348863}
+    gruntSpawnPoints: {fileID: 418088487}
+    eliteSpawnPoints: {fileID: 505641347}
+    peeperSpawnPoints: {fileID: 1907722968}
+    casterSpawnPoints: {fileID: 184709337}
+    bossSpawnPoint: {fileID: 0}
+    chamberDoorAnimators:
+    - {fileID: 2073834226}
+    doorOpenTrigger: Trigger
+    hasSpawned: 0
+    isCleared: 0
+    activeEnemies: []
+  - chamberName: Boss
+    spawnOnStart: 0
+    chamberTriggers:
+    - {fileID: 691346437}
+    gruntSpawnPoints: {fileID: 0}
+    eliteSpawnPoints: {fileID: 0}
+    peeperSpawnPoints: {fileID: 0}
+    casterSpawnPoints: {fileID: 0}
+    bossSpawnPoint: {fileID: 1959231145}
+    chamberDoorAnimators:
+    - {fileID: 0}
+    doorOpenTrigger: Trigger
+    hasSpawned: 0
+    isCleared: 0
+    activeEnemies: []
+--- !u!4 &1293063542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293063540}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.69659, y: 1.65659, z: 9.78568}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1296536188
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21094,6 +21286,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1328835028}
+  - component: {fileID: 1328835029}
   m_Layer: 0
   m_Name: Boss Chamber
   m_TagString: Untagged
@@ -21183,6 +21376,38 @@ Transform:
   - {fileID: 1618545277}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1328835029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1328835027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 8d776d97b28f7384a88f63dda8d6a74c, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &1330963074
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22698,6 +22923,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1424705033}
+  - component: {fileID: 1424705034}
   m_Layer: 0
   m_Name: Chamber 3
   m_TagString: Untagged
@@ -22781,6 +23007,38 @@ Transform:
   - {fileID: 1841709321}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1424705034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1424705032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: ba410946df9149148a4df48496e3a952, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &1428432304
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23033,6 +23291,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1445074690}
+  - component: {fileID: 1445074691}
   m_Layer: 0
   m_Name: Corridors
   m_TagString: Untagged
@@ -23060,6 +23319,38 @@ Transform:
   - {fileID: 524905623}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1445074691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445074689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 6899dbd951007764a8c668751f0a3501, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &1446096341
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23200,6 +23491,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1451309769}
+  - component: {fileID: 1451309770}
   m_Layer: 0
   m_Name: Chamber 1
   m_TagString: Untagged
@@ -23319,6 +23611,38 @@ Transform:
   - {fileID: 2019077966}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1451309770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451309768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 2364634d44be47b4b93ca1438f3ab701, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1001 &1453322572
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33044,3 +33368,4 @@ SceneRoots:
   - {fileID: 1584982019}
   - {fileID: 65497258}
   - {fileID: 1385538732}
+  - {fileID: 1293063542}

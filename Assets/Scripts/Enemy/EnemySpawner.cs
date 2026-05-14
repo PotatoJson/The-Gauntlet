@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -20,6 +20,8 @@ public class ChamberData
     public Transform eliteSpawnPoints;
     [Tooltip("Parent GameObject containing all Peeper spawn points. Leave empty if none.")]
     public Transform peeperSpawnPoints;
+    [Tooltip("Parent GameObject containing all Caster spawn points. Leave empty if none.")]
+    public Transform casterSpawnPoints;
 
     [Header("Boss Spawn (Single Point)")]
     [Tooltip("A single Transform for the Boss spawn point. Not a container. Leave empty if no boss in this chamber.")]
@@ -42,6 +44,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject gruntPrefab;
     public GameObject elitePrefab;
     public GameObject peeperPrefab;
+    public GameObject casterPrefab;
     public GameObject bossPrefab;
 
     [Header("Chambers Configuration")]
@@ -115,6 +118,7 @@ public class EnemySpawner : MonoBehaviour
         SpawnEnemyType(gruntPrefab, chamber.gruntSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(peeperPrefab, chamber.peeperSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(casterPrefab, chamber.casterSpawnPoints, chamber.activeEnemies);
 
         // Spawn Boss explicitly at its single spawn point
         if (bossPrefab != null && chamber.bossSpawnPoint != null)

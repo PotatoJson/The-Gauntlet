@@ -30,6 +30,11 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected float awarenessRange = 25f;
     [SerializeField] protected float engagementRange = 15f;
 
+    [Header("Line of Sight")]
+    [Tooltip("Layers that block enemy vision (e.g., walls/environment).")]
+    [SerializeField] private LayerMask lineOfSightObstructionMask = 0;
+    [SerializeField] private float lineOfSightHeight = 1.6f;
+
     [Header("Attack Damage")]
     [SerializeField] protected float lightAttackDamage = 10f;
     [SerializeField] protected float heavyAttackDamage = 25f;
@@ -238,6 +243,12 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void ContinueCombat()
     {
         if (isAttacking || isCharging || isStunned || isInHitStun) return;
+        if (!HasLineOfSightToPlayer())
+        {
+            StopChasing();
+            return;
+        }
+
         float distance = GetDistanceToPlayer();
         if (distance <= attackRange)
         {
@@ -254,7 +265,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void CheckAwareness()
     {
         if (player == null) return;
-        if (GetDistanceToPlayer() <= awarenessRange)
+        if (GetDistanceToPlayer() <= awarenessRange && HasLineOfSightToPlayer())
         {
             isAware = true;
             StopIdleWander(true);
@@ -267,7 +278,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         if (player == null) return;
         float distance = GetDistanceToPlayer();
-        if (distance <= engagementRange)
+        if (distance <= engagementRange && HasLineOfSightToPlayer())
         {
             isEngaged = true;
             if (!hasOpenedWithCharge)
@@ -281,16 +292,51 @@ public abstract class BaseEnemy : MonoBehaviour
         }
         else if (isAware && !isAttacking && !isCharging)
         {
-            ChasePlayer();
-            FacePlayer();
+            if (HasLineOfSightToPlayer())
+            {
+                ChasePlayer();
+                FacePlayer();
+            }
+            else
+            {
+                StopChasing();
+            }
         }
     }
 
     protected float GetDistanceToPlayer() => player != null ? Vector3.Distance(transform.position, player.position) : float.MaxValue;
 
+    private bool HasLineOfSightToPlayer()
+    {
+        if (player == null) return false;
+
+        Vector3 origin = transform.position + Vector3.up * lineOfSightHeight;
+        Vector3 target = player.position + Vector3.up * lineOfSightHeight;
+        Vector3 direction = target - origin;
+        float distance = direction.magnitude;
+
+        if (distance <= 0.01f) return true;
+
+        return !Physics.Raycast(origin, direction.normalized, distance, lineOfSightObstructionMask, QueryTriggerInteraction.Ignore);
+    }
+
+    private void StopChasing()
+    {
+        if (!navAgent.isOnNavMesh) return;
+        navAgent.isStopped = true;
+        navAgent.ResetPath();
+        navAgent.velocity = Vector3.zero;
+    }
+
     protected void ChasePlayer()
     {
         if (isAttacking || isStunned || isCharging || isInHitStun || player == null) return;
+        if (!HasLineOfSightToPlayer())
+        {
+            StopChasing();
+            return;
+        }
+
         if (navAgent.isStopped) navAgent.isStopped = false;
         navAgent.speed = chaseSpeed;
 

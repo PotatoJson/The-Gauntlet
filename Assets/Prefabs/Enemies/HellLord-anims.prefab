@@ -294,6 +294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HellLord
   maxHealth: 100
   currentHealth: 0
+  xpValue: 0
   chaseSpeed: 4
   attackRange: 2
   chargeSpeed: 5
@@ -305,6 +306,10 @@ MonoBehaviour:
   idleWanderIntervalVariance: 0.5
   awarenessRange: 25
   engagementRange: 15
+  lineOfSightObstructionMask:
+    serializedVersion: 2
+    m_Bits: 0
+  lineOfSightHeight: 1.6
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
@@ -370,7 +375,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4735697497377127661}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: b3a55ecdd02afb24f8231702983d5084, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

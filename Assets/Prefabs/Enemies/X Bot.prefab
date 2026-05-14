@@ -934,12 +934,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   maxHealth: 100
   currentHealth: 0
+  xpValue: 0
   chaseSpeed: 2
   attackRange: 2
   chargeSpeed: 2
   chargeStopDistance: 2
+  enableIdleWander: 1
+  idleWanderRadius: 4
+  idleWanderSpeed: 1.5
+  idleWanderInterval: 2.5
+  idleWanderIntervalVariance: 0.5
   awarenessRange: 25
   engagementRange: 15
+  lineOfSightObstructionMask:
+    serializedVersion: 2
+    m_Bits: 256
+  lineOfSightHeight: 1.6
   lightAttackDamage: 10
   heavyAttackDamage: 25
   chargeAttackDamage: 20
@@ -995,7 +1005,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6790434822493017317}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: b3a55ecdd02afb24f8231702983d5084, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
