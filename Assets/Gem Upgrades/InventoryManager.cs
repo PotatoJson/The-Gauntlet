@@ -215,9 +215,9 @@ public class InventoryManager : MonoBehaviour
                     slotBtn.onClick.RemoveAllListeners();
                     slotBtn.onClick.AddListener(() =>
                     {
-                        // --- THE FIX: Block Mouse and Keyboard from opening the PopUI! ---
-                        if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-                        if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+                        // --- THE FIX: Block Mouse and Keyboard from opening the PopUI! --- THIS IS BREAKING GEMS
+                        //if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+                        //if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
 
                         DraggableGem equippedGem = child.GetComponentInChildren<DraggableGem>();
 

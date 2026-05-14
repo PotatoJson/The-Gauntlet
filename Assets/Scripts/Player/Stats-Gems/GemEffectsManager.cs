@@ -20,7 +20,9 @@ public class GemEffectsManager : MonoBehaviour
     private void Awake()
     {
         _healthScript = GetComponent<PlayerHealth>(); 
-        _staminaScript = GetComponent<PlayerStamina>(); 
+        _staminaScript = GetComponent<PlayerStamina>();
+        _statsManager = GetComponent<PlayerStatsManager>();
+
     }
 
     private void OnEnable()

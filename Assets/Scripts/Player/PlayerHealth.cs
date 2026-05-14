@@ -100,7 +100,7 @@ public class PlayerHealth : MonoBehaviour
         if(_statsManager != null)
         {
             _statsManager.OnStatsCalculated -= HandleMaxHealthChange;
-            _statsManager.OnStatsCalculated += HandleMaxPoiseChange;
+            _statsManager.OnStatsCalculated -= HandleMaxPoiseChange;
         }
 
         Gamepad gamepad = Gamepad.current;
