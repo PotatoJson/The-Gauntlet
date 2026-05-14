@@ -471,7 +471,6 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        animator?.SetTrigger(AnimHitReaction);
         EnterHitStun();
     }
 

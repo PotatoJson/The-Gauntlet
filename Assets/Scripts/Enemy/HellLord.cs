@@ -23,6 +23,7 @@ public class HellLord : BaseEnemy
     [SerializeField] private float fireballSpawnRadius = 5f;
     [SerializeField] private int fireballsPerTick = 3;
     [SerializeField] private float castInterval = 0.5f;
+    [SerializeField] private float castDuration = 10f;
     [SerializeField] private float impactDelay = 1.5f;
     [SerializeField] private float fireballSpawnHeight = 15f;
     [SerializeField] private float fireballSpeed = 8f;
@@ -40,6 +41,10 @@ public class HellLord : BaseEnemy
 
     [Header("Hell Lord - Rotation")]
     [SerializeField] private float facePlayerTurnSpeed = 4f;
+
+    [Header("Hell Lord - Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
+    [SerializeField] private float debugLogInterval = 1f;
 
     private float aiDecisionTimer;
     private bool isCasting;
@@ -59,6 +64,7 @@ public class HellLord : BaseEnemy
     private static readonly int AnimCastAttack = Animator.StringToHash("Cast");
 
     private bool skipBeamUntilMelee;
+    private float debugLogTimer;
 
     protected override void Start()
     {
@@ -69,6 +75,17 @@ public class HellLord : BaseEnemy
     protected override void Update()
     {
         base.Update();
+
+        if (enableDebugLogs)
+        {
+            debugLogTimer -= Time.deltaTime;
+            if (debugLogTimer <= 0f)
+            {
+                float distance = GetDistanceToPlayer();
+                Debug.Log($"[HellLord DEBUG] {gameObject.name} state: aware={isAware}, engaged={isEngaged}, attacking={isAttacking}, casting={isCasting}, beam={isBeamActive}, stunned={isStunned}, hitStun={isInHitStun}, cooldown={attackCooldownTimer:F2}, distance={distance:F2}, nextCastChunk={nextCastChunk}");
+                debugLogTimer = Mathf.Max(0.1f, debugLogInterval);
+            }
+        }
 
         if (isAttacking || isCasting || isBeamActive)
         {
@@ -127,6 +144,11 @@ public class HellLord : BaseEnemy
 
         if (distance <= engagementRange)
         {
+            if (enableDebugLogs && !isEngaged)
+            {
+                Debug.Log($"[HellLord DEBUG] {gameObject.name} engaged at distance {distance:F2}.");
+            }
+
             isEngaged = true;
             hasOpenedWithCharge = true;
         }
@@ -144,7 +166,14 @@ public class HellLord : BaseEnemy
 
     private void MakeDecision()
     {
-        if (!CanPerformAction() || player == null) return;
+        if (!CanPerformAction() || player == null)
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[HellLord DEBUG] MakeDecision blocked. CanPerformAction={CanPerformAction()}, playerNull={player == null}.");
+            }
+            return;
+        }
 
         float distance = GetDistanceToPlayer();
 
@@ -181,7 +210,14 @@ public class HellLord : BaseEnemy
 
     public override void LightAttack()
     {
-        if (!CanPerformAction()) return;
+        if (!CanPerformAction())
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[HellLord DEBUG] LightAttack blocked. attacking={isAttacking}, casting={isCasting}, beam={isBeamActive}, stunned={isStunned}, hitStun={isInHitStun}, cooldown={attackCooldownTimer:F2}");
+            }
+            return;
+        }
 
         isAttacking = true;
         attackCooldownTimer = attackCooldown;
@@ -217,7 +253,14 @@ public class HellLord : BaseEnemy
 
     private void BeamAttack()
     {
-        if (!CanPerformAction()) return;
+        if (!CanPerformAction())
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[HellLord DEBUG] BeamAttack blocked. attacking={isAttacking}, casting={isCasting}, beam={isBeamActive}, stunned={isStunned}, hitStun={isInHitStun}, cooldown={attackCooldownTimer:F2}");
+            }
+            return;
+        }
 
         isAttacking = true;
         attackCooldownTimer = attackCooldown;
@@ -346,7 +389,19 @@ public class HellLord : BaseEnemy
 
         if (healthPercent <= threshold)
         {
-            if (!CanPerformAction()) return;
+            if (!CanPerformAction())
+            {
+                if (enableDebugLogs)
+                {
+                    Debug.LogWarning($"[HellLord DEBUG] Cast threshold met but blocked. health={healthPercent:F2}, threshold={threshold:F2}, attacking={isAttacking}, casting={isCasting}, beam={isBeamActive}, stunned={isStunned}, hitStun={isInHitStun}, cooldown={attackCooldownTimer:F2}");
+                }
+                return;
+            }
+
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[HellLord DEBUG] Cast threshold met. health={healthPercent:F2}, threshold={threshold:F2}. Starting cast.");
+            }
 
             nextCastChunk--;
             StartCastSequence();
@@ -355,7 +410,14 @@ public class HellLord : BaseEnemy
 
     private void StartCastSequence()
     {
-        if (!CanPerformAction()) return;
+        if (!CanPerformAction())
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning($"[HellLord DEBUG] StartCastSequence blocked. attacking={isAttacking}, casting={isCasting}, beam={isBeamActive}, stunned={isStunned}, hitStun={isInHitStun}, cooldown={attackCooldownTimer:F2}");
+            }
+            return;
+        }
 
         isCasting = true;
         isAttacking = true;
@@ -364,19 +426,30 @@ public class HellLord : BaseEnemy
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[HellLord DEBUG] StartCastSequence triggered. waves={castWavesPerSequence}, interval={castInterval:F2}");
+        }
+
         animator?.SetTrigger(AnimCastAttack);
 
-        if (animator == null)
-        {
-            BeginCastSequence();
-        }
+        BeginCastSequence();
     }
 
     public void BeginCastSequence()
     {
         if (castRoutine != null)
         {
-            StopCoroutine(castRoutine);
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning("[HellLord DEBUG] BeginCastSequence ignored (cast already running).");
+            }
+            return;
+        }
+
+        if (enableDebugLogs)
+        {
+            Debug.Log("[HellLord DEBUG] BeginCastSequence started.");
         }
 
         castRoutine = StartCoroutine(CastSequenceRoutine());
@@ -384,12 +457,32 @@ public class HellLord : BaseEnemy
 
     private IEnumerator CastSequenceRoutine()
     {
-        int waves = Mathf.Max(1, castWavesPerSequence);
+        float duration = Mathf.Max(0.05f, castDuration);
+        float elapsed = 0f;
+        float timer = 0f;
 
-        for (int i = 0; i < waves; i++)
+        while (elapsed < duration)
         {
-            CastFireballWave();
-            yield return new WaitForSeconds(castInterval);
+            elapsed += Time.deltaTime;
+            timer -= Time.deltaTime;
+
+            if (timer <= 0f)
+            {
+                CastFireballWave();
+                timer = castInterval;
+
+                if (enableDebugLogs)
+                {
+                    Debug.Log($"[HellLord DEBUG] Casting wave at t={elapsed:F2}/{duration:F2}.");
+                }
+            }
+
+            yield return null;
+        }
+
+        if (enableDebugLogs)
+        {
+            Debug.Log("[HellLord DEBUG] CastSequenceRoutine complete. Ending cast.");
         }
 
         isCasting = false;
@@ -399,7 +492,14 @@ public class HellLord : BaseEnemy
 
     private void CastFireballWave()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning("[HellLord DEBUG] CastFireballWave aborted: player is null.");
+            }
+            return;
+        }
 
         for (int i = 0; i < fireballsPerTick; i++)
         {
