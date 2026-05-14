@@ -7,8 +7,18 @@ using UnityEngine.UI;
 
 public class RewardMenuManager : MonoBehaviour
 {
-    public static RewardMenuManager Instance { get; private set; }
-
+    private static RewardMenuManager _instance; //needed this approach since object is turned off initally
+    public static RewardMenuManager Instance 
+    { 
+        get 
+        {
+            // If it's null (because it's turned off), find it anyway!
+            if (_instance == null) 
+                _instance = FindFirstObjectByType<RewardMenuManager>(FindObjectsInactive.Include);
+            
+            return _instance;
+        } 
+    }
     [Header("Screen References")]
     [SerializeField] private GameObject characterScreenRoot;
     [SerializeField] private GameObject leftSideGauntlets;
@@ -48,7 +58,7 @@ public class RewardMenuManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if(_instance == null) _instance = this;
     }
 
     public bool IsRewardModeActive()
@@ -386,6 +396,11 @@ public class RewardMenuManager : MonoBehaviour
     {
         _isWarningActive = false;
         warningPanel.SetActive(false);
+        PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
+        if (statsManager != null && InventoryManager.Instance != null)
+        {
+            statsManager.SyncWithUI(InventoryManager.Instance.primaryGauntlet, InventoryManager.Instance.secondaryGauntlet);
+        }
         CloseRewardMenu();
     }
 

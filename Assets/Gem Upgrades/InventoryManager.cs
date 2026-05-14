@@ -7,7 +7,17 @@ using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    public static InventoryManager Instance { get; private set; }
+    private static InventoryManager _instance; //needed this approach since object is turned off initally
+    public static InventoryManager Instance 
+    { 
+        get 
+        {
+            if (_instance == null) 
+                _instance = FindFirstObjectByType<InventoryManager>(FindObjectsInactive.Include);
+            
+            return _instance;
+        } 
+    }
 
     [Header("Mode Panels")]
     [SerializeField] private GameObject leftSideGauntlets; //they wernt showing up normally so I added this to reference
@@ -49,7 +59,7 @@ public class InventoryManager : MonoBehaviour
     private GauntletRarity _pendingGauntletRarity;
     private void Awake()
     {
-        Instance = this;
+        if (_instance == null) _instance = this;
         SetupHoverEvents(primaryGauntlet);
         SetupHoverEvents(secondaryGauntlet);
         if (swapOverlayPanel != null) swapOverlayPanel.SetActive(false);
