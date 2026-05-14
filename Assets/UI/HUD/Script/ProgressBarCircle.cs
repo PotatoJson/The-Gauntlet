@@ -3,10 +3,22 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 [ExecuteInEditMode]
 public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHandler
 {
+
+    public static ProgressBarCircle Instance {get; private set;}
+
+    [Header("UI References (Drag & Drop)")]
+    [SerializeField] private Image fillBar;
+    [SerializeField] private TMPro.TMP_Text txtLevel;
+
+    [Header("Level Up Notification")]
+    [Tooltip("Drag your Red Arrow UI object here")]
+    [SerializeField] private GameObject redArrow;
+
     [Header("Level & EXP Settings")]
     public int currentLevel = 1;
     public float currentExp = 0f;
@@ -14,38 +26,49 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
     [Header("UI Colors")]
     public Color levelTextColor = new Color(0.1f, 0.2f, 0.8f, 1f);
-    public Color barColor = Color.green;
-    public Color barBackgroundColor = Color.white;
-    public Color maskColor = new Color(0.9f, 0.9f, 0.9f, 1f);
-
-    private Image bar, mask;
-    private TMPro.TMP_Text txtLevel;
+    public Color barColor = Color.yellow;
 
     private Sequence _expSequence;
 
     [Header("Reward Menu Link")]
-    public UnityEvent onRewardReadyClicked; // We will link this to the Reward Menu in the Inspector!
+    public UnityEvent onRewardReadyClicked;
+    [Tooltip("Drag Reward Menu Input Here")]
+    public InputActionReference rewardMenuInput;
 
     private int _pendingLevelUps = 0;
-    private Tween _pulseTween;
+    public bool HasPendingLevelUps => _pendingLevelUps > 0;
 
-    // NEW: Variable to remember your text's exact starting size!
-    private Vector3 _originalTextScale;
-    private Vector3 _originalBarScale;
+    // Animation Tracking
+    private Tween _pulseTween;
+    private Tween _arrowTween;
+    private Vector3 _originalTextScale = Vector3.one;
+    private Vector3 _originalBarScale = Vector3.one;
+    private Vector2 _originalArrowPos;
+
+    private void OnEnable()
+    {
+        if(rewardMenuInput != null) rewardMenuInput.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if(rewardMenuInput != null) rewardMenuInput.action.Disable();
+    }
 
     private void Awake()
     {
-        txtLevel = transform.Find("Text").GetComponent<TMPro.TMP_Text>();
-        bar = transform.Find("BarCircle").GetComponent<Image>();
-        mask = transform.Find("Mask").GetComponent<Image>();
+        if(Instance == null) Instance = this;
+        else if(Instance != this && Application.isPlaying) Destroy(gameObject);
 
-        // NEW: Capture the scale (e.g., 16, 16, 16) the moment the game wakes up
-        if (txtLevel != null)
-        {
-            _originalTextScale = txtLevel.transform.localScale;
-        }
-
+        if (txtLevel != null) _originalTextScale = txtLevel.transform.localScale;
         _originalBarScale = transform.localScale;
+
+        // Remember exactly where the arrow starts, then hide it!
+        if (redArrow != null)
+        {
+            _originalArrowPos = redArrow.GetComponent<RectTransform>().anchoredPosition;
+            redArrow.SetActive(false);
+        }
     }
 
     private void Start()
@@ -62,6 +85,8 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         {
             newExp -= expToNextLevel;
             levelsGained++;
+
+            expToNextLevel = Mathf.Round(expToNextLevel * 1.5f);
         }
 
         currentExp = newExp;
@@ -70,48 +95,67 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
         _pendingLevelUps += levelsGained;
 
-        if (_pulseTween == null || !_pulseTween.IsActive())
+        // THE FIX: Only trigger the breathing and the arrow IF the player leveled up!
+        if (_pendingLevelUps > 0)
         {
-            _pulseTween = transform.DOScale(_originalBarScale * 1.05f, 0.6f)
-                .SetEase(Ease.InOutSine)
-                .SetLoops(-1, LoopType.Yoyo)
-                .SetUpdate(true); 
+            // 1. Start the bar breathing
+            if (_pulseTween == null || !_pulseTween.IsActive())
+            {
+                _pulseTween = transform.DOScale(_originalBarScale * 1.05f, 0.6f)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetUpdate(true);
+            }
+
+            // 2. Show the arrow and start the pointing bounce
+            if (redArrow != null && !redArrow.activeSelf)
+            {
+                redArrow.SetActive(true);
+                RectTransform arrowRect = redArrow.GetComponent<RectTransform>();
+                arrowRect.anchoredPosition = _originalArrowPos; // Snap to original position first
+
+                // Bounce diagonally down-and-right by 15 pixels, then back to the target
+                _arrowTween = arrowRect.DOAnchorPos(_originalArrowPos + new Vector2(15f, -15f), 0.5f)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetUpdate(true);
+            }
         }
 
+        // Keep the normal EXP fill animation running regardless of level up
         _expSequence?.Kill();
-        _expSequence = DOTween.Sequence();
+        _expSequence = DOTween.Sequence().SetUpdate(true);
 
         if (levelsGained == 0)
         {
-            _expSequence.Append(bar.DOFillAmount(currentExp / expToNextLevel, 0.4f).SetEase(Ease.OutCubic));
+            _expSequence.Append(fillBar.DOFillAmount(currentExp / expToNextLevel, 0.4f).SetEase(Ease.OutCubic));
         }
         else
         {
-            _expSequence.Append(bar.DOFillAmount(1f, 0.25f).SetEase(Ease.InQuad));
+            _expSequence.Append(fillBar.DOFillAmount(1f, 0.25f).SetEase(Ease.InQuad));
 
             for (int i = 0; i < levelsGained; i++)
             {
                 int levelToShow = previousLevel + i + 1;
 
                 _expSequence.AppendCallback(() => {
-                    txtLevel.text = levelToShow.ToString();
-                    bar.fillAmount = 0f;
-
-                    txtLevel.transform.DOKill();
-                    // NEW: Reset back to 16 (or whatever you set it to) instead of 1
-                    txtLevel.transform.localScale = _originalTextScale;
-
-                    // NEW: Punch relative to the original scale!
-                    txtLevel.transform.DOPunchScale(_originalTextScale * 0.6f, 0.35f, 8, 1f);
+                    if (txtLevel != null)
+                    {
+                        txtLevel.text = levelToShow.ToString();
+                        txtLevel.transform.DOKill();
+                        txtLevel.transform.localScale = _originalTextScale;
+                        txtLevel.transform.DOPunchScale(_originalTextScale * 0.6f, 0.35f, 8, 1f);
+                    }
+                    if (fillBar != null) fillBar.fillAmount = 0f;
                 });
 
                 if (i < levelsGained - 1)
                 {
-                    _expSequence.Append(bar.DOFillAmount(1f, 0.15f).SetEase(Ease.Linear));
+                    _expSequence.Append(fillBar.DOFillAmount(1f, 0.15f).SetEase(Ease.Linear));
                 }
             }
 
-            _expSequence.Append(bar.DOFillAmount(currentExp / expToNextLevel, 0.5f).SetEase(Ease.OutCubic));
+            _expSequence.Append(fillBar.DOFillAmount(currentExp / expToNextLevel, 0.5f).SetEase(Ease.OutCubic));
         }
     }
 
@@ -137,22 +181,24 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
         _expSequence?.Kill();
 
-        txtLevel.transform.DOKill();
-        // NEW: Reset back to your custom scale
-        txtLevel.transform.localScale = _originalTextScale;
-
-        txtLevel.text = currentLevel.ToString();
-
-        if (levelsLost > 0)
+        if (txtLevel != null)
         {
-            txtLevel.color = Color.red;
-            txtLevel.DOColor(levelTextColor, 0.5f);
+            txtLevel.transform.DOKill();
+            txtLevel.transform.localScale = _originalTextScale;
+            txtLevel.text = currentLevel.ToString();
 
-            // NEW: Punch relative to the original scale!
-            txtLevel.transform.DOPunchScale(_originalTextScale * 0.3f, 0.3f, 10, 1f);
+            if (levelsLost > 0)
+            {
+                txtLevel.color = Color.red;
+                txtLevel.DOColor(levelTextColor, 0.5f);
+                txtLevel.transform.DOPunchScale(_originalTextScale * 0.3f, 0.3f, 10, 1f);
+            }
         }
 
-        bar.DOFillAmount(currentExp / expToNextLevel, 0.4f).SetEase(Ease.OutCubic);
+        if (fillBar != null)
+        {
+            fillBar.DOFillAmount(currentExp / expToNextLevel, 0.4f).SetEase(Ease.OutCubic);
+        }
     }
 
     private void UpdateVisualsInstantly()
@@ -163,15 +209,10 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             txtLevel.color = levelTextColor;
         }
 
-        if (bar != null && expToNextLevel > 0)
+        if (fillBar != null && expToNextLevel > 0)
         {
-            bar.fillAmount = currentExp / expToNextLevel;
-            bar.color = barColor;
-        }
-
-        if (mask != null)
-        {
-            mask.color = maskColor;
+            fillBar.fillAmount = currentExp / expToNextLevel;
+            fillBar.color = barColor;
         }
     }
 
@@ -180,15 +221,25 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         if (!Application.isPlaying)
         {
             UpdateVisualsInstantly();
-            // Continuously update the baseline scale while you are tweaking in the editor
             if (txtLevel != null) _originalTextScale = txtLevel.transform.localScale;
             _originalBarScale = transform.localScale;
+        }
+        else
+        {
+            if(HasPendingLevelUps && rewardMenuInput != null)
+            {
+                if (rewardMenuInput.action.WasPressedThisFrame())
+                {
+                    TryOpenRewardMenu();
+                }
+            }
         }
     }
 
     private void OnDestroy()
     {
         _expSequence?.Kill();
+        _arrowTween?.Kill();
         if (txtLevel != null) txtLevel.transform.DOKill();
     }
 
@@ -208,18 +259,28 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         {
             _pendingLevelUps--;
 
-            // If no more levels are pending, stop the pulsing animation
+            // If no more levels are pending, completely kill all animations!
             if (_pendingLevelUps <= 0)
             {
+                // Stop bar breathing
                 _pulseTween?.Kill();
-                transform.localScale = Vector3.one;
-
                 transform.localScale = _originalBarScale;
+
+                // Stop arrow pointing and hide it
+                if (redArrow != null)
+                {
+                    _arrowTween?.Kill();
+                    redArrow.GetComponent<RectTransform>().anchoredPosition = _originalArrowPos;
+                    redArrow.SetActive(false);
+                }
             }
 
-            // Tell the Reward Menu to open!
             onRewardReadyClicked?.Invoke();
+            //hard link 
+            if(RewardMenuManager.Instance != null && Application.isPlaying)
+            {
+                RewardMenuManager.Instance.OpenRewardMenu();
+            }
         }
     }
-
 }

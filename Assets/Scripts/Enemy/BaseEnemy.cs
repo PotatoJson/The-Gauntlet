@@ -9,6 +9,10 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected float maxHealth = 100f;
     public float currentHealth;
 
+    [Header("Rewards")]
+    [Tooltip("How much xp this specific enemy drops")]
+    [SerializeField] protected float xpValue;
+
     [Header("Movement")]
     [SerializeField] protected float chaseSpeed = 4f;
     [SerializeField] protected float attackRange = 2f;
@@ -104,6 +108,9 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private PlayerHealth playerHealth;
     protected PlayerManager playerManager;
+
+    //death event
+    public static event System.Action<BaseEnemy> OnAnyEnemyDied;
 
     protected virtual void Awake()
     {
@@ -485,6 +492,8 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         navAgent.enabled = false;
+        //enemy death event for gem event manager
+        OnAnyEnemyDied?.Invoke(this);
 
         animator?.SetTrigger(AnimDie);
         gameObject.layer = LayerMask.NameToLayer("Default");
@@ -493,6 +502,11 @@ public abstract class BaseEnemy : MonoBehaviour
 
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
         if (healthBar != null) healthBar.gameObject.SetActive(false);
+
+        if(ProgressBarCircle.Instance != null)
+        {
+            ProgressBarCircle.Instance.AddExperience(xpValue);
+        }
 
         var dissolve = GetComponent<DissolveExample.DissolveChilds>();
         if (dissolve != null) dissolve.StartDissolve();

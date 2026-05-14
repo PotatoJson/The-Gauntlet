@@ -8,10 +8,10 @@ using Unity.VisualScripting;
 public class PlayerHealth : MonoBehaviour
 {
     private PlayerStatsManager _statsManager;
-    
 
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
+    public float MaxHealth => maxHealth;
     private float _currentHealth;
     [Tooltip("How much health recovers per second after the delay.")]
     [SerializeField] private float healthRecoveryRate = 1f; // 1 HP per second = REAL slow
@@ -43,6 +43,18 @@ public class PlayerHealth : MonoBehaviour
     [Header("Stagger stuff")]//these will be used to trigger a large knockback throwing the player
     public float InstantKnockback;
     public float OvercapKnockback;
+
+    [Header("Potion Settings")]
+    public int MaxPotions = 5;
+    public int CurrentPotions;
+    public float PotionHealAmount = 35f;
+    public event Action<int, int> OnPotionCountChanged;
+
+    [Header("VFX")]
+    [Tooltip("Drag your healing VFX prefab here.")]
+    [SerializeField] private GameObject healingVfxPrefab;
+    [Tooltip("Optional: Drag a specific transform here (like the chest/feet). If empty, spawns at the player's base.")]
+    [SerializeField] private Transform vfxSpawnPoint;
 
     [Header("Haptic Feedback")]
     [Tooltip("Low frequency motor (left side). Heavy, deep rumble.")]
@@ -100,12 +112,22 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
+        CurrentPotions = MaxPotions;
         _currentHealth = maxHealth;
         CurrentPoise = 0;
         OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
     }
 
+    private void Update()
+    {
+        HandleInvincibility();
+        HandlePoiseRecovery();
+        HandleHealthRecovery();
+    }
+
+#region StatChangesFromGems
     private void HandleMaxPoiseChange()
     {
         _maxPoise = _statsManager.CurrentMaxPoise;
@@ -125,14 +147,58 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Post Health gem - " + maxHealth);
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
     }
+#endregion
 
-
-    private void Update()
+#region PotionHandling
+    public bool TryConsumePotion()
     {
-        HandleInvincibility();
-        HandlePoiseRecovery();
-        HandleHealthRecovery();
+        if(CurrentPotions > 0 && _currentHealth < maxHealth)
+        {
+            CurrentPotions--;
+
+            OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
+
+            return true;
+        }
+        return false;
     }
+
+    public void AddPotion()
+    {
+        // Only add a potion if we aren't already at the maximum limit!
+        if (CurrentPotions < MaxPotions)
+        {
+            CurrentPotions++;
+
+            // Tell the UI to draw a new potion bottle!
+            OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
+
+            Debug.Log($"Debug: Added 1 Potion! Total: {CurrentPotions}");
+        }
+        else
+        {
+            Debug.Log("Debug: Potion count is already at max!");
+        }
+    }
+
+    public void ExecutePotionHeal()
+    {
+        Heal(PotionHealAmount);
+        Debug.Log($"Healed Potions remaining: {CurrentPotions}");
+
+        _stateManager.SetInCombat();
+
+        if (healingVfxPrefab != null)
+        {
+            // Figure out where to spawn it (use the custom point, or just the player's position)
+            Transform spawnLocation = (vfxSpawnPoint != null) ? vfxSpawnPoint : transform;
+
+            // Spawn the prefab as a child of the player so it moves WITH the player!
+            GameObject spawnedVFX = Instantiate(healingVfxPrefab, spawnLocation.position, spawnLocation.rotation, transform);
+        }
+
+    }
+#endregion
 
     #region UpdateClarity
     private void HandleInvincibility()
@@ -250,13 +316,15 @@ public class PlayerHealth : MonoBehaviour
     private void TriggerKnockback()
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.Play("Empty", 1);
         _animator.SetTrigger("KnockbackHit");
-        _stateManager.CurrentLungeSpeed = -20;
+        _stateManager.CurrentLungeSpeed = -15;
     }
 
     private void TriggerLargeStumble()
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        _animator.Play("Empty", 1);
         _animator.SetTrigger("LargeStumble");
         _stateManager.CurrentLungeSpeed = -4f;
     }
@@ -270,20 +338,29 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleDeath()
     {
+        // 1. Turn off the Character Controller so the player is frozen in place where they died
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
-        transform.position = PlayerSpawn.transform.position;
-        if (cc != null) cc.enabled = true;
 
-        if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
+        // (Optional) If you have a death animation, trigger it here!
+        // _animator.SetTrigger("Die");
 
-        Debug.Log("Death Test");
+
+        // 3. Trigger the screen falling apart and the Game Over menu!
+        DeathScreenShatter.Instance.TriggerDeathShatter();
+
+        Debug.Log("Player died. Awaiting Restart...");
+
+        //transform.position = PlayerSpawn.transform.position;
+        //if (cc != null) cc.enabled = true; // Re-enable the Character Controller so it can move again after respawn
+        //if (playerCamera != null) playerCamera.SnapToTarget();
+
+        // Notice we completely deleted the transform.position teleport code!
     }
 
     public void Heal(float amount)
     {
         //if (IsDead) return;
-
         _currentHealth += amount;
         _currentHealth = Mathf.Min(_currentHealth, maxHealth);
 

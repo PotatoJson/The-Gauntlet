@@ -7,10 +7,20 @@ using System.Collections.Generic;
 
 public class InventoryManager : MonoBehaviour
 {
-    public static InventoryManager Instance { get; private set; }
+    private static InventoryManager _instance;
+    public static InventoryManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+                _instance = FindFirstObjectByType<InventoryManager>(FindObjectsInactive.Include);
+
+            return _instance;
+        }
+    }
 
     [Header("Mode Panels")]
-    [SerializeField] private GameObject leftSideGauntlets; //they wernt showing up normally so I added this to reference
+    [SerializeField] private GameObject leftSideGauntlets;
     [SerializeField] private GameObject rightSideDetails;
     [SerializeField] private GameObject rightSideRewards;
 
@@ -47,9 +57,10 @@ public class InventoryManager : MonoBehaviour
     private bool _isWarningActive = false;
 
     private GauntletRarity _pendingGauntletRarity;
+
     private void Awake()
     {
-        Instance = this;
+        if (_instance == null) _instance = this;
         SetupHoverEvents(primaryGauntlet);
         SetupHoverEvents(secondaryGauntlet);
         if (swapOverlayPanel != null) swapOverlayPanel.SetActive(false);
@@ -74,7 +85,6 @@ public class InventoryManager : MonoBehaviour
         if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
             GameObject newGauntlet = Instantiate(gauntletPrefab, primaryGauntlet);
-            // UPDATE: Pass the rarity!
             newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(true, rarity);
             SetupHoverEvents(primaryGauntlet);
             return;
@@ -83,20 +93,18 @@ public class InventoryManager : MonoBehaviour
         if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null)
         {
             GameObject newGauntlet = Instantiate(gauntletPrefab, secondaryGauntlet);
-            // UPDATE: Pass the rarity!
             newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(false, rarity);
             SetupHoverEvents(secondaryGauntlet);
             return;
         }
 
-        // UPDATE: Pass the rarity into the swap phase
         BeginGauntletSwap(gauntletPrefab, rarity);
     }
 
     private void BeginGauntletSwap(GameObject prefab, GauntletRarity rarity)
     {
         _pendingGauntletPrefab = prefab;
-        _pendingGauntletRarity = rarity; // REMEMBER IT!
+        _pendingGauntletRarity = rarity;
         Time.timeScale = 0f;
 
         gameObject.SetActive(true);
@@ -144,7 +152,6 @@ public class InventoryManager : MonoBehaviour
         GameObject newGauntlet = Instantiate(_pendingGauntletPrefab, targetContainer);
         GauntletManager newManager = newGauntlet.GetComponent<GauntletManager>();
 
-        // UPDATE: Pass the remembered rarity into the new gauntlet!
         newManager.InitializeGauntlet(isPrimary, _pendingGauntletRarity);
 
         List<GameObject> overflowGems = new List<GameObject>();
@@ -188,10 +195,8 @@ public class InventoryManager : MonoBehaviour
 
         foreach (Transform child in gauntletParent.GetComponentsInChildren<Transform>(true))
         {
-            // Find all the Gauntlet Slots
             if (child.name.Contains("Slot") && child.GetComponent<EventTrigger>() == null)
             {
-                // 1. Keep your existing Hover Logic for the Details Panel
                 EventTrigger trigger = child.gameObject.AddComponent<EventTrigger>();
                 EventTrigger.Entry entry = new EventTrigger.Entry();
                 entry.eventID = EventTriggerType.PointerEnter;
@@ -204,17 +209,18 @@ public class InventoryManager : MonoBehaviour
                 });
                 trigger.triggers.Add(entry);
 
-                // 2. THE FIX: Wire the Slot's physical Button to the South Button!
                 Button slotBtn = child.GetComponent<Button>();
                 if (slotBtn != null)
                 {
                     slotBtn.onClick.RemoveAllListeners();
                     slotBtn.onClick.AddListener(() =>
                     {
-                        // Check if there is a gem currently sitting inside this slot
+                        // --- THE FIX: Block Mouse and Keyboard from opening the PopUI! ---
+                        if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+                        if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+
                         DraggableGem equippedGem = child.GetComponentInChildren<DraggableGem>();
 
-                        // If there is a gem, AND we aren't currently trying to place a new one, open the PopUI!
                         if (equippedGem != null && GemPopupMenu.Instance != null && !GemPopupMenu.Instance.IsPlacingMode)
                         {
                             GemPopupMenu.Instance.OpenMenu(equippedGem, equippedGem.GetComponent<RectTransform>());
@@ -262,19 +268,15 @@ public class InventoryManager : MonoBehaviour
             }
             else if (rightSideDetails.activeSelf)
             {
-                // THE FIX: Step Back Logic!
                 GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
 
-                // If we are actively focused on a finger slot...
                 if (currentSel != null && currentSel.name.Contains("Slot"))
                 {
-                    // Step back to the Primary Title
                     if (currentSel.transform.IsChildOf(primaryGauntlet) && primaryTitleButton != null)
                     {
                         EventSystem.current.SetSelectedGameObject(null);
                         EventSystem.current.SetSelectedGameObject(primaryTitleButton);
                     }
-                    // Step back to the Secondary Title
                     else if (currentSel.transform.IsChildOf(secondaryGauntlet) && secondaryTitleButton != null)
                     {
                         EventSystem.current.SetSelectedGameObject(null);
@@ -287,13 +289,11 @@ public class InventoryManager : MonoBehaviour
                 }
                 else
                 {
-                    // If we are NOT focused on a slot (meaning we are on the headers), show the Warning Panel!
                     TryCloseCharacterScreen();
                 }
             }
         }
 
-        // Keep the detail panel hover logic exactly the same!
         if (!swapOverlayPanel.activeSelf && !_isWarningActive && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
@@ -324,8 +324,6 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    // --- NEW: CENTRALIZED CLOSE AND WARNING LOGIC ---
-
     public void TryCloseCharacterScreen()
     {
         _isWarningActive = true;
@@ -334,7 +332,6 @@ public class InventoryManager : MonoBehaviour
         if (warningBodyText != null)
             warningBodyText.text = "Are you sure you want to leave the inventory?";
 
-        // Dynamically wire the buttons so they don't conflict with RewardMenuManager
         warningConfirmBtn.onClick.RemoveAllListeners();
         warningConfirmBtn.onClick.AddListener(ConfirmClose);
 
@@ -353,7 +350,6 @@ public class InventoryManager : MonoBehaviour
         FocusFirstActiveSlot(primaryGauntlet);
     }
 
-    // Call this from the OnClick() of your "Gauntlet Secondary" Title Button!
     public void FocusSecondaryGauntlet()
     {
         FocusFirstActiveSlot(secondaryGauntlet);
@@ -363,23 +359,20 @@ public class InventoryManager : MonoBehaviour
     {
         if (gauntletContainer == null) return;
 
-        // Find the Gauntlet Prefab that is currently spawned inside this container
         GauntletManager gauntlet = gauntletContainer.GetComponentInChildren<GauntletManager>();
 
         if (gauntlet != null && gauntlet.fingerSlots != null)
         {
-            // Loop through the slots and find the first one that is active (not sealed!)
             foreach (GameObject slot in gauntlet.fingerSlots)
             {
                 if (slot.activeInHierarchy)
                 {
-                    // Pass controller focus to this slot!
                     if (EventSystem.current != null)
                     {
                         EventSystem.current.SetSelectedGameObject(null);
                         EventSystem.current.SetSelectedGameObject(slot);
                     }
-                    return; // Stop looking once we found the first valid one
+                    return;
                 }
             }
         }
@@ -403,22 +396,19 @@ public class InventoryManager : MonoBehaviour
         warningPanel.SetActive(false);
 
         PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
-        if(statsManager != null)
+        if (statsManager != null)
         {
             statsManager.SyncWithUI(primaryGauntlet, secondaryGauntlet);
         }
 
-        // Find the Gauntlet Menu to see if we came from the Pause Screen
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
 
         if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
         {
-            // We opened it from the pause menu, return control to it safely!
             gauntletMenu.CloseUpgradeMenu();
         }
         else
         {
-            // We opened it from gameplay via the Debug Swap, just close and unpause!
             gameObject.SetActive(false);
             Time.timeScale = 1f;
         }

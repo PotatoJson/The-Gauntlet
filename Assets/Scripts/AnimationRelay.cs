@@ -5,16 +5,26 @@ public class AnimationEventRelay : MonoBehaviour
     /* --- used for animations events --- */
     private PlayerCombat _playerCombat;
     private PlayerManager _stateManager;
+    private PlayerHealth _healthScript;
 
     private void Awake()
     {
         // When the game starts, look UP the hierarchy to find the General
         _playerCombat = GetComponentInParent<PlayerCombat>();
         _stateManager = GetComponentInParent<PlayerManager>();
+        _healthScript = GetComponentInParent<PlayerHealth>();
 
         if (_playerCombat == null)
         {
             Debug.LogError("AnimationEventRelay could not find PlayerCombat on the parent!");
+        }
+        if (_stateManager == null)
+        {
+            Debug.LogError("AnimationEventRelay could not find PlayerManager on the parent!");
+        }
+        if (_healthScript == null)
+        {
+            Debug.LogError("AnimationEventRelay could not find PlayerHealth on the parent!");
         }
     }
 
@@ -73,5 +83,21 @@ public class AnimationEventRelay : MonoBehaviour
     public void TriggerAnimationLunge()
     {
         _playerCombat.ApplyLungeForce();
+    }
+
+    public void TriggerPotionHeal()
+    {
+        if(_healthScript != null)
+        {
+            _healthScript.ExecutePotionHeal();
+        }
+    }
+
+    public void EndPotionAnimation()
+    {
+        if(_stateManager.GetCurrentState() == PlayerState.Healing)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+        }
     }
 }

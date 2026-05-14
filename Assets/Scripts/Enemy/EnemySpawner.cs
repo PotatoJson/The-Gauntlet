@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 [System.Serializable]
@@ -158,14 +159,15 @@ public class EnemySpawner : MonoBehaviour
                 // If zero enemies left, clear the chamber and open the door
                 if (chamber.activeEnemies.Count == 0)
                 {
-                    ClearChamber(chamber);
+                    ClearChamber(chamber, false);
                 }
             }
         }
     }
 
-    private void ClearChamber(ChamberData chamber)
+    private void ClearChamber(ChamberData chamber, bool isInstantClear)
     {
+        Debug.Log("Chamber cleared beginning test");
         chamber.isCleared = true;
 
         if (MetricsTracker.Instance != null)
@@ -195,8 +197,59 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.LogWarning($"Chamber '{chamber.chamberName}' cleared, but no Door Animator is assigned!");
         }
+
+        if (isInstantClear)
+        {
+            Debug.Log("Chamber cleared instantly");
+            GrantChamberRewards();
+        }
+        else
+        {
+            Debug.Log("Chamber cleared starting...");
+            StartCoroutine(ChamberRewardSequence());
+        }
+    }
+
+    private IEnumerator ChamberRewardSequence()
+    {
+        yield return new WaitForSeconds(2f);
+        GrantChamberRewards();
+    }
+
+    private void GrantChamberRewards()
+    {
+        PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if(playerHealth != null)
+        {
+            if(playerHealth.CurrentPotions < playerHealth.MaxPotions)
+            {
+                playerHealth.CurrentPotions++;
+                Debug.Log($"Chamber Cleared! Potion refilled. Total: {playerHealth.CurrentPotions}");
+            }
+        }
+
+        if(RewardMenuManager.Instance != null)
+        {
+            RewardMenuManager.Instance.OpenRewardMenu();
+        }
+        else Debug.Log("RewardManager not found");
+    }
+
+    public void ForceClearChamber(int chamberIndex)
+    {
+        // Safety check to make sure the index actually exists
+        if (chamberIndex < 0 || chamberIndex >= chambers.Count) return;
+
+        ChamberData chamber = chambers[chamberIndex];
+
+        // Only clear it if it hasn't been cleared already
+        if (!chamber.isCleared)
+        {
+            ClearChamber(chamber, true);
+        }
     }
 }
+
 
 // -----------------------------------------------------------------------------------------
 // Helper Component: Automatically attached to each trigger at runtime.
@@ -220,4 +273,6 @@ public class ChamberTriggerListener : MonoBehaviour
             manager.TriggerChamber(chamberIndex, other);
         }
     }
+
+    
 }

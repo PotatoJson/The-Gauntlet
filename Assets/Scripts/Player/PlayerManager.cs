@@ -9,7 +9,8 @@ public enum PlayerState
     Parrying,
     Dodging,
     Staggered,
-    Airborne
+    Airborne,
+    Healing
 }
 
 public class PlayerManager : MonoBehaviour

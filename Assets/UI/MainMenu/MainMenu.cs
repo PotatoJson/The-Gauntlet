@@ -96,6 +96,13 @@ public class MainMenuManager : MonoBehaviour
         }
     }
 
+    public void OnTutorialClicked()
+    {
+        Time.timeScale = 1f;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        SceneManager.LoadScene("Tutorial");
+    }
     public void CloseSettings()
     {
         settingsPanel.SetActive(false);

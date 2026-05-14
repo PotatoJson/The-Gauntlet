@@ -94,7 +94,7 @@ public class PlayerMovement : MonoBehaviour
         _moveAction = _playerMap.FindAction("Move");
         _lookAction = _playerMap.FindAction("Look");
 
-        InputAction rollAction = _playerMap.FindAction("Roll");
+        /*InputAction rollAction = _playerMap.FindAction("Roll");
         InputAction lockOnAction = _playerMap.FindAction("LockOn");
         InputAction jumpAction = _playerMap.FindAction("Jump");
 
@@ -107,20 +107,58 @@ public class PlayerMovement : MonoBehaviour
 
         lockOnAction.started += ctx => ToggleLockOn();
 
-        jumpAction.started += ctx => OnJumpInput();
+        jumpAction.started += ctx => OnJumpInput();*/
 
     }
 
-    private void OnEnable() => _playerMap.Enable();
-    private void OnDisable() => _playerMap.Disable();
+    private void OnMovePerformed(InputAction.CallbackContext ctx) => _moveInput = ctx.ReadValue<Vector2>();
+    private void OnMoveCanceled(InputAction.CallbackContext ctx) => _moveInput = Vector2.zero;
 
-    private void OnRollButtonDown()
+    private void OnEnable()
+    {
+        _playerMap.Enable();
+
+        // Subscribe to events explicitly
+        _moveAction.performed += OnMovePerformed;
+        _moveAction.canceled += OnMoveCanceled;
+
+        _playerMap.FindAction("Roll").started += OnRollButtonDown;
+        _playerMap.FindAction("Roll").canceled += OnRollButtonUp;
+
+        _playerMap.FindAction("LockOn").started += ToggleLockOn;
+        _playerMap.FindAction("Jump").started += OnJumpInput;
+    }
+    private void OnDisable()
+    {
+        _playerMap.Disable();
+
+        _moveInput = Vector2.zero;
+        _smoothSpeed = 0f;
+        _horizontalVelocity = Vector3.zero;
+
+        if (_stateManager != null)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+
+        }
+        // THIS CURES THE MEMORY LEAK! Unsubscribe from the global asset when disabled/dead.
+        _moveAction.performed -= OnMovePerformed;
+        _moveAction.canceled -= OnMoveCanceled;
+
+        _playerMap.FindAction("Roll").started -= OnRollButtonDown;
+        _playerMap.FindAction("Roll").canceled -= OnRollButtonUp;
+
+        _playerMap.FindAction("LockOn").started -= ToggleLockOn;
+        _playerMap.FindAction("Jump").started -= OnJumpInput;
+    }
+
+    private void OnRollButtonDown(InputAction.CallbackContext ctx)
     {
         _isRollButtonHeld = true;
         _rollButtonHoldTimer = 0f;
     }
 
-    private void OnRollButtonUp()
+    private void OnRollButtonUp(InputAction.CallbackContext ctx)
     {
         _isRollButtonHeld = false;
 
@@ -152,6 +190,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (!_controller.enabled) return;
+
         _stateManager.IsLockedOn = isTargetLocked;
         _stateManager.MoveDirectionIntent = GetWorldSpaceMovementDirection();
 
@@ -248,17 +288,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        if(!_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Airborne);
+        PlayerState currentState = _stateManager.GetCurrentState();
+        bool isHealing = (currentState == PlayerState.Healing);
+
+        if(!_controller.isGrounded && !isHealing) _stateManager.SetPlayerState(PlayerState.Airborne);
 
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);
             _horizontalVelocity = Vector3.zero; // Stop horizontal movement
-            if(_controller.isGrounded) _stateManager.SetPlayerState(PlayerState.Idle);
+            if(_controller.isGrounded && !isHealing) _stateManager.SetPlayerState(PlayerState.Idle);
             return;
         }
 
-        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f;
+        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f && !isHealing;
 
         if (actualSprint && _stateManager.IsInCombat)
         {
@@ -274,7 +317,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (_controller.isGrounded)
+        if (_controller.isGrounded && !isHealing)
         {
             _stateManager.SetPlayerState(actualSprint ? PlayerState.Running : PlayerState.Walking);
         }
@@ -307,6 +350,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _targetSpeed = actualSprint ? sprintSpeed : walkSpeed;
+
+        if(isHealing) _targetSpeed = walkSpeed * 0.65f;
         _smoothSpeed = Mathf.Lerp(_smoothSpeed, _targetSpeed, 10f * Time.deltaTime);
         
         // Save the speed instead of moving directly
@@ -451,7 +496,7 @@ public class PlayerMovement : MonoBehaviour
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
     }
     
-    private void ToggleLockOn()
+    private void ToggleLockOn(InputAction.CallbackContext ctx)
     {
         if (PlayerCamera.Instance == null) return;
 
@@ -471,7 +516,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void OnJumpInput()
+    private void OnJumpInput(InputAction.CallbackContext ctx)
     {
         PlayerState currentState = _stateManager.GetCurrentState();
 
