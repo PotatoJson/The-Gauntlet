@@ -1,12 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic;
-using DG.Tweening; // We use DOTween for the smooth fading!
+using DG.Tweening;
 
 public class CombatHUDFader : MonoBehaviour
 {
     [Header("References")]
     [Tooltip("Drag your Player object here to read the combat state")]
     public PlayerManager playerManager;
+
+    [Tooltip("Drag your Player object here to read the health state")]
+    public PlayerHealth playerHealth; // --- NEW REFERENCE ---
 
     [Tooltip("Drag the UI elements you want to fade here. They MUST have a CanvasGroup component!")]
     public List<CanvasGroup> elementsToFade;
@@ -15,15 +18,21 @@ public class CombatHUDFader : MonoBehaviour
     [Tooltip("How many seconds it takes to fade in or out")]
     public float fadeDuration = 0.5f;
 
-    private bool _wasInCombat;
+    private bool _wasVisible;
 
     private void Start()
     {
         if (playerManager != null)
         {
             // Set the initial state instantly when the game starts
-            _wasInCombat = playerManager.IsInCombat;
-            ForceAlpha(_wasInCombat ? 1f : 0f);
+            bool hasLevelUp = (ProgressBarCircle.Instance != null && ProgressBarCircle.Instance.HasPendingLevelUps);
+
+            // --- NEW: Check if missing health on start ---
+            bool isMissingHealth = (playerHealth != null && playerHealth.CurrentHealth < playerHealth.MaxHealth);
+
+            _wasVisible = playerManager.IsInCombat || hasLevelUp || isMissingHealth;
+
+            ForceAlpha(_wasVisible ? 1f : 0f);
         }
     }
 
@@ -31,12 +40,30 @@ public class CombatHUDFader : MonoBehaviour
     {
         if (playerManager == null) return;
 
-        // If the player's combat state just changed this frame...
-        if (playerManager.IsInCombat != _wasInCombat)
-        {
-            _wasInCombat = playerManager.IsInCombat;
+        bool inCombat = playerManager.IsInCombat;
 
-            if (_wasInCombat)
+        bool hasLevelUp = false;
+        if (ProgressBarCircle.Instance != null)
+        {
+            hasLevelUp = ProgressBarCircle.Instance.HasPendingLevelUps;
+        }
+
+        // --- NEW: Keep UI visible if health is not full ---
+        bool isMissingHealth = false;
+        if (playerHealth != null)
+        {
+            isMissingHealth = playerHealth.CurrentHealth < playerHealth.MaxHealth;
+        }
+
+        // The UI should be visible if ANY of these three things are true!
+        bool shouldBeVisible = (inCombat || hasLevelUp || isMissingHealth);
+
+        // If visibility changed this frame then fade
+        if (shouldBeVisible != _wasVisible)
+        {
+            _wasVisible = shouldBeVisible;
+
+            if (_wasVisible)
             {
                 FadeAllTo(1f); // Fade IN
             }

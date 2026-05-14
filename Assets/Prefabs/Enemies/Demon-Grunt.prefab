@@ -750,6 +750,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BasicEnemy
   maxHealth: 100
   currentHealth: 0
+  xpValue: 10
   chaseSpeed: 4
   attackRange: 2
   chargeSpeed: 5
@@ -759,6 +760,9 @@ MonoBehaviour:
   lightAttackDamage: 5
   heavyAttackDamage: 15
   chargeAttackDamage: 10
+  lightAttackPoiseDamage: 10
+  heavyAttackPoiseDamage: 25
+  chargeAttackPoiseDamage: 20
   playerLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295

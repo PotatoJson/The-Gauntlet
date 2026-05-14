@@ -11,6 +11,7 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
+    public float MaxHealth => maxHealth;
     private float _currentHealth;
     [Tooltip("How much health recovers per second after the delay.")]
     [SerializeField] private float healthRecoveryRate = 1f; // 1 HP per second = REAL slow

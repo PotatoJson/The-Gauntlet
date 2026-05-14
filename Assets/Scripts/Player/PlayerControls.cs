@@ -190,6 +190,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RewardsMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""9a969459-669d-4ea7-b541-4a114199a71c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -586,6 +595,28 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""DebugTeleport"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""39a665b5-952b-40a9-95a2-f6acabf4cf39"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""RewardsMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dd2960cc-b024-479b-8460-3f7bab0d6992"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RewardsMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1378,6 +1409,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
         m_Player_Heal = m_Player.FindAction("Heal", throwIfNotFound: true);
         m_Player_DebugTeleport = m_Player.FindAction("DebugTeleport", throwIfNotFound: true);
+        m_Player_RewardsMenu = m_Player.FindAction("RewardsMenu", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1491,6 +1523,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Pause;
     private readonly InputAction m_Player_Heal;
     private readonly InputAction m_Player_DebugTeleport;
+    private readonly InputAction m_Player_RewardsMenu;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1546,6 +1579,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/DebugTeleport".
         /// </summary>
         public InputAction @DebugTeleport => m_Wrapper.m_Player_DebugTeleport;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/RewardsMenu".
+        /// </summary>
+        public InputAction @RewardsMenu => m_Wrapper.m_Player_RewardsMenu;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1605,6 +1642,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @DebugTeleport.started += instance.OnDebugTeleport;
             @DebugTeleport.performed += instance.OnDebugTeleport;
             @DebugTeleport.canceled += instance.OnDebugTeleport;
+            @RewardsMenu.started += instance.OnRewardsMenu;
+            @RewardsMenu.performed += instance.OnRewardsMenu;
+            @RewardsMenu.canceled += instance.OnRewardsMenu;
         }
 
         /// <summary>
@@ -1649,6 +1689,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @DebugTeleport.started -= instance.OnDebugTeleport;
             @DebugTeleport.performed -= instance.OnDebugTeleport;
             @DebugTeleport.canceled -= instance.OnDebugTeleport;
+            @RewardsMenu.started -= instance.OnRewardsMenu;
+            @RewardsMenu.performed -= instance.OnRewardsMenu;
+            @RewardsMenu.canceled -= instance.OnRewardsMenu;
         }
 
         /// <summary>
@@ -2177,6 +2220,13 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDebugTeleport(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RewardsMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRewardsMenu(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
