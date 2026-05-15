@@ -95,7 +95,6 @@ public class GemPopupMenu : MonoBehaviour
         slottedPanel.SetActive(isEquipped);
         subPanel.SetActive(false);
 
-        // --- THE FIX: Disable "Unequip" if we aren't in the Reward Menu! ---
         if (unequipButton != null)
         {
             bool isRewardMode = RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive();

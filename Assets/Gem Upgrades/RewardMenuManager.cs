@@ -151,9 +151,11 @@ public class RewardMenuManager : MonoBehaviour
                 btn.onClick.RemoveAllListeners();
 
                 btn.onClick.AddListener(() =>
-                {   //These break GEMS
-                    if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-                    if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+                {
+                    // --- STABLE FIX: Only open the PopUI if a Gamepad is the active device ---
+                    bool isUsingGamepad = Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame;
+
+                    if (!isUsingGamepad) return;
 
                     if (!CanDragGem(dragScript)) return;
 
@@ -240,8 +242,10 @@ public class RewardMenuManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {
-                    if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-                    if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+                    // --- STABLE FIX: Only open the PopUI if a Gamepad is the active device ---
+                    bool isUsingGamepad = Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame;
+
+                    if (!isUsingGamepad) return;
 
                     if (!CanDragGem(dragScript)) return;
 

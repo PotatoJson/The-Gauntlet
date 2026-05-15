@@ -290,12 +290,17 @@ public class InventoryManager : MonoBehaviour
                     slotBtn.onClick.RemoveAllListeners();
                     slotBtn.onClick.AddListener(() =>
                     {
-                        // --- THE FIX: Block Mouse and Keyboard from opening the PopUI! --- THIS IS BREAKING GEMS
-                        //if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-                        //if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+                        // --- STABLE FIX: Check the last active device instead of frame release ---
+                        bool isUsingMouseOrKeyboard = false;
+                        if (Gamepad.current == null || (Mouse.current != null && Mouse.current.wasUpdatedThisFrame))
+                        {
+                            isUsingMouseOrKeyboard = true;
+                        }
+
+                        // Only allow the PopUI to open for Controller users
+                        if (isUsingMouseOrKeyboard) return;
 
                         DraggableGem equippedGem = child.GetComponentInChildren<DraggableGem>();
-
                         if (equippedGem != null && GemPopupMenu.Instance != null && !GemPopupMenu.Instance.IsPlacingMode)
                         {
                             GemPopupMenu.Instance.OpenMenu(equippedGem, equippedGem.GetComponent<RectTransform>());
