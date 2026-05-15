@@ -61,9 +61,27 @@ public class PersistentEquipment : MonoBehaviour
             foreach (GameObject slot in gm.fingerSlots)
             {
                 DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
-                if (gem != null && gem.originalPrefab != null)
+
+                if (gem != null && RewardMenuManager.Instance != null && gem.LinkedGemData != null)
                 {
-                    gemList.Add(gem.originalPrefab); // Save the original prefab so we can spawn it later!
+                    bool foundPrefab = false;
+                    foreach (GameObject projectPrefab in RewardMenuManager.Instance.allGemPrefabs)
+                    {
+                        if (projectPrefab.GetComponent<DraggableGem>().LinkedGemData == gem.LinkedGemData)
+                        {
+                            gemList.Add(projectPrefab);
+                            foundPrefab = true;
+                            break;
+                        }
+                    }
+
+                    // Fallback to keep spacing aligned just in case a gem isn't found
+                    if (!foundPrefab) gemList.Add(null);
+                }
+                else
+                {
+                    // --- THE FIX: Save a blank 'null' space to keep the exact slot indexes perfectly aligned! ---
+                    gemList.Add(null);
                 }
             }
         }

@@ -26,7 +26,7 @@ public class RewardMenuManager : MonoBehaviour
 
     [Header("Reward Generation")]
     [SerializeField] private Transform gemHolder;
-    [SerializeField] private List<GameObject> allGemPrefabs;
+    [SerializeField] public List<GameObject> allGemPrefabs;
 
     [Header("Small Description UI")]
     [SerializeField] private TMP_Text rewardNameText;
@@ -86,7 +86,6 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
-    // --- NEW: Fades out and disables navigation to remaining gems ---
     private void UpdateGemInteractability(bool isInteractable)
     {
         if (_isOverflowMode) return;
@@ -153,8 +152,8 @@ public class RewardMenuManager : MonoBehaviour
 
                 btn.onClick.AddListener(() =>
                 {   //These break GEMS
-                    //if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-                    //if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
+                    if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
+                    if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
 
                     if (!CanDragGem(dragScript)) return;
 

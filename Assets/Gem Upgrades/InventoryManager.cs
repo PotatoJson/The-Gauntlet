@@ -114,10 +114,17 @@ public class InventoryManager : MonoBehaviour
         {
             for (int i = 0; i < savedGemPrefabs.Count; i++)
             {
-                if (i < gm.currentActiveSlots)
+                if (i < gm.currentActiveSlots && savedGemPrefabs[i] != null)
                 {
                     GameObject newlySpawnedGem = Instantiate(savedGemPrefabs[i], gm.fingerSlots[i].transform);
-                    newlySpawnedGem.GetComponent<RectTransform>().sizeDelta = gm.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+
+                    // --- THE FIX: Force the gem to the exact dead-center of the slot! ---
+                    RectTransform gemRect = newlySpawnedGem.GetComponent<RectTransform>();
+                    gemRect.localPosition = Vector3.zero;
+                    gemRect.localScale = Vector3.one;
+
+                    gemRect.sizeDelta = gm.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+                    newlySpawnedGem.GetComponent<DraggableGem>().originalPrefab = savedGemPrefabs[i];
 
                     Image slotImage = gm.fingerSlots[i].GetComponent<Image>();
                     Image gemImage = newlySpawnedGem.GetComponent<Image>();

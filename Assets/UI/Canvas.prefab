@@ -537,6 +537,7 @@ GameObject:
   - component: {fileID: 1548274793643067890}
   - component: {fileID: 1575995725666900783}
   - component: {fileID: 2940110805874837393}
+  - component: {fileID: 9129976450429684373}
   m_Layer: 5
   m_Name: EXP_DEBUG
   m_TagString: Untagged
@@ -603,6 +604,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   playerHealth: {fileID: 0}
+--- !u!114 &9129976450429684373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 303527396880894412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d39af8808a2b38647b6bbe385374177a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  targetSceneName: Cave Level
 --- !u!1 &477392515474882814
 GameObject:
   m_ObjectHideFlags: 0
@@ -857,6 +871,10 @@ MonoBehaviour:
   secondaryTitleButton: {fileID: 2773615849459546962}
   DefaultPrimaryPrefab: {fileID: 6912230105925256729, guid: ae677e6277a10ae4eb230d09645cb4f6, type: 3}
   DefaultSecondaryPrefab: {fileID: 6912230105925256729, guid: ae677e6277a10ae4eb230d09645cb4f6, type: 3}
+  activePrimaryPrefab: {fileID: 0}
+  activePrimaryRarity: 0
+  activeSecondaryPrefab: {fileID: 0}
+  activeSecondaryRarity: 0
 --- !u!114 &1125904845653065177
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7475,7 +7493,6 @@ GameObject:
   - component: {fileID: 4961414771448458305}
   - component: {fileID: 8163763182684274252}
   - component: {fileID: 7052677815293669570}
-  - component: {fileID: 7665752657789574427}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -7576,18 +7593,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &7665752657789574427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8420259944261759690}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c992aea23b97cc46859643a2cf13241, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TempUIPersistence
 --- !u!1 &8781106333070835575
 GameObject:
   m_ObjectHideFlags: 0
@@ -9300,6 +9305,7 @@ MonoBehaviour:
   freezeTimeBeforeFall: 0.5
   fallDuration: 1.5
   fallDistance: 1500
+  hudPanel: {fileID: 0}
 --- !u!114 &4321778118194152076 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8910073527973273634, guid: 508da1f24a178d942b883451fc148589, type: 3}
