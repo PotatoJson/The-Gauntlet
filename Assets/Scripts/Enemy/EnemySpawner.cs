@@ -216,7 +216,7 @@ public class EnemySpawner : MonoBehaviour
 
     private IEnumerator ChamberRewardSequence()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSecondsRealtime(2f);
         GrantChamberRewards();
     }
 

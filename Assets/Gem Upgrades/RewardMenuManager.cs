@@ -146,27 +146,7 @@ public class RewardMenuManager : MonoBehaviour
             if (dragScript != null) dragScript.enabled = true;
 
             Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null)
-            {
-                btn.onClick.RemoveAllListeners();
-
-                btn.onClick.AddListener(() =>
-                {
-                    // --- STABLE FIX: Only open the PopUI if a Gamepad is the active device ---
-                    bool isUsingGamepad = Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame;
-
-                    if (!isUsingGamepad) return;
-
-                    if (!CanDragGem(dragScript)) return;
-
-                    if (GemPopupMenu.Instance != null)
-                    {
-                        GemPopupMenu.Instance.OpenMenu(dragScript, spawnedGem.GetComponent<RectTransform>());
-                    }
-                });
-
-                spawnedButtons.Add(btn);
-            }
+            if (btn != null) spawnedButtons.Add(btn);
 
             EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
             if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
@@ -179,10 +159,9 @@ public class RewardMenuManager : MonoBehaviour
 
         TrapControllerFocus(spawnedButtons);
 
-        if (Gamepad.current != null && firstSpawnedGem != null && EventSystem.current != null)
+        if (Gamepad.current != null && firstSpawnedGem != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(firstSpawnedGem);
+            StartCoroutine(SetFocusDelayed(firstSpawnedGem));
         }
     }
 
@@ -236,27 +215,7 @@ public class RewardMenuManager : MonoBehaviour
             if (dragScript != null) dragScript.enabled = true;
 
             Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null)
-            {
-                btn.onClick.RemoveAllListeners();
-
-                btn.onClick.AddListener(() =>
-                {
-                    // --- STABLE FIX: Only open the PopUI if a Gamepad is the active device ---
-                    bool isUsingGamepad = Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame;
-
-                    if (!isUsingGamepad) return;
-
-                    if (!CanDragGem(dragScript)) return;
-
-                    if (GemPopupMenu.Instance != null)
-                    {
-                        GemPopupMenu.Instance.OpenMenu(dragScript, spawnedGem.GetComponent<RectTransform>());
-                    }
-                });
-
-                spawnedButtons.Add(btn);
-            }
+            if (btn != null) { spawnedButtons.Add(btn); }
 
             EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
             if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
@@ -269,10 +228,9 @@ public class RewardMenuManager : MonoBehaviour
 
         TrapControllerFocus(spawnedButtons);
 
-        if (Gamepad.current != null && firstSpawnedGem != null && EventSystem.current != null)
+        if (Gamepad.current != null && firstSpawnedGem != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(firstSpawnedGem);
+            StartCoroutine(SetFocusDelayed(firstSpawnedGem));
         }
     }
 
@@ -440,6 +398,16 @@ public class RewardMenuManager : MonoBehaviour
             statsManager.SyncWithUI(InventoryManager.Instance.primaryGauntlet, InventoryManager.Instance.secondaryGauntlet);
         }
         CloseRewardMenu();
+    }
+
+    private System.Collections.IEnumerator SetFocusDelayed(GameObject target)
+    {
+        yield return null;
+        if (EventSystem.current != null && target != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(target);
+        }
     }
 
     private void CloseRewardMenu()

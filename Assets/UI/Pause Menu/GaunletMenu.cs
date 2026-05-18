@@ -211,7 +211,7 @@ public class GauntletMenu : MonoBehaviour
     public void ResumeGame()
     {
         _isPaused = false;
-        _uiMap.Disable();
+        //_uiMap.Disable();
         _playerMap.Enable();
 
         // Lock cursor after pressing Esc

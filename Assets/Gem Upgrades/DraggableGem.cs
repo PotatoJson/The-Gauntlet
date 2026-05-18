@@ -5,8 +5,10 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CanvasGroup))]
-public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
+public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
+//IPointerClickHandler
 {
+
     [Header("Back End Stuff")]
     public GemData LinkedGemData;
 
@@ -61,7 +63,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 _canDrag = false;
 
                 transform.DOKill();
-                transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true);
+                transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true).SetUpdate(true);
                 return;
             }
         }
@@ -114,7 +116,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         return transform.parent != null && transform.parent.name.Contains("Slot");
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    /*public void OnPointerClick(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Left)
         {   //These BREAK GEMS
@@ -138,7 +140,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 GemPopupMenu.Instance.OpenMenu(this, myRect);
             }
         }
-    }
+    }*/
 
     // --- UPDATED: Block the gamepad's submit button if the gem is locked! ---
     public void ForceOpenPopUI()
@@ -150,7 +152,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 if (!RewardMenuManager.Instance.CanDragGem(this))
                 {
                     transform.DOKill();
-                    transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true);
+                    transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true).SetUpdate(true);
                     return;
                 }
             }
