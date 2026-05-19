@@ -48,6 +48,11 @@ public class PlayerMovement : MonoBehaviour
     public float gravityMultiplier = 2.0f;
     public float jumpHeight = 2.0f;
 
+    [Header("Jump Settings")]
+    [Tooltip("How long the player can still jump after falling off a ledge.")]
+    public float coyoteTime = 0.15f; 
+    private float _coyoteTimeCounter;
+
     // Internal Variables
     private CharacterController _controller;
     private bool _isMouseInput;
@@ -488,9 +493,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void ApplyGravity()
     {
-        if (_controller.isGrounded && _velocity.y <= 0) 
+        if (_controller.isGrounded) 
         {
-            _velocity.y = -2f; 
+            _coyoteTimeCounter = coyoteTime; // Reset coyote time when on the ground
+
+            if (_velocity.y <= 0) 
+            {
+                _velocity.y = -2f; 
+            }
+        }
+        else
+        {
+            _coyoteTimeCounter -= Time.deltaTime; // Tick down when in the air
         }
 
         _velocity.y += gravity * gravityMultiplier * Time.deltaTime;
@@ -520,11 +534,13 @@ public class PlayerMovement : MonoBehaviour
     {
         PlayerState currentState = _stateManager.GetCurrentState();
 
+        // Allow jumping from standard ground states, OR if airborne but still within the coyote window
         bool canJump = (currentState == PlayerState.Idle || 
-        currentState == PlayerState.Walking ||
-        currentState == PlayerState.Running);
+                        currentState == PlayerState.Walking ||
+                        currentState == PlayerState.Running ||
+                        (currentState == PlayerState.Airborne && _coyoteTimeCounter > 0f));
 
-        if (_controller.isGrounded && canJump)
+        if (_coyoteTimeCounter > 0f && canJump)
         {
             if (_stateManager.IsInCombat)
             {
@@ -534,6 +550,9 @@ public class PlayerMovement : MonoBehaviour
 
             // Physics formula for jump height
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity * gravityMultiplier);
+
+            // Set counter to 0 so the player can't double jump in the air
+            _coyoteTimeCounter = 0f;
 
             _stateManager.SetPlayerState(PlayerState.Airborne);
 
