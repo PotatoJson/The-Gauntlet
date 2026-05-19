@@ -62,6 +62,8 @@ public class PlayerCamera : MonoBehaviour
     public float targetSwitchCooldown = 0.3f;
 
     [Header("Dynamic Framing")]
+    [Tooltip("Maximum downward angle when locked on to prevent bird's eye view.")]
+    public float maximumLockOnDownAngle = 25f;
     [Tooltip("The distance considered 'point blank' for framing.")]
     public float closeFramingDistance = 2f;
     [Tooltip("The distance considered 'max range' for framing.")]
@@ -289,8 +291,18 @@ public class PlayerCamera : MonoBehaviour
             {
                 Quaternion pivotTargetRotation = Quaternion.LookRotation(pivotDirection);
                 Vector3 eulerAngle = pivotTargetRotation.eulerAngles;
+
+                // Convert the 0-360 angle to -180 to 180 to clamp it easily
+                float pitch = eulerAngle.x;
+                if (pitch > 180f) pitch -= 360f; 
+
+                // Clamp the downward tilt to new maximum value
+                pitch = Mathf.Clamp(pitch, minimumPivot, maximumLockOnDownAngle);
+
+                eulerAngle.x = pitch;
                 eulerAngle.y = 0;
                 eulerAngle.z = 0;
+
                 cameraPivotTransform.localRotation = Quaternion.Slerp(cameraPivotTransform.localRotation, Quaternion.Euler(eulerAngle), lockOnTrackingSpeed * Time.deltaTime);
             }
 
