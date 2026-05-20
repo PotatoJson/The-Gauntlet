@@ -113,6 +113,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "RightSkill",
+                    "type": "Button",
+                    "id": "0cf48cc9-5435-4a98-84d4-695d8bfa97b1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "LeftSkill",
+                    "type": "Button",
+                    "id": "89e085e4-b1c1-4192-88db-01061ed48f68",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -487,6 +505,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "RewardsMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "52e8c45d-a5a5-4fe7-bc9d-c7e104f78cfa",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "RightSkill",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "afa6bdc7-413f-48fd-96de-bd5cd6d9c5f6",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "LeftSkill",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -7,7 +7,7 @@ public class RunTimeGauntlet
     public EquipSlot CurrentSlot = EquipSlot.None;
     //gem sockets
     public StatGemData[] SocketedStatGems; 
-    public SkillGemData SockedSkill; 
+    public SkillGemData ActiveSkillGem; 
 
     public RunTimeGauntlet(GauntletData gauntletData, EquipSlot initialSlot)
     {

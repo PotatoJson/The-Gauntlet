@@ -100,4 +100,13 @@ public class AnimationEventRelay : MonoBehaviour
             _stateManager.SetPlayerState(PlayerState.Idle);
         }
     }
+
+    public void ExecuteSkill()
+    {
+        if(_playerCombat != null)
+        {
+            Debug.Log("skill test");
+            _playerCombat.ExecuteSkillSpawn();
+        }
+    }
 }

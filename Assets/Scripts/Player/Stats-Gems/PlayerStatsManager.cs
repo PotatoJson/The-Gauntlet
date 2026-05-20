@@ -91,38 +91,6 @@ public class PlayerStatsManager : MonoBehaviour
         return newGauntlet;
     }
 
-    /*public void RecalculateGlobalStats()
-    {
-        _activeBonuses.Clear();
-
-        //get all modifiers
-        List<GemModifier> allMods = new List<GemModifier>();
-        if(PrimaryGauntlet != null) allMods.AddRange(PrimaryGauntlet.GetAllActiveModifiers());
-        if(SecondaryGauntlet != null) allMods.AddRange(SecondaryGauntlet.GetAllActiveModifiers());
-        Debug.Log($"Total active modifiers found across both hands: {allMods.Count}");
-        foreach(GemModifier mod in allMods)
-        {
-            if(_activeBonuses.ContainsKey(mod.StatType)) _activeBonuses[mod.StatType] += mod.Amount;
-            else
-            {
-                _activeBonuses.Add(mod.StatType, mod.Amount);
-            }
-        }
-
-        float primaryWeaponDamage = (PrimaryGauntlet != null && PrimaryGauntlet.BaseGauntlet != null) ? PrimaryGauntlet.BaseGauntlet.Damage : 0f;
-        float primaryPoiseDamage = (PrimaryGauntlet != null && PrimaryGauntlet.BaseGauntlet != null) ? PrimaryGauntlet.BaseGauntlet.PoiseDamage : 0f;
-
-        CurrentMaxHealth = BaseMaxHealth + GetBonus(StatModifierType.MaxHealth);
-        CurrentDamage = BaseDamage + primaryWeaponDamage + GetBonus(StatModifierType.PhysicalDamage);
-        CurrentStamina = BaseStamina + GetBonus(StatModifierType.MaxStamina);
-        CurrentPoiseDamage = BasePoiseDamage + primaryPoiseDamage + GetBonus(StatModifierType.PoiseDamage);
-        CurrentMaxPoise = BaseMaxPoise + GetBonus(StatModifierType.MaxPoise);
-  
-        //invoke event to tell other scripts stats have changed 
-        OnStatsCalculated?.Invoke();
-    }*/
-
-
     public void RecalculateGlobalStats()
     {
         _flatBonuses.Clear();

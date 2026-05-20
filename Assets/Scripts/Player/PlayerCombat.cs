@@ -52,6 +52,19 @@ public class PlayerCombat : MonoBehaviour
     private CombatInput _currentBuffer = CombatInput.None;
     private float BufferTimer = 0f;
 
+    [Header("Skill Setings")]
+    [SerializeField] private Transform _leftSkillSpawnPoint;
+    [SerializeField] private Transform _rightSkillSpawnPoint;
+
+    private float _leftSkillCooldownTimer = 0f;
+    private float _rightSkillCooldownTimer = 0f;
+
+    private InputAction _leftSkillAction;
+    private InputAction _rightSkillAction;
+
+    private RunTimeGauntlet _currentlyCastingGauntlet;
+    private Transform _currentSpawnPoint;
+
     [Header("Input Setup")]
     [SerializeField] private InputActionAsset inputAsset;
 
@@ -77,6 +90,12 @@ public class PlayerCombat : MonoBehaviour
         _heavyAttackAction = _playerMap.FindAction("HeavyAttack");
         _healAction = _playerMap.FindAction("Heal");
         _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
+        
+        _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
+        _leftSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: true);
+
+        _rightSkillAction = _playerMap.FindAction("RightSkill");
+        _rightSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: false);
 
         _lightAttackAction.started += ctx => OnLightAttackInput();
         _heavyAttackAction.started += ctx => 
@@ -96,6 +115,8 @@ public class PlayerCombat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (_leftSkillCooldownTimer > 0) _leftSkillCooldownTimer -= Time.deltaTime;
+        if (_rightSkillCooldownTimer > 0) _rightSkillCooldownTimer -= Time.deltaTime;
 
         if(_stateManager.RequestBufferClear)
         {
@@ -152,7 +173,67 @@ public class PlayerCombat : MonoBehaviour
     }
     #endregion
 
-    //Temp Potion logic
+    #region skill Handling
+    private void AttemptSkillCast(bool isLeftGauntlet)
+    {
+        PlayerState currentState = _stateManager.GetCurrentState();
+        if (currentState != PlayerState.Idle && currentState != PlayerState.Walking) return;
+
+        RunTimeGauntlet targetGauntlet = isLeftGauntlet ? _statsManager.SecondaryGauntlet : _statsManager.PrimaryGauntlet;
+        float currentCooldown = isLeftGauntlet ? _leftSkillCooldownTimer : _rightSkillCooldownTimer;
+        
+        if (targetGauntlet == null || targetGauntlet.ActiveSkillGem == null) return;
+        if (currentCooldown > 0) return;
+
+        SkillGemData slottedSkill = targetGauntlet.ActiveSkillGem;
+
+        if (!_staminaScript.HasEnoughStamina(slottedSkill.StaminaCost)) return;
+        _staminaScript.ConsumeStamina(slottedSkill.StaminaCost);
+
+        ForceSnapToLockOn();
+        _currentlyCastingGauntlet = targetGauntlet;
+        _currentSpawnPoint = isLeftGauntlet ? _leftSkillSpawnPoint : _rightSkillSpawnPoint;
+
+        ConsumeBuffer();
+        _stateManager.SetPlayerState(PlayerState.Attacking); 
+        
+        if (isLeftGauntlet) _animator.SetTrigger("CastLeftSkill");
+        else _animator.SetTrigger("CastRightSkill");
+        
+        if (isLeftGauntlet) _leftSkillCooldownTimer = slottedSkill.Cooldown;
+        else _rightSkillCooldownTimer = slottedSkill.Cooldown;
+    }
+
+    public void ExecuteSkillSpawn()
+    {
+        if (_currentlyCastingGauntlet == null || _currentlyCastingGauntlet.ActiveSkillGem == null)
+        {
+            Debug.LogWarning("ExecuteSkillSpawn fired, but no gauntlet was cached!");
+            return; 
+        }
+
+        SkillGemData slottedSkill = _currentlyCastingGauntlet.ActiveSkillGem;
+        ElementType currentElement = _currentlyCastingGauntlet.BaseGauntlet.Element;
+
+        GameObject prefabToSpawn = slottedSkill.GetPrefabForElement(currentElement);
+
+        if (prefabToSpawn != null && _currentSpawnPoint != null)
+        {
+            GameObject activeSkill = Instantiate(prefabToSpawn, _currentSpawnPoint.position, transform.rotation);
+            
+            BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
+            if (projectileScript != null)
+            {
+                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise); 
+            }
+        }
+
+        _currentlyCastingGauntlet = null;
+        _currentSpawnPoint = null;
+    }
+
+    #endregion
+
     private void UsePotion()
     {
         PlayerState currentState = _stateManager.GetCurrentState();
@@ -232,49 +313,66 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-    private void ProcessAttackRotation()
-{
-    if (_stateManager.GetCurrentState() != PlayerState.Attacking) return;
-
-    // LOCK-ON
-    if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
+    //instant snap for spells
+    private void ForceSnapToLockOn()
     {
-        // Track the enemy during the wind-up phase (while _isRotationLocked is true).
-        // Once the hitbox is armed (_isRotationLocked = false), we stop tracking so the swing follows through naturally.
-        if (_isRotationLocked) 
+        // Only snap if we are actively locked on to a valid target
+        if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
         {
             Vector3 directionToTarget = PlayerCamera.Instance.currentLockOnTarget.position - transform.position;
-            directionToTarget.y = 0; // Keep the rotation strictly horizontal
+            directionToTarget.y = 0; // Keep the rotation strictly horizontal so we don't tilt into the floor
 
             if (directionToTarget != Vector3.zero)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
-                
-                // Check if we are performing a running attack
-                bool isRunningAttack = (_currentAttackNode == RunningLightAttack || _currentAttackNode == RunningHeavyAttack);
-                
-                // Use a slower turn speed (e.g., 5f) for running attacks to create U-turn arc, 
-                // and a fast snap (30f) for standing/walking attacks
-                float currentTurnSpeed = isRunningAttack ? 5f : 30f; 
-
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentTurnSpeed * Time.deltaTime);
+                // Bypass Slerp and instantly snap the rotation
+                transform.rotation = Quaternion.LookRotation(directionToTarget.normalized);
             }
         }
     }
-    // FREE-AIM BEHAVIOR
-    else
-    {
-        // Only allow free-aim snapping if the rotation is unlocked (hitbox is armed / active frames)
-        if (_isRotationLocked) return;
 
-        Vector3 snapDir = _stateManager.MoveDirectionIntent;
-        if (snapDir != Vector3.zero)
+    private void ProcessAttackRotation()
+    {
+        if (_stateManager.GetCurrentState() != PlayerState.Attacking) return;
+
+        // LOCK-ON
+        if (_stateManager.IsLockedOn && PlayerCamera.Instance != null && PlayerCamera.Instance.currentLockOnTarget != null)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(snapDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
+            // Track the enemy during the wind-up phase (while _isRotationLocked is true).
+            // Once the hitbox is armed (_isRotationLocked = false), we stop tracking so the swing follows through naturally.
+            if (_isRotationLocked) 
+            {
+                Vector3 directionToTarget = PlayerCamera.Instance.currentLockOnTarget.position - transform.position;
+                directionToTarget.y = 0; // Keep the rotation strictly horizontal
+
+                if (directionToTarget != Vector3.zero)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToTarget.normalized);
+                    
+                    // Check if we are performing a running attack
+                    bool isRunningAttack = (_currentAttackNode == RunningLightAttack || _currentAttackNode == RunningHeavyAttack);
+                    
+                    // Use a slower turn speed (e.g., 5f) for running attacks to create U-turn arc, 
+                    // and a fast snap (30f) for standing/walking attacks
+                    float currentTurnSpeed = isRunningAttack ? 5f : 30f; 
+
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentTurnSpeed * Time.deltaTime);
+                }
+            }
+        }
+        // FREE-AIM BEHAVIOR
+        else
+        {
+            // Only allow free-aim snapping if the rotation is unlocked (hitbox is armed / active frames)
+            if (_isRotationLocked) return;
+
+            Vector3 snapDir = _stateManager.MoveDirectionIntent;
+            if (snapDir != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(snapDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 30f * Time.deltaTime);
+            }
         }
     }
-}
 
     private void HandleHeavyChargeTimer()
     {

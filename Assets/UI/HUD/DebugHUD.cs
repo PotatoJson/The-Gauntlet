@@ -11,6 +11,16 @@ public class DebugHUD : MonoBehaviour
     [Tooltip("Drag your CharacterScreen object here so the script can find it while it's hidden!")]
     public InventoryManager inventoryManager;
 
+    [Tooltip("NEW: Drag your Player here so we can force-equip the skills!")]
+    public PlayerStatsManager statsManager;
+
+    [Header("Test Gems")]
+    [Tooltip("Drag your Test Fireball SkillGemData here")]
+    public SkillGemData testFireGem;
+    
+    [Tooltip("Drag your Test Rock SkillGemData here")]
+    public SkillGemData testEarthGem;
+
     private void Start()
     {
         // Hide the debug menu automatically when the game starts
@@ -34,6 +44,12 @@ public class DebugHUD : MonoBehaviour
                 debugMenuPanel.SetActive(!debugMenuPanel.activeSelf);
             }
         }
+
+        // --- NEW CHEAT CODE: Press 9 to force-slot your skills! ---
+        if (Keyboard.current.digit9Key.wasPressedThisFrame)
+        {
+            ForceEquipTestGems();
+        }
     }
 
     // Call this from the OnClick() of your 5 elemental buttons!
@@ -52,6 +68,29 @@ public class DebugHUD : MonoBehaviour
         else
         {
             Debug.LogWarning("Inventory Manager is missing! Please drag the CharacterScreen into the Inspector.");
+        }
+    }
+
+    private void ForceEquipTestGems()
+    {
+        if (statsManager == null)
+        {
+            Debug.LogWarning("PlayerStatsManager is missing from DebugHUD!");
+            return;
+        }
+
+        // Equip Earth to the Primary (Right) Gauntlet
+        if (statsManager.PrimaryGauntlet != null && testEarthGem != null)
+        {
+            statsManager.PrimaryGauntlet.ActiveSkillGem = testEarthGem;
+            Debug.Log("CHEAT: Earth Gem slotted into Primary (Right) Gauntlet!");
+        }
+
+        // Equip Fire to the Secondary (Left) Gauntlet
+        if (statsManager.SecondaryGauntlet != null && testFireGem != null)
+        {
+            statsManager.SecondaryGauntlet.ActiveSkillGem = testFireGem;
+            Debug.Log("CHEAT: Fire Gem slotted into Secondary (Left) Gauntlet!");
         }
     }
 }
