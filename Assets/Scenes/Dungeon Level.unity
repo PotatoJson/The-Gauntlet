@@ -86405,66 +86405,14 @@ PrefabInstance:
       propertyPath: _staminaBar
       value: 
       objectReference: {fileID: 766812051}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _combat
-      value: 
-      objectReference: {fileID: 1464312950}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _movement
-      value: 
-      objectReference: {fileID: 1755252237}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _leftHitBox
-      value: 
-      objectReference: {fileID: 1464312949}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _rightHitBox
-      value: 
-      objectReference: {fileID: 1464312948}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _healthScript
-      value: 
-      objectReference: {fileID: 994712868}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _statsManager
-      value: 
-      objectReference: {fileID: 1464312947}
-    - target: {fileID: 1328476746531781019, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _staminaScript
-      value: 
-      objectReference: {fileID: 1464312946}
     - target: {fileID: 1682075080402086317, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 1682075080402086317, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_Layer
-      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2615825535877183288, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: _bossRoomSpawn
       value: 
       objectReference: {fileID: 1705691835}
-    - target: {fileID: 3354600228069912316, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 3354600228069912316, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768896108444568593, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768896108444568593, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 3953087891796077334, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 14.85
@@ -86505,14 +86453,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5221296846589769512, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _leftSkillSpawnPoint
-      value: 
-      objectReference: {fileID: 1464312954}
-    - target: {fileID: 5221296846589769512, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: _rightSkillSpawnPoint
-      value: 
-      objectReference: {fileID: 1464312953}
     - target: {fileID: 8214966954790734677, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: PlayerSpawn
       value: 
@@ -86521,10 +86461,6 @@ PrefabInstance:
       propertyPath: LastCheckPoint
       value: 
       objectReference: {fileID: 304513521}
-    - target: {fileID: 8214966954790734677, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-      propertyPath: OvercapKnockback
-      value: 25
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -86535,17 +86471,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8760963343898537160, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
   m_PrefabInstance: {fileID: 1464312944}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1464312946 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 13187733473135032, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 75ce6c7ee99bef2488f3f8821c3daf0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerStamina
 --- !u!114 &1464312947 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7300029207042372441, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
@@ -86557,49 +86482,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5f0be08bd281f343b3eae772cccd1ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsManager
---- !u!114 &1464312948 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 235802254161317062, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13eb31eeab2305d489be9b2ceef965f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitboxController
---- !u!114 &1464312949 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6711534601265782201, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13eb31eeab2305d489be9b2ceef965f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HitboxController
---- !u!114 &1464312950 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5221296846589769512, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4dcbd721ca24a040aedb4334936e376, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
---- !u!4 &1464312953 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4008724010860173095, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1464312954 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2359436493398022220, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
-  m_PrefabInstance: {fileID: 1464312944}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1466266993
 PrefabInstance:
   m_ObjectHideFlags: 0

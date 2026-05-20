@@ -152,6 +152,7 @@ MonoBehaviour:
   gravity: -9.81
   gravityMultiplier: 3
   jumpHeight: 2
+  coyoteTime: 0.15
   _moveRollCancel: 0.6
   _combatRollCancel: 0.4
   inputAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
@@ -190,6 +191,8 @@ MonoBehaviour:
   _normHeavyWindUp: 0.4
   MaxChargeDuration: 1
   BufferDuration: 0.5
+  _leftSkillSpawnPoint: {fileID: 2359436493398022220}
+  _rightSkillSpawnPoint: {fileID: 4008724010860173095}
   inputAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &2615825535877183288
 MonoBehaviour:
@@ -238,7 +241,7 @@ MonoBehaviour:
   PoiseRecoveryRate: 15
   PoiseRecoveryDelay: 10
   InstantKnockback: 50
-  OvercapKnockback: 0
+  OvercapKnockback: 25
   MaxPotions: 5
   CurrentPotions: 0
   PotionHealAmount: 35
@@ -321,13 +324,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3301561cf080c748a72a89bf646d67e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemEffectsManager
-  _combat: {fileID: 0}
-  _movement: {fileID: 0}
-  _healthScript: {fileID: 0}
-  _staminaScript: {fileID: 0}
-  _leftHitBox: {fileID: 0}
-  _rightHitBox: {fileID: 0}
-  _statsManager: {fileID: 0}
+  _combat: {fileID: 5221296846589769512}
+  _movement: {fileID: 8379124841691409511}
+  _healthScript: {fileID: 8214966954790734677}
+  _staminaScript: {fileID: 13187733473135032}
+  _leftHitBox: {fileID: 6711534601265782201}
+  _rightHitBox: {fileID: 235802254161317062}
+  _statsManager: {fileID: 7300029207042372441}
   hasExecutionerGem: 0
   hasBerserkerGem: 0
 --- !u!1 &3354600228069912316
@@ -342,9 +345,9 @@ GameObject:
   - component: {fileID: 3035460180272627589}
   - component: {fileID: 6711534601265782201}
   - component: {fileID: 7599233528456859533}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LeftFistHitbox
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -437,9 +440,9 @@ GameObject:
   - component: {fileID: 8577642113105457850}
   - component: {fileID: 235802254161317062}
   - component: {fileID: 5233594212788826596}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: RightFistHitbox
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -535,7 +538,7 @@ GameObject:
   - component: {fileID: 8526603621544959811}
   m_Layer: 6
   m_Name: PlayerCapsule
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
