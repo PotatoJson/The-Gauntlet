@@ -28,17 +28,47 @@ public class PlayerAudioManager : MonoBehaviour
     [SerializeField, Range(0.8f, 1.2f)] private float pitchMax = 1.1f;
     [SerializeField, Range(0f, 1f)] private float volume = 0.8f;
 
+    private PlayerManager _stateManager;
+    private Animator _animator;
+
+    [Header("Footstep Fixes")]
+    [Tooltip("Prevents footsteps from rapid-firing during animation glitches")]
+    [SerializeField] private float footstepCooldown = 0.2f;
+    private float _lastFootstepTime;
+
     private void Awake()
     {
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
+
+        _stateManager = GetComponentInParent<PlayerManager>(); 
+        _animator = GetComponentInChildren<Animator>();
     }
 
-    // ========================================================
-    // PUBLIC METHODS (Select these in your Animation Events!)
-    // ========================================================
+    // public methods
 
-    public void PlayFootstep() => PlayClip(footstepSound);
+    public void PlayFootstep() 
+    {
+        // check if the animator is currently blending 
+        // between a punch and walking, block the footstep!
+        if (_animator != null && _animator.IsInTransition(0)) return;
+
+        // Only allow footsteps if actively moving
+        if (_stateManager != null)
+        {
+            PlayerState currentState = _stateManager.GetCurrentState();
+            if (currentState != PlayerState.Walking && currentState != PlayerState.Running)
+            {
+                return; // Block the sound if Idle, Attacking, Airborne, etc.
+            }
+        }
+
+        //Prevents the Frame 0 from instantly firing
+        if (Time.time - _lastFootstepTime < footstepCooldown) return;
+
+        _lastFootstepTime = Time.time;
+        PlayClip(footstepSound);
+    }
     public void PlayRoll() => PlayClip(rollSound);
     public void PlayHeavyWhoosh() => PlayClip(heavyWhooshSound);
     public void PlayWallImpact() => PlayClip(wallImpactSound);
@@ -49,9 +79,7 @@ public class PlayerAudioManager : MonoBehaviour
     public void PlayEnemyImpact() => PlayRandomClip(enemyImpactSounds);
 
 
-    // ========================================================
     // INTERNAL AUDIO LOGIC
-    // ========================================================
 
     private void PlayClip(AudioClip clip)
     {
