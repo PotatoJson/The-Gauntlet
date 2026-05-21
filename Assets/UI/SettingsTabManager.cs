@@ -30,10 +30,15 @@ public class SettingsTabManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI leftPromptText;
     [SerializeField] private TextMeshProUGUI rightPromptText;
 
-    [Header("Visual Feedback")]
-    [SerializeField] private Color activeColor = Color.white;
-    [SerializeField] private Color previewColor = Color.red;
-    [SerializeField] private Color inactiveColor = Color.gray;
+    [Header("Paper Sprite Sheets")]
+    [Tooltip("The normal sprite used when a tab is unselected (e.g., Sprite 6)")]
+    [SerializeField] private Sprite unselectedTabSprite;
+
+    [Tooltip("The highlighted or preview sprite when a controller hovers over it (e.g., Sprite 7)")]
+    [SerializeField] private Sprite previewTabSprite;
+
+    [Tooltip("The active sprite when the tab panel is wide open (e.g., Sprite 8)")]
+    [SerializeField] private Sprite activeTabSprite;
 
     [Header("Sub-Tab Managers")]
     [SerializeField] private ControlsSubTabManager controlsSubTabManager;
@@ -243,40 +248,46 @@ public class SettingsTabManager : MonoBehaviour
 
     private void UpdateTabVisuals()
     {
-        // THE FIX: Define a perfectly transparent white color to match your new UI borders
-        Color transparentState = new Color(1f, 1f, 1f, 0f);
-
         for (int i = 0; i < tabButtons.Count; i++)
         {
             if (tabButtons[i] == null) continue;
 
-            // 1. KEYBOARD & MOUSE: Keep it simple. Open tab is Active, others are Transparent.
+            // Make sure the image rendering color stays clean white so our art displays natively
+            tabButtons[i].image.color = Color.white;
+
+            // 1. MOUSE & KEYBOARD STYLE
             if (!_isUsingGamepad)
             {
-                tabButtons[i].image.color = (i == _currentTabIndex) ? activeColor : transparentState;
+                if (i == _currentTabIndex)
+                {
+                    if (activeTabSprite != null) tabButtons[i].image.sprite = activeTabSprite;
+                }
+                else
+                {
+                    if (unselectedTabSprite != null) tabButtons[i].image.sprite = unselectedTabSprite;
+                }
                 continue;
             }
 
-            // 2. GAMEPAD: Use the 3-state logic (Active, Preview, Transparent)
+            // 2. GAMEPAD NAVIGATION STYLE (Supports Preview, Active, Unselected)
             if (i == _previewTabIndex)
             {
                 if (i == _currentTabIndex && !_isFocusOnHeader)
                 {
-                    tabButtons[i].image.color = activeColor;
+                    if (activeTabSprite != null) tabButtons[i].image.sprite = activeTabSprite;
                 }
                 else
                 {
-                    tabButtons[i].image.color = previewColor;
+                    if (previewTabSprite != null) tabButtons[i].image.sprite = previewTabSprite;
                 }
             }
             else if (i == _currentTabIndex)
             {
-                tabButtons[i].image.color = activeColor;
+                if (activeTabSprite != null) tabButtons[i].image.sprite = activeTabSprite;
             }
             else
             {
-                // Unselected and un-previewed tabs vanish entirely!
-                tabButtons[i].image.color = transparentState;
+                if (unselectedTabSprite != null) tabButtons[i].image.sprite = unselectedTabSprite;
             }
         }
     }

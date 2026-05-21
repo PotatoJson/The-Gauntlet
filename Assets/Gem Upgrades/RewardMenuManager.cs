@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -18,32 +19,26 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
-    [Header("Screen References")]
+    [Header("Screen Configuration")]
     [SerializeField] private GameObject characterScreenRoot;
-    [SerializeField] private GameObject leftSideGauntlets;
-    [SerializeField] private GameObject rightSideDetails;
-    [SerializeField] private GameObject rightSideRewards;
+    [SerializeField] public RectTransform mainPaperPlate;     // Drag the brown center background plate here
+    [SerializeField] private RectTransform titleBannerHolder;  // Drag the top Title/Banner container here
+    [SerializeField] private RectTransform switchGauntletBtn;  // Drag the upper right swap button here
 
-    [Header("Reward Generation")]
-    [SerializeField] private Transform gemHolder;
+    [Header("Reward Processing Pool")]
+    [SerializeField] private Transform gemSpawnAreaRoot;      // Drag the parent Canvas container where gems can float freely
     [SerializeField] public List<GameObject> allGemPrefabs;
 
-    [Header("Small Description UI")]
+    [Header("Description Box Anchor Panel")]
+    [SerializeField] private CanvasGroup descriptionPanelGroup; // Drag your new bottom-right anchor group here
     [SerializeField] private TMP_Text rewardNameText;
     [SerializeField] private TMP_Text rewardDescText;
     [SerializeField] private Image rewardIcon;
 
-    [Header("Warning Dialog UI")]
+    [Header("Warning Panels")]
     [SerializeField] private GameObject warningPanel;
     [SerializeField] private GameObject warningCancelButton;
-
-    [Header("UI Text Overrides")]
-    [SerializeField] private TMP_Text menuTitleText;
     [SerializeField] private TMP_Text warningBodyText;
-
-    [Header("Navigation Anchors")]
-    [SerializeField] private GameObject primaryTitleButton;
-    [SerializeField] private GameObject secondaryTitleButton;
 
     [Header("Cleanup References")]
     [SerializeField] private GameObject expBarRoot;
@@ -52,37 +47,43 @@ public class RewardMenuManager : MonoBehaviour
     private GameObject _lastSelectedReward;
     private bool _isWarningActive = false;
     private DraggableGem _currentlySlottedGem;
-
     private bool _isOverflowMode = false;
+
+    private List<DraggableGem> _activeRewardGems = new List<DraggableGem>();
 
     private void Awake()
     {
         if (_instance == null) _instance = this;
+        if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f; // Keep hidden until hover
     }
 
     public bool IsRewardModeActive()
     {
-        return rightSideRewards != null && rightSideRewards.activeSelf;
+        return characterScreenRoot != null && characterScreenRoot.activeSelf;
     }
 
     public bool CanDragGem(DraggableGem gem)
     {
         if (_isOverflowMode) return true;
+        if (!_activeRewardGems.Contains(gem)) return true;
         return _currentlySlottedGem == null || _currentlySlottedGem == gem;
     }
 
     public void OnGemSlotted(DraggableGem gem)
     {
+        if (!_activeRewardGems.Contains(gem)) return;
         _currentlySlottedGem = gem;
-        UpdateGemInteractability(false); // --- NEW: Lock the other gems! ---
+        UpdateGemInteractability(false);
     }
 
     public void OnGemReturned(DraggableGem gem)
     {
+        if (!_activeRewardGems.Contains(gem)) return;
+
         if (_currentlySlottedGem == gem)
         {
             _currentlySlottedGem = null;
-            UpdateGemInteractability(true); // --- NEW: Unlock the gems! ---
+            UpdateGemInteractability(true);
         }
     }
 
@@ -90,237 +91,266 @@ public class RewardMenuManager : MonoBehaviour
     {
         if (_isOverflowMode) return;
 
-        // Loop through whatever gems are still sitting in the choice pool
-        foreach (Transform child in gemHolder)
+        foreach (DraggableGem gem in _activeRewardGems)
         {
-            Button btn = child.GetComponent<Button>();
-            if (btn != null)
-            {
-                // Disabling the button automatically removes it from Gamepad navigation!
-                btn.interactable = isInteractable;
-            }
+            if (gem == null) continue;
 
-            CanvasGroup cg = child.GetComponent<CanvasGroup>();
-            if (cg != null)
-            {
-                // Visually fade them out so the player knows they are locked
-                cg.alpha = isInteractable ? 1f : 0.4f;
-            }
-        }
-    }
+            // Don't dim the gem we just chose!
+            if (gem == _currentlySlottedGem) continue;
 
-    public void OpenOverflowMenu(List<GameObject> overflowGemPrefabs)
-    {
-        Time.timeScale = 0f;
+            Button btn = gem.GetComponent<Button>();
+            if (btn != null) btn.interactable = isInteractable;
 
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-
-        characterScreenRoot.SetActive(true);
-        leftSideGauntlets.SetActive(true);
-        rightSideDetails.SetActive(false);
-        rightSideRewards.SetActive(true);
-
-        if (expBarRoot != null) expBarRoot.SetActive(false);
-
-        if (warningPanel != null) warningPanel.SetActive(false);
-        _isWarningActive = false;
-        _currentlySlottedGem = null;
-
-        _isOverflowMode = true;
-
-        if (menuTitleText != null) menuTitleText.text = "Gem Holder";
-        if (warningBodyText != null) warningBodyText.text = "Discard unequipped gems permanently?";
-
-        foreach (Transform child in gemHolder) { Destroy(child.gameObject); }
-
-        GameObject firstSpawnedGem = null;
-        List<Button> spawnedButtons = new List<Button>();
-
-        foreach (GameObject gemPrefab in overflowGemPrefabs)
-        {
-            GameObject spawnedGem = Instantiate(gemPrefab, gemHolder);
-            if (firstSpawnedGem == null) firstSpawnedGem = spawnedGem;
-
-            DraggableGem dragScript = spawnedGem.GetComponent<DraggableGem>();
-            if (dragScript != null) dragScript.enabled = true;
-
-            Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null) spawnedButtons.Add(btn);
-
-            EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
-
-            EventTrigger.Entry entry = new EventTrigger.Entry();
-            entry.eventID = EventTriggerType.PointerEnter;
-            entry.callback.AddListener((data) => { UpdateSmallDescription(spawnedGem); });
-            trigger.triggers.Add(entry);
-        }
-
-        TrapControllerFocus(spawnedButtons);
-
-        if (Gamepad.current != null && firstSpawnedGem != null)
-        {
-            StartCoroutine(SetFocusDelayed(firstSpawnedGem));
+            CanvasGroup cg = gem.GetComponent<CanvasGroup>();
+            if (cg != null) cg.alpha = isInteractable ? 1f : 0.4f;
         }
     }
 
     public void OpenRewardMenu()
     {
-        Time.timeScale = 0f;
+        _isOverflowMode = false;
+        SetupMenuExecution();
+        GenerateScatterRewards(3);
+    }
 
+    public void OpenOverflowMenu(List<GameObject> overflowGemPrefabs)
+    {
+        _isOverflowMode = true;
+        SetupMenuExecution();
+
+        foreach (Transform child in gemSpawnAreaRoot) { child.DOKill(); Destroy(child.gameObject); }
+
+        List<Button> spawnedButtons = new List<Button>();
+        GameObject firstSpawnedGem = null;
+
+        foreach (GameObject gemPrefab in overflowGemPrefabs)
+        {
+            GameObject spawnedGem = SpawnAndScatterGem(gemPrefab);
+            if (firstSpawnedGem == null) firstSpawnedGem = spawnedGem;
+
+            Button btn = spawnedGem.GetComponent<Button>();
+            if (btn != null) spawnedButtons.Add(btn);
+        }
+
+        TrapControllerFocus(spawnedButtons);
+        InitializeFocusState(firstSpawnedGem);
+    }
+
+    private void SetupMenuExecution()
+    {
+        Time.timeScale = 0f;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
         characterScreenRoot.SetActive(true);
-        leftSideGauntlets.SetActive(true);
-        rightSideDetails.SetActive(false);
-        rightSideRewards.SetActive(true);
-
         if (expBarRoot != null) expBarRoot.SetActive(false);
-
         if (warningPanel != null) warningPanel.SetActive(false);
+        if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;
+
+        if (gemSpawnAreaRoot != null && gemSpawnAreaRoot.TryGetComponent<Image>(out var bgImage))
+        {
+            bgImage.raycastTarget = true;
+        }
+
         _isWarningActive = false;
         _currentlySlottedGem = null;
-        _isOverflowMode = false;
+        _activeRewardGems.Clear();
 
-        if (menuTitleText != null) menuTitleText.text = "Choose a Reward";
-        if (warningBodyText != null) warningBodyText.text = "Leave without taking a reward?";
-
-        GenerateRewards();
+        if (warningBodyText != null)
+        {
+            warningBodyText.text = _isOverflowMode ? "Discard unequipped gems permanently?" : "Leave without taking a reward?";
+        }
     }
 
-    private void GenerateRewards()
+    private void GenerateScatterRewards(int count)
     {
-        foreach (Transform child in gemHolder) { Destroy(child.gameObject); }
+        foreach (Transform child in gemSpawnAreaRoot) { child.DOKill(); Destroy(child.gameObject); }
 
         List<GameObject> chosenGems = new List<GameObject>();
-        int maxRewards = Mathf.Min(3, allGemPrefabs.Count);
+        int maxRewards = Mathf.Min(count, allGemPrefabs.Count);
 
         while (chosenGems.Count < maxRewards)
         {
             GameObject randomGem = allGemPrefabs[Random.Range(0, allGemPrefabs.Count)];
-            if (!chosenGems.Contains(randomGem)) { chosenGems.Add(randomGem); }
+            if (!chosenGems.Contains(randomGem)) chosenGems.Add(randomGem);
         }
 
-        GameObject firstSpawnedGem = null;
         List<Button> spawnedButtons = new List<Button>();
+        GameObject firstSpawnedGem = null;
+        List<GameObject> gemsForAnimation = new List<GameObject>(); // --- HOOK FOR DROPS ---
 
         foreach (GameObject gemPrefab in chosenGems)
         {
-            GameObject spawnedGem = Instantiate(gemPrefab, gemHolder);
+            GameObject spawnedGem = SpawnAndScatterGem(gemPrefab);
             if (firstSpawnedGem == null) firstSpawnedGem = spawnedGem;
 
-            DraggableGem dragScript = spawnedGem.GetComponent<DraggableGem>();
-            if (dragScript != null) dragScript.enabled = true;
+            gemsForAnimation.Add(spawnedGem); // Add to sequence trackers
 
             Button btn = spawnedGem.GetComponent<Button>();
-            if (btn != null) { spawnedButtons.Add(btn); }
-
-            EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
-
-            EventTrigger.Entry entry = new EventTrigger.Entry();
-            entry.eventID = EventTriggerType.PointerEnter;
-            entry.callback.AddListener((data) => { UpdateSmallDescription(spawnedGem); });
-            trigger.triggers.Add(entry);
+            if (btn != null) spawnedButtons.Add(btn);
         }
+
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.AnimateGemArrivalDrops(gemsForAnimation);
+        }
+
 
         TrapControllerFocus(spawnedButtons);
+        InitializeFocusState(firstSpawnedGem);
+    }
 
-        if (Gamepad.current != null && firstSpawnedGem != null)
+    private GameObject SpawnAndScatterGem(GameObject prefab)
+    {
+        GameObject spawnedGem = Instantiate(prefab, gemSpawnAreaRoot);
+        DraggableGem dragScript = spawnedGem.GetComponent<DraggableGem>();
+        if (dragScript != null)
         {
-            StartCoroutine(SetFocusDelayed(firstSpawnedGem));
+            dragScript.enabled = true;
+            _activeRewardGems.Add(dragScript); 
         }
+
+        // Configure standard event functions dynamically
+        Button btn = spawnedGem.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() =>
+            {
+                if (Gamepad.current != null && Gamepad.current.wasUpdatedThisFrame && CanDragGem(dragScript) && GemPopupMenu.Instance != null)
+                {
+                    GemPopupMenu.Instance.OpenMenu(dragScript, spawnedGem.GetComponent<RectTransform>());
+                }
+            });
+        }
+
+        EventTrigger trigger = spawnedGem.GetComponent<EventTrigger>();
+        if (trigger == null) trigger = spawnedGem.AddComponent<EventTrigger>();
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+        entry.callback.AddListener((data) => { UpdateSmallDescription(spawnedGem); });
+        trigger.triggers.Add(entry);
+
+        // --- EXCLUSIVE DROP SHIELD MATH ---
+        RectTransform gemRect = spawnedGem.GetComponent<RectTransform>();
+        Vector2 safePosition = CalculateSafeScatterPoint(gemRect);
+        gemRect.anchoredPosition = safePosition;
+
+        return spawnedGem;
+    }
+
+    private Vector2 CalculateSafeScatterPoint(RectTransform gemRect)
+    {
+        RectTransform spawnAreaCanvas = gemSpawnAreaRoot.GetComponent<RectTransform>();
+
+        // --- THE FIX: Define the valid spawn area using the Paper Plate's internal size! ---
+        float halfWidth = (mainPaperPlate.rect.width / 2f) - 60f;
+        float halfHeight = (mainPaperPlate.rect.height / 2f) - 60f;
+
+        for (int attempts = 0; attempts < 200; attempts++)
+        {
+            // 1. Pick a random point relative to the Paper Plate
+            float randX = Random.Range(-halfWidth, halfWidth);
+            float randY = Random.Range(-halfHeight, halfHeight);
+
+            // 2. Convert to screen space, then back to the gem canvas space
+            Vector3 worldPoint = mainPaperPlate.TransformPoint(new Vector3(randX, randY, 0));
+            Vector2 testPoint = spawnAreaCanvas.InverseTransformPoint(worldPoint);
+
+            // 3. Avoid the Top Banner and Swap Button
+            if (IsPointInsideBlocker(testPoint, titleBannerHolder, spawnAreaCanvas)) continue;
+            if (IsPointInsideBlocker(testPoint, switchGauntletBtn, spawnAreaCanvas)) continue;
+
+            // 4. THE FIX: Avoid the Gauntlets! 
+            if (InventoryManager.Instance != null)
+            {
+                if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.primaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
+                if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.secondaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
+            }
+
+            return testPoint;
+        }
+
+        // Fallback: slightly offset so they don't perfectly stack
+        return new Vector2(Random.Range(-150, -50), Random.Range(-100, 100));
+    }
+
+    private bool IsPointInsideBlocker(Vector2 targetPoint, RectTransform blocker, RectTransform canvas)
+    {
+        if (blocker == null) return false;
+
+        // Translate the blocker's world boundaries down into local canvas space matching the gems
+        Vector3[] blockerCorners = new Vector3[4];
+        blocker.GetWorldCorners(blockerCorners);
+
+        float minX = float.MaxValue, maxX = float.MinValue;
+        float minY = float.MaxValue, maxY = float.MinValue;
+
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2 localPos = canvas.InverseTransformPoint(blockerCorners[i]);
+            if (localPos.x < minX) minX = localPos.x;
+            if (localPos.x > maxX) maxX = localPos.x;
+            if (localPos.y < minY) minY = localPos.y;
+            if (localPos.y > maxY) maxY = localPos.y;
+        }
+
+        // Add a 30 pixel safety margin buffer around the edges of the central gauntlet board
+        return (targetPoint.x >= minX - 30f && targetPoint.x <= maxX + 30f &&
+                targetPoint.y >= minY - 30f && targetPoint.y <= maxY + 30f);
     }
 
     private void TrapControllerFocus(List<Button> spawnedButtons)
     {
-        if (spawnedButtons.Count > 0)
+        if (spawnedButtons.Count <= 0) return;
+        for (int i = 0; i < spawnedButtons.Count; i++)
         {
-            for (int i = 0; i < spawnedButtons.Count; i++)
-            {
-                Navigation nav = new Navigation();
-                nav.mode = Navigation.Mode.Explicit;
+            Navigation nav = new Navigation { mode = Navigation.Mode.Explicit };
+            nav.selectOnLeft = spawnedButtons[(i == 0) ? spawnedButtons.Count - 1 : i - 1];
+            nav.selectOnRight = spawnedButtons[(i == spawnedButtons.Count - 1) ? 0 : i + 1];
+            spawnedButtons[i].navigation = nav;
+        }
+    }
 
-                int leftIndex = (i == 0) ? spawnedButtons.Count - 1 : i - 1;
-                int rightIndex = (i == spawnedButtons.Count - 1) ? 0 : i + 1;
+    private void InitializeFocusState(GameObject target)
+    {
+        if (Gamepad.current != null && target != null && EventSystem.current != null)
+        {
+            StartCoroutine(SetFocusDelayed(target));
+        }
+    }
 
-                nav.selectOnLeft = spawnedButtons[leftIndex];
-                nav.selectOnRight = spawnedButtons[rightIndex];
-
-                spawnedButtons[i].navigation = nav;
-            }
+    private System.Collections.IEnumerator SetFocusDelayed(GameObject target)
+    {
+        yield return null;
+        if (EventSystem.current != null && target != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(target);
         }
     }
 
     private void Update()
     {
-        if (rightSideRewards.activeSelf)
+        if (!characterScreenRoot.activeSelf) return;
+        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+
+        if (!_isWarningActive && EventSystem.current != null)
         {
-            if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
-
-            if (!_isWarningActive && EventSystem.current != null)
+            GameObject currentSel = EventSystem.current.currentSelectedGameObject;
+            if (currentSel != null && currentSel != _lastSelectedReward && currentSel.transform.parent == gemSpawnAreaRoot)
             {
-                GameObject currentSel = EventSystem.current.currentSelectedGameObject;
-                if (currentSel != null && currentSel != _lastSelectedReward && currentSel.transform.parent == gemHolder)
-                {
-                    _lastSelectedReward = currentSel;
-                    UpdateSmallDescription(_lastSelectedReward);
-                }
+                _lastSelectedReward = currentSel;
+                UpdateSmallDescription(_lastSelectedReward);
             }
+        }
 
-            bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
-                                 (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+        bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                             (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
 
-            if (cancelPressed)
-            {
-                if (_isWarningActive)
-                {
-                    CancelClose();
-                }
-                else
-                {
-                    GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-
-                    if (currentSel != null)
-                    {
-                        if (currentSel.transform.IsChildOf(gemHolder))
-                        {
-                            if (primaryTitleButton != null)
-                            {
-                                EventSystem.current.SetSelectedGameObject(null);
-                                EventSystem.current.SetSelectedGameObject(primaryTitleButton);
-                            }
-                        }
-                        else if (currentSel.name.Contains("Slot") && InventoryManager.Instance != null)
-                        {
-                            if (currentSel.transform.IsChildOf(InventoryManager.Instance.primaryGauntlet) && primaryTitleButton != null)
-                            {
-                                EventSystem.current.SetSelectedGameObject(null);
-                                EventSystem.current.SetSelectedGameObject(primaryTitleButton);
-                            }
-                            else if (currentSel.transform.IsChildOf(InventoryManager.Instance.secondaryGauntlet) && secondaryTitleButton != null)
-                            {
-                                EventSystem.current.SetSelectedGameObject(null);
-                                EventSystem.current.SetSelectedGameObject(secondaryTitleButton);
-                            }
-                            else
-                            {
-                                ShowWarning();
-                            }
-                        }
-                        else
-                        {
-                            ShowWarning();
-                        }
-                    }
-                    else
-                    {
-                        ShowWarning();
-                    }
-                }
-            }
+        if (cancelPressed)
+        {
+            if (_isWarningActive) CancelClose();
+            else ShowWarning();
         }
     }
 
@@ -336,6 +366,7 @@ public class RewardMenuManager : MonoBehaviour
                 rewardIcon.sprite = gemData.gemIcon;
                 rewardIcon.color = Color.white;
             }
+            if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 1f; // Fade in visibility
         }
     }
 
@@ -343,22 +374,6 @@ public class RewardMenuManager : MonoBehaviour
     {
         _isWarningActive = true;
         warningPanel.SetActive(true);
-
-        if (warningBodyText != null)
-        {
-            if (_isOverflowMode)
-            {
-                warningBodyText.text = "Discard unequipped gems permanently?";
-            }
-            else if (_currentlySlottedGem != null)
-            {
-                warningBodyText.text = "Reward equipped! Ready to leave?";
-            }
-            else
-            {
-                warningBodyText.text = "Leave without taking a reward?";
-            }
-        }
 
         if (Gamepad.current != null && warningCancelButton != null && EventSystem.current != null)
         {
@@ -375,16 +390,8 @@ public class RewardMenuManager : MonoBehaviour
         if (Gamepad.current != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-
-            // --- UPDATED: Snap focus to the equipped gem so the player isn't stranded! ---
-            if (_currentlySlottedGem != null)
-            {
-                EventSystem.current.SetSelectedGameObject(_currentlySlottedGem.gameObject);
-            }
-            else if (_lastSelectedReward != null)
-            {
-                EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
-            }
+            if (_currentlySlottedGem != null) EventSystem.current.SetSelectedGameObject(_currentlySlottedGem.gameObject);
+            else if (_lastSelectedReward != null) EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
         }
     }
 
@@ -400,32 +407,30 @@ public class RewardMenuManager : MonoBehaviour
         CloseRewardMenu();
     }
 
-    private System.Collections.IEnumerator SetFocusDelayed(GameObject target)
-    {
-        yield return null;
-        if (EventSystem.current != null && target != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(target);
-        }
-    }
-
     private void CloseRewardMenu()
     {
         characterScreenRoot.SetActive(false);
+        if (expBarRoot != null) expBarRoot.SetActive(true);
+        if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;
 
-        if (expBarRoot != null)
+        if (gemSpawnAreaRoot != null && gemSpawnAreaRoot.TryGetComponent<Image>(out var bgImage))
         {
-            expBarRoot.SetActive(true);
+            bgImage.raycastTarget = false;
+
+        }
+
+        if (gemSpawnAreaRoot != null)
+        {
+            foreach (Transform child in gemSpawnAreaRoot)
+            {
+                child.DOKill(); // Stop animations before destroying
+                Destroy(child.gameObject);
+            }
         }
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-
-        if (lookAction != null)
-        {
-            lookAction.action.Enable();
-        }
+        if (lookAction != null) lookAction.action.Enable();
 
         Time.timeScale = 1f;
     }

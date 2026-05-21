@@ -21,6 +21,7 @@ public class GauntletMenu : MonoBehaviour
 
     [Header("Input References")]
     [SerializeField] private InputActionAsset inputActions;
+    [SerializeField] private InputActionReference inventoryToggleAction;
     private InputActionMap _playerMap;
     private InputActionMap _uiMap;
     private InputAction _pauseAction;
@@ -74,19 +75,28 @@ public class GauntletMenu : MonoBehaviour
     {
         _pauseAction.Enable();
         _pauseAction.performed += OnPausePerformed;
+        if (inventoryToggleAction != null) inventoryToggleAction.action.Enable(); 
     }
 
     private void OnDisable()
     {
         _pauseAction.Disable();
         _pauseAction.performed -= OnPausePerformed;
+        if (inventoryToggleAction != null) inventoryToggleAction.action.Disable();
     }
 
     private void Update()
     {
-        if (!_isPaused) return;
+        if (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame())
+        {
+            if (!_isPaused && characterScreenRoot != null && !characterScreenRoot.activeSelf)
+            {
+                PauseGame();
+                OpenUpgradeMenu();
+            }
+        }
 
-        // REMOVE the settingsPanel check so mouse detection works in all menus
+        if (!_isPaused) return;
 
         bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
         bool keyboardPressed = Keyboard.current != null &&
