@@ -32,6 +32,10 @@ public class ChamberData
     public List<Animator> chamberDoorAnimators = new List<Animator>();
     public string doorOpenTrigger = "OpenDoor";
 
+    [Header("Chamber Reward")]
+    [Tooltip("Drag the deactivated ChamberRewardTrigger for this room here.")]
+    public GameObject chamberRewardObject;
+
     // Internal State Tracking
     [HideInInspector] public bool hasSpawned = false;
     [HideInInspector] public bool isCleared = false;
@@ -202,7 +206,13 @@ public class EnemySpawner : MonoBehaviour
             Debug.LogWarning($"Chamber '{chamber.chamberName}' cleared, but no Door Animator is assigned!");
         }
 
-        if (isInstantClear)
+        if (chamber.chamberRewardObject != null)
+        {
+            chamber.chamberRewardObject.SetActive(true);
+            Debug.Log($"[EnemySpawner] Revealed reward for {chamber.chamberName}!");
+        }
+
+        /*if (isInstantClear)
         {
             Debug.Log("Chamber cleared instantly");
             GrantChamberRewards();
@@ -211,10 +221,10 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.Log("Chamber cleared starting...");
             StartCoroutine(ChamberRewardSequence());
-        }
+        }*/
     }
 
-    private IEnumerator ChamberRewardSequence()
+    /*private IEnumerator ChamberRewardSequence()
     {
         yield return new WaitForSecondsRealtime(2f);
         GrantChamberRewards();
@@ -237,7 +247,7 @@ public class EnemySpawner : MonoBehaviour
             RewardMenuManager.Instance.OpenRewardMenu();
         }
         else Debug.Log("RewardManager not found");
-    }
+    }*/
 
     public void ForceClearChamber(int chamberIndex)
     {
