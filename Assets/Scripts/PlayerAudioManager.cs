@@ -76,7 +76,29 @@ public class PlayerAudioManager : MonoBehaviour
 
     // These two pick a random sound from your arrays to keep combat dynamic
     public void PlayLightWhoosh() => PlayRandomClip(lightWhooshSounds);
-    public void PlayEnemyImpact() => PlayRandomClip(enemyImpactSounds);
+    public void PlayEnemyImpact(Vector3 impactPosition) 
+    {
+        // Array configuration test
+        if (enemyImpactSounds == null || enemyImpactSounds.Length == 0) 
+        {
+            Debug.LogError("<color=red><b>[MANAGER ERROR]</b> The EnemyImpactSounds array is EMPTY in the Inspector window!</color>");
+            return;
+        }
+
+        AudioClip randomClip = enemyImpactSounds[Random.Range(0, enemyImpactSounds.Length)];
+        
+        if (randomClip == null)
+        {
+            Debug.LogError("<color=red><b>[MANAGER ERROR]</b> A slot inside your EnemyImpactSounds array is empty/null!</color>");
+            return;
+        }
+
+        // Clear visual confirmation log
+        Debug.Log($"<color=cyan><b>[AUDIO PLAYING]</b> Successfully executing impact sound: {randomClip.name} at coordinates: {impactPosition}</color>");
+        
+        // FALLBACK TEST: Play directly on the player audio source (2D) to bypass any camera distance attenuation issues
+        PlayClip(randomClip);
+    }
 
 
     // INTERNAL AUDIO LOGIC

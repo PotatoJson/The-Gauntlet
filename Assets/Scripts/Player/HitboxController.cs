@@ -44,22 +44,32 @@ public class HitboxController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Don't hit ourselves
         if(other.transform.root == transform.root) return;
-        if(other.TryGetComponent<BaseEnemy>(out BaseEnemy enemyScript))
+
+        // THE FIX: Search the object and its parents for the BaseEnemy script
+        BaseEnemy enemyScript = other.GetComponentInParent<BaseEnemy>();
+
+        // If we successfully found the script...
+        if(enemyScript != null)
         {
             GameObject enemyRoot = other.transform.root.gameObject;
+            
+            // Make sure we only hit this enemy once per swing
             if(_alreadyHit.Add(enemyRoot))
             {
-                enemyScript.TakeDamage(_currentDamage/*, _currentPoiseDamage TODO: Add poise system to enemies later*/);
+                enemyScript.TakeDamage(_currentDamage);
                 SpawnBlood(other);
 
                 if (MetricsTracker.Instance != null)
                 {
                     MetricsTracker.Instance.RecordMeleeHit(_currentAttackType, _currentDamage);
                 }
+                
+                // Moved the log INSIDE so it only prints when you actually damage an enemy!
+                Debug.Log($"<color=orange>Successfully Damaged {enemyRoot.name} for {_currentDamage}</color>");
             }
         }
-        Debug.Log($"Hit {other.name} for {_currentDamage} Damage");
     }
 
     private void SpawnBlood(Collider target)

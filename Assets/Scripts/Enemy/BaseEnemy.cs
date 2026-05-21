@@ -113,6 +113,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private PlayerHealth playerHealth;
     protected PlayerManager playerManager;
+    protected PlayerAudioManager playerAudioManager;
 
     //death event
     public static event System.Action<BaseEnemy> OnAnyEnemyDied;
@@ -128,8 +129,11 @@ public abstract class BaseEnemy : MonoBehaviour
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
         if (player != null)
+        {
             playerHealth = player.GetComponent<PlayerHealth>();
             playerManager = player.GetComponent<PlayerManager>();
+        }
+        playerAudioManager = FindAnyObjectByType<PlayerAudioManager>();
     }
 
     protected virtual void Start()
@@ -504,7 +508,24 @@ public abstract class BaseEnemy : MonoBehaviour
     #region Damage, Health & Hitboxes
     public virtual void TakeDamage(float damage)
     {
-        if (IsDead()) return;
+        //Force the enemy to report its health
+        Debug.Log($"<color=yellow>Enemy {gameObject.name} hit! Current Health is: {currentHealth}</color>");
+
+        if (IsDead()) 
+        {
+            Debug.LogWarning("Enemy is already dead! Skipping damage and sound.");
+            return;
+        }
+
+        //Play the sound with a safety log
+        if (playerAudioManager != null)
+        {
+            playerAudioManager.PlayEnemyImpact(transform.position); 
+        }
+        else
+        {
+            Debug.LogError("<color=red>TakeDamage fired, but Audio Manager is STILL null!</color>");
+        }
 
         playerManager?.SetInCombat();
         
