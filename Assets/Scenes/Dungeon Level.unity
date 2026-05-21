@@ -18292,6 +18292,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1023073569370176075, guid: 1961632ea41c53947a774c84e43d99ef, type: 3}
   m_PrefabInstance: {fileID: 1658815535}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &332847931 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4917449782345847679, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 690440286}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &333461194
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37720,6 +37731,14 @@ PrefabInstance:
       propertyPath: playerManager
       value: 
       objectReference: {fileID: 1462897096}
+    - target: {fileID: 809021339637959330, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: altMenuCanvasGroup
+      value: 
+      objectReference: {fileID: 690440291}
+    - target: {fileID: 1112892938851541703, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1575995725666900783, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerHealth
       value: 
@@ -37740,6 +37759,26 @@ PrefabInstance:
       propertyPath: playerManager
       value: 
       objectReference: {fileID: 1462897096}
+    - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: elementsToFade.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: 'elementsToFade.Array.data[0]'
+      value: 
+      objectReference: {fileID: 690440291}
+    - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: 'elementsToFade.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1642579573}
+    - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: 'elementsToFade.Array.data[2]'
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2011649541254606141, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: 'elementsToFade.Array.data[3]'
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2141713174327206360, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -37820,6 +37859,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2253837790230315747, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerHealth
+      value: 
+      objectReference: {fileID: 994712868}
+    - target: {fileID: 2651694721818954785, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2838688201023236640, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -37840,6 +37887,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: SpawnGauntlet
       objectReference: {fileID: 0}
+    - target: {fileID: 3380623062487122293, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_Name
+      value: HSE
+      objectReference: {fileID: 0}
     - target: {fileID: 4145074490360026239, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -37847,6 +37898,18 @@ PrefabInstance:
     - target: {fileID: 4145074490360026239, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: SpawnGauntlet
+      objectReference: {fileID: 0}
+    - target: {fileID: 4692947584835275263, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_Alpha
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4692947584835275263, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_Interactable
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5311058177322472226, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_Alpha
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6283543031277195622, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: hudPanel
@@ -37856,6 +37919,10 @@ PrefabInstance:
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 1755252237}
+    - target: {fileID: 6715758798475793791, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6753638547299446044, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerHealth
       value: 
@@ -37864,6 +37931,10 @@ PrefabInstance:
       propertyPath: playerHealth
       value: 
       objectReference: {fileID: 994712868}
+    - target: {fileID: 7422193485817305102, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_Alpha
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7665752657789574427, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -37884,6 +37955,18 @@ PrefabInstance:
       propertyPath: testEarthGem
       value: 
       objectReference: {fileID: 11400000, guid: 378babd367648824a81c6273caa44bf1, type: 2}
+    - target: {fileID: 8300653277200775370, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: fillBar
+      value: 
+      objectReference: {fileID: 332847931}
+    - target: {fileID: 8300653277200775370, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: redArrow
+      value: 
+      objectReference: {fileID: 709397298}
+    - target: {fileID: 8300653277200775370, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: txtLevel
+      value: 
+      objectReference: {fileID: 1018935711}
     - target: {fileID: 8420259944261759690, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_Name
       value: Canvas
@@ -37904,6 +37987,11 @@ PrefabInstance:
 --- !u!1 &690440287 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3414136427608377627, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 690440286}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &690440291 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 5311058177322472226, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
   m_PrefabInstance: {fileID: 690440286}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &690558206 stripped
@@ -39563,6 +39651,11 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7281604953214523668, guid: b4e36a0bebc0cfd4c8b8a439bef6a15d, type: 3}
   m_PrefabInstance: {fileID: 386298804}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &709397298 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1494155544272839854, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 690440286}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &709978877
 PrefabInstance:
@@ -59174,6 +59267,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1197348807929088204, guid: ed0b1b4d502f51848b1c5119cc7cb3b2, type: 3}
   m_PrefabInstance: {fileID: 101853065}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1018935711 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1889592004248300014, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 690440286}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &1021493012
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -86410,6 +86514,10 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 2615825535877183288, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+      propertyPath: IsInCombat
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2615825535877183288, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: _bossRoomSpawn
       value: 
       objectReference: {fileID: 1705691835}
@@ -86461,6 +86569,14 @@ PrefabInstance:
       propertyPath: LastCheckPoint
       value: 
       objectReference: {fileID: 304513521}
+    - target: {fileID: 8557496677095737673, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.00013387679
+      objectReference: {fileID: 0}
+    - target: {fileID: 8557496677095737673, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0021049858
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -97448,6 +97564,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 6346436511151377735, guid: cdb044cec19c039408dae3173e9af7d8, type: 3}
   m_PrefabInstance: {fileID: 1642215520}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &1642579573 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 8019013823391795320, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 690440286}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1643596683 stripped
 Transform:
