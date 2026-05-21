@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8862002911632284055}
   - component: {fileID: 3684165091168464202}
   - component: {fileID: 2008504572661095369}
+  - component: {fileID: 4880432285823952357}
   m_Layer: 9
   m_Name: Point Light
   m_TagString: Untagged
@@ -127,6 +128,22 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &4880432285823952357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876424662825962770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e065a3d8b2c96714797773cda904a204, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightFlicker
+  lightSource: {fileID: 3684165091168464202}
+  minIntensity: 2
+  maxIntensity: 5
+  smoothing: 5
 --- !u!1001 &3509549618126356982
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -187,6 +204,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4257311553008950347, guid: b620f34124d836848a3cf6b84f2e7791, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 23ce24275c574a6448bfb485eff738ab, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

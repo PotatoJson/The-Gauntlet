@@ -616,6 +616,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""211f79dd-a658-43c7-b8bc-89957d1c1431"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""RightSkill"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""afa6bdc7-413f-48fd-96de-bd5cd6d9c5f6"",
                     ""path"": ""<Keyboard>/q"",
                     ""interactions"": """",
@@ -644,6 +655,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
                     ""action"": ""OpenInventory"",
+                    ""id"": ""19f8a643-3ab8-47be-9dc7-3164f372286f"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""LeftSkill"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
