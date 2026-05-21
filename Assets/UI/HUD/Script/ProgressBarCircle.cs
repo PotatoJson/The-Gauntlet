@@ -95,7 +95,6 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
         _pendingLevelUps += levelsGained;
 
-        // THE FIX: Only trigger the breathing and the arrow IF the player leveled up!
         if (_pendingLevelUps > 0)
         {
             // 1. Start the bar breathing
@@ -108,14 +107,16 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             }
 
             // 2. Show the arrow and start the pointing bounce
-            if (redArrow != null && !redArrow.activeSelf)
+            if (redArrow != null)
             {
                 redArrow.SetActive(true);
                 RectTransform arrowRect = redArrow.GetComponent<RectTransform>();
-                arrowRect.anchoredPosition = _originalArrowPos; // Snap to original position first
 
-                // Bounce diagonally down-and-right by 15 pixels, then back to the target
-                _arrowTween = arrowRect.DOAnchorPos(_originalArrowPos + new Vector2(15f, -15f), 0.5f)
+                _arrowTween?.Kill();
+
+                // Start from the original position, move DOWN by only 4px
+                arrowRect.anchoredPosition = _originalArrowPos;
+                _arrowTween = arrowRect.DOAnchorPos(_originalArrowPos + new Vector2(0f, -0.1f), 0.8f)
                     .SetEase(Ease.InOutSine)
                     .SetLoops(-1, LoopType.Yoyo)
                     .SetUpdate(true);
@@ -276,7 +277,7 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             }
 
             onRewardReadyClicked?.Invoke();
-            //hard link 
+
             if(RewardMenuManager.Instance != null && Application.isPlaying)
             {
                 RewardMenuManager.Instance.OpenRewardMenu();

@@ -90,6 +90,21 @@ public class GemPopupMenu : MonoBehaviour
         transform.position = gemRect.position;
         _rectTransform.anchoredPosition += new Vector2(gemRect.rect.width / 2f, -gemRect.rect.height / 2f);
 
+        Canvas canvas = GetComponentInParent<Canvas>();
+        Vector3[] corners = new Vector3[4];
+        _rectTransform.GetWorldCorners(corners);
+
+        float screenWidth = Screen.width;
+        float screenHeight = Screen.height;
+
+        // Check right edge
+        if (corners[2].x > screenWidth)
+            _rectTransform.anchoredPosition -= new Vector2(corners[2].x - screenWidth + 20, 0);
+
+        // Check bottom edge
+        if (corners[0].y < 0)
+            _rectTransform.anchoredPosition += new Vector2(0, Mathf.Abs(corners[0].y) + 20);
+
         bool isEquipped = gem.IsEquipped();
         unslottedPanel.SetActive(!isEquipped);
         slottedPanel.SetActive(isEquipped);
@@ -152,14 +167,24 @@ public class GemPopupMenu : MonoBehaviour
     {
         if (_targetGem != null)
         {
-            if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+            RewardMenuManager manager = RewardMenuManager.Instance;
+            if (manager != null && manager.IsRewardModeActive())
             {
-                RewardMenuManager.Instance.OnGemReturned(_targetGem);
+                Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
+                _targetGem.transform.SetParent(rewardContainer);
+
+                manager.OnGemReturned(_targetGem);
+
+                /*if (InventoryManager.Instance != null)
+                {
+                    InventoryManager.Instance.AnimateSingleGemDrop(_targetGem);
+                }*/
             }
             _targetGem.ReturnToInventory();
         }
         CloseMenu();
 
+        // 3. Instead of focusing the slot (which is empty), focus the gem itself!
         if (EventSystem.current != null && _targetGem != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -172,12 +197,16 @@ public class GemPopupMenu : MonoBehaviour
 
     private void TryEquipToGauntlet(Transform gauntletParent)
     {
-        GauntletManager gauntlet = gauntletParent.GetComponentInChildren<GauntletManager>();
-        if (gauntlet == null)
+        // Add a check to ensure the gauntletParent is actually visible
+        if (gauntletParent == null || !gauntletParent.gameObject.activeInHierarchy)
         {
-            CloseMenu();
+            Debug.Log("Gauntlet not visible!");
             return;
         }
+
+        GauntletManager gauntlet = gauntletParent.GetComponentInChildren<GauntletManager>();
+        if (gauntlet == null) return;
+
         StartPlacementMode(gauntlet);
     }
 
