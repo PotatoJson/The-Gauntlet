@@ -43,11 +43,6 @@ public class PlayerStatsManager : MonoBehaviour
     // no need to link scripts becasue of events
     public event Action OnStatsCalculated;
 
-    private void Awake()
-    {
-
-    }
-    
     private void Start()
     {
         if(PrimaryGauntlet == null && DefaultPrimary != null)
@@ -75,12 +70,6 @@ public class PlayerStatsManager : MonoBehaviour
 
         //create the actual gauntlet from data
         RunTimeGauntlet newGauntlet = new RunTimeGauntlet(gManager.LinkedGauntletData, slotContext);
-
-        RunTimeGauntlet oldGauntlet = (slotContext == EquipSlot.Primary) ? PrimaryGauntlet : SecondaryGauntlet;
-        if (oldGauntlet != null && oldGauntlet.ActiveSkillGem != null)
-        {
-            newGauntlet.ActiveSkillGem = oldGauntlet.ActiveSkillGem;
-        }
 
         for (int i = 0; i < gManager.currentActiveSlots; i++)
         {

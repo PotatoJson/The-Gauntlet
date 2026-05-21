@@ -11,12 +11,15 @@ public class DebugHUD : MonoBehaviour
     [Tooltip("Drag your CharacterScreen object here so the script can find it while it's hidden!")]
     public InventoryManager inventoryManager;
 
-    [Tooltip("Drag your Player here to force-equip the skills")]
+    [Tooltip("NEW: Drag your Player here so we can force-equip the skills!")]
     public PlayerStatsManager statsManager;
 
     [Header("Test Gems")]
-    [Tooltip("Generic gems")]
-    public SkillGemData GenericTestGem;
+    [Tooltip("Drag your Test Fireball SkillGemData here")]
+    public SkillGemData testFireGem;
+    
+    [Tooltip("Drag your Test Rock SkillGemData here")]
+    public SkillGemData testEarthGem;
 
     private void Start()
     {
@@ -76,18 +79,18 @@ public class DebugHUD : MonoBehaviour
             return;
         }
 
-        // Equip the same generic gem to the Primary (Right) Gauntlet
-        if (statsManager.PrimaryGauntlet != null)
+        // Equip Earth to the Primary (Right) Gauntlet
+        if (statsManager.PrimaryGauntlet != null && testEarthGem != null)
         {
-            statsManager.PrimaryGauntlet.ActiveSkillGem = GenericTestGem;
-            Debug.Log($"CHEAT: {GenericTestGem.name} slotted into Primary (Right) Gauntlet!");
+            statsManager.PrimaryGauntlet.ActiveSkillGem = testEarthGem;
+            Debug.Log("CHEAT: Earth Gem slotted into Primary (Right) Gauntlet!");
         }
 
-        // Equip the same generic gem to the Secondary (Left) Gauntlet
-        if (statsManager.SecondaryGauntlet != null)
+        // Equip Fire to the Secondary (Left) Gauntlet
+        if (statsManager.SecondaryGauntlet != null && testFireGem != null)
         {
-            statsManager.SecondaryGauntlet.ActiveSkillGem = GenericTestGem;
-            Debug.Log($"CHEAT: {GenericTestGem.name} slotted into Secondary (Left) Gauntlet!");
+            statsManager.SecondaryGauntlet.ActiveSkillGem = testFireGem;
+            Debug.Log("CHEAT: Fire Gem slotted into Secondary (Left) Gauntlet!");
         }
     }
 }
