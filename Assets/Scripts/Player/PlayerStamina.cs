@@ -13,7 +13,7 @@ public class PlayerStamina : MonoBehaviour
     private float _maxStamina;
     private float _regenTimer = 0f;
 
-    [SerializeField] private StaminaBar _staminaBar;
+    [SerializeField] private AnimatedStaminaBar _staminaBar;
 
     public event Action<float, float> OnStaminaChanged;
 

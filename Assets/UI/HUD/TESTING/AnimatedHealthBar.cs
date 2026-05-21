@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening; // --- NEW: Required for smooth sliding! ---
 
 public class AnimatedHealthBar : MonoBehaviour
 {
@@ -7,10 +8,15 @@ public class AnimatedHealthBar : MonoBehaviour
     [SerializeField] private PlayerHealth playerHealth;
 
     private Animator _animator;
+    private Tween _currentTween;
+    private float _visualHealthPercent = 1f; // Tracks our smooth intermediate position
 
     [Header("Settings")]
     [Tooltip("The EXACT name of the animation block inside the Animator window")]
     [SerializeField] private string animationStateName = "pixel_health_bar";
+
+    [Tooltip("How long it takes for the bar to slide to its new value")]
+    [SerializeField] private float smoothDuration = 0.25f;
 
     private void Awake()
     {
@@ -19,46 +25,57 @@ public class AnimatedHealthBar : MonoBehaviour
 
     private void OnEnable()
     {
-        // Subscribe to your existing health event!
         if (playerHealth != null)
         {
-            playerHealth.OnHealthChanged += UpdateAnimatorFrame;
+            playerHealth.OnHealthChanged += HandleHealthChanged;
         }
     }
 
     private void OnDisable()
     {
-        // Clean up the event listener if the UI is destroyed
         if (playerHealth != null)
         {
-            playerHealth.OnHealthChanged -= UpdateAnimatorFrame;
+            playerHealth.OnHealthChanged -= HandleHealthChanged;
         }
+        if (_currentTween != null) _currentTween.Kill();
     }
 
     private void Start()
     {
-        // Force the bar to update the exact moment the game starts
-        if (playerHealth != null)
+        if (playerHealth != null && playerHealth.MaxHealth > 0)
         {
-            UpdateAnimatorFrame(playerHealth.CurrentHealth, playerHealth.MaxHealth);
+            _visualHealthPercent = playerHealth.CurrentHealth / playerHealth.MaxHealth;
+            UpdateAnimatorFrame(_visualHealthPercent);
         }
     }
 
-    private void UpdateAnimatorFrame(float currentHealth, float maxHealth)
+    private void HandleHealthChanged(float currentHealth, float maxHealth)
     {
-        if (_animator == null || maxHealth <= 0) return;
+        if (maxHealth <= 0) return;
 
-        // 1. Get the health as a decimal between 0.0 and 1.0
-        float healthPercent = currentHealth / maxHealth;
+        float targetPercent = currentHealth / maxHealth;
 
-        // 2. IMPORTANT CALCULATION:
-        // Looking at your screenshots, Frame 1 is FULL (red), and Frame 73 is EMPTY (clear).
-        // That means 100% health = Animation Time 0.0. 
-        // 0% health = Animation Time 1.0.
-        // So, we must invert the health percentage to match the timeline!
-        float animationScrubTime = 1f - healthPercent;
+        // Kill any ongoing slide so it doesn't fight the new one
+        if (_currentTween != null) _currentTween.Kill();
 
-        // 3. Force the Animator to instantly jump to that exact percentage of the timeline!
+        // --- THE MAGIC: Smoothly slide our visual tracker over time ---
+        _currentTween = DOTween.To(
+            () => _visualHealthPercent,
+            x => {
+                _visualHealthPercent = x;
+                UpdateAnimatorFrame(_visualHealthPercent);
+            },
+            targetPercent,
+            smoothDuration
+        ).SetEase(Ease.OutQuad).SetUpdate(true); // SetUpdate(true) makes it work even when game time is paused!
+    }
+
+    private void UpdateAnimatorFrame(float percent)
+    {
+        if (_animator == null) return;
+
+        // Invert it because Frame 0 is Full, Frame 73 is Empty
+        float animationScrubTime = 1f - Mathf.Clamp01(percent);
         _animator.Play(animationStateName, 0, animationScrubTime);
     }
 }
