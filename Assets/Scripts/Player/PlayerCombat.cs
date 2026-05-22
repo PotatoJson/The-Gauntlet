@@ -59,6 +59,12 @@ public class PlayerCombat : MonoBehaviour
     private float _leftSkillCooldownTimer = 0f;
     private float _rightSkillCooldownTimer = 0f;
 
+    public float LeftSkillTimer => _leftSkillCooldownTimer;
+    public float RightSkillTimer => _rightSkillCooldownTimer;
+
+    public float LeftMaxCooldown => 5.0f; 
+    public float RightMaxCooldown => 5.0f;
+
     private InputAction _leftSkillAction;
     private InputAction _rightSkillAction;
 

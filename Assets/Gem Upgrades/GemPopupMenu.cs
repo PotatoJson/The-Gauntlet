@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
-using UnityEngine.UI; // --- NEW: Needed for the Button component! ---
+using UnityEngine.UI;
 
 public class GemPopupMenu : MonoBehaviour
 {
@@ -17,8 +17,6 @@ public class GemPopupMenu : MonoBehaviour
     [SerializeField] private GameObject equipButton;
     [SerializeField] private GameObject swapButton;
     [SerializeField] private GameObject primaryButton;
-
-    // --- NEW: Reference to the actual Unequip button! ---
     [SerializeField] private Button unequipButton;
 
     [Header("Gauntlet Slot Containers")]
@@ -27,9 +25,9 @@ public class GemPopupMenu : MonoBehaviour
 
     private DraggableGem _targetGem;
     private RectTransform _rectTransform;
-
     private bool _isPlacingMode = false;
     private Transform _originalGemParent;
+    private DraggableGem _displacedGem;
 
     public bool IsPlacingMode => _isPlacingMode;
 
@@ -58,7 +56,6 @@ public class GemPopupMenu : MonoBehaviour
                 if (subPanel != null && subPanel.activeSelf)
                 {
                     subPanel.SetActive(false);
-
                     bool isEquipped = _targetGem.IsEquipped();
                     unslottedPanel.SetActive(!isEquipped);
                     slottedPanel.SetActive(isEquipped);
@@ -91,19 +88,14 @@ public class GemPopupMenu : MonoBehaviour
         _rectTransform.anchoredPosition += new Vector2(gemRect.rect.width / 2f, -gemRect.rect.height / 2f);
 
         Canvas canvas = GetComponentInParent<Canvas>();
-        Vector3[] corners = new Vector3[4];
-        _rectTransform.GetWorldCorners(corners);
+        if (canvas != null)
+        {
+            Vector3[] corners = new Vector3[4];
+            _rectTransform.GetWorldCorners(corners);
 
-        float screenWidth = Screen.width;
-        float screenHeight = Screen.height;
-
-        // Check right edge
-        if (corners[2].x > screenWidth)
-            _rectTransform.anchoredPosition -= new Vector2(corners[2].x - screenWidth + 20, 0);
-
-        // Check bottom edge
-        if (corners[0].y < 0)
-            _rectTransform.anchoredPosition += new Vector2(0, Mathf.Abs(corners[0].y) + 20);
+            if (corners[2].x > Screen.width) _rectTransform.anchoredPosition -= new Vector2(corners[2].x - Screen.width + 20f, 0);
+            if (corners[0].y < 0) _rectTransform.anchoredPosition += new Vector2(0, Mathf.Abs(corners[0].y) + 20f);
+        }
 
         bool isEquipped = gem.IsEquipped();
         unslottedPanel.SetActive(!isEquipped);
@@ -131,9 +123,11 @@ public class GemPopupMenu : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void OnEquipClicked()
+    public void OnEquipClicked() { subPanel.SetActive(true); FocusSubMenu(); }
+    public void OnSwapClicked() { subPanel.SetActive(true); FocusSubMenu(); }
+
+    private void FocusSubMenu()
     {
-        subPanel.SetActive(true);
         if (Gamepad.current != null && primaryButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -153,38 +147,31 @@ public class GemPopupMenu : MonoBehaviour
         }
     }
 
-    public void OnSwapClicked()
-    {
-        subPanel.SetActive(true);
-        if (Gamepad.current != null && primaryButton != null && EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(primaryButton);
-        }
-    }
-
     public void OnUnequipClicked()
     {
         if (_targetGem != null)
         {
-            RewardMenuManager manager = RewardMenuManager.Instance;
-            if (manager != null && manager.IsRewardModeActive())
+            Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
+            _targetGem.parentAfterDrag = rewardContainer;
+            _targetGem.transform.SetParent(rewardContainer);
+
+            if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+                RewardMenuManager.Instance.OnGemReturned(_targetGem);
+
+            if (RewardMenuManager.Instance != null)
             {
-                Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
-                _targetGem.transform.SetParent(rewardContainer);
-
-                manager.OnGemReturned(_targetGem);
-
-                /*if (InventoryManager.Instance != null)
-                {
-                    InventoryManager.Instance.AnimateSingleGemDrop(_targetGem);
-                }*/
+                RectTransform gemRect = _targetGem.GetComponent<RectTransform>();
+                gemRect.anchoredPosition = RewardMenuManager.Instance.CalculateSafeScatterPoint(gemRect);
             }
+
             _targetGem.ReturnToInventory();
+
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.AnimateSingleGemDrop(_targetGem);
         }
+
         CloseMenu();
 
-        // 3. Instead of focusing the slot (which is empty), focus the gem itself!
         if (EventSystem.current != null && _targetGem != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -197,19 +184,18 @@ public class GemPopupMenu : MonoBehaviour
 
     private void TryEquipToGauntlet(Transform gauntletParent)
     {
-        // Add a check to ensure the gauntletParent is actually visible
-        if (gauntletParent == null || !gauntletParent.gameObject.activeInHierarchy)
+        if (!gauntletParent.gameObject.activeInHierarchy)
         {
-            Debug.Log("Gauntlet not visible!");
-            return;
+            if (InventoryManager.Instance != null) InventoryManager.Instance.ToggleEquippedGauntletDisplay();
         }
 
         GauntletManager gauntlet = gauntletParent.GetComponentInChildren<GauntletManager>();
-        if (gauntlet == null) return;
+        if (gauntlet == null) { CloseMenu(); return; }
 
         StartPlacementMode(gauntlet);
     }
 
+    // --- THE GEM-CENTRIC PLACEMENT FIX ---
     private void StartPlacementMode(GauntletManager gauntlet)
     {
         _isPlacingMode = true;
@@ -223,37 +209,87 @@ public class GemPopupMenu : MonoBehaviour
         _targetGem.transform.SetAsLastSibling();
 
         CanvasGroup cg = _targetGem.GetComponent<CanvasGroup>();
-        if (cg != null)
-        {
-            cg.alpha = 0.6f;
-            cg.blocksRaycasts = false;
-        }
+        if (cg != null) { cg.alpha = 0.6f; cg.blocksRaycasts = false; }
 
-        if (Gamepad.current != null)
+        GameObject firstValidSlot = null;
+
+        // --- WAKE UP SLOTS BASED ON GEM TYPE ---
+        if (_targetGem.LinkedGemData.gemType == GemType.Stat)
         {
+            // Only wake up the finger slots
             foreach (GameObject slot in gauntlet.fingerSlots)
             {
-                if (slot.activeInHierarchy && slot.transform.childCount == 0)
+                if (slot.activeInHierarchy)
                 {
-                    if (EventSystem.current != null)
-                    {
-                        EventSystem.current.SetSelectedGameObject(null);
-                        EventSystem.current.SetSelectedGameObject(slot);
-                    }
-                    break;
+                    Button slotBtn = slot.GetComponent<Button>();
+                    if (slotBtn != null) slotBtn.interactable = true; // Make controller see it!
+                    if (firstValidSlot == null) firstValidSlot = slot;
                 }
+            }
+        }
+        else if (_targetGem.LinkedGemData.gemType == GemType.Skill)
+        {
+            // Only wake up the Ultimate slot
+            if (gauntlet.SkillSlot != null && gauntlet.SkillSlot.activeInHierarchy)
+            {
+                Button slotBtn = gauntlet.SkillSlot.GetComponent<Button>();
+                if (slotBtn != null) slotBtn.interactable = true;
+                firstValidSlot = gauntlet.SkillSlot;
+            }
+        }
+
+        // Snap controller focus to the first valid slot we found
+        if (Gamepad.current != null && firstValidSlot != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(firstValidSlot);
+        }
+    }
+
+    private void EndPlacementMode()
+    {
+        _isPlacingMode = false;
+        CanvasGroup cg = _targetGem.GetComponent<CanvasGroup>();
+        if (cg != null) { cg.alpha = 1f; cg.blocksRaycasts = true; }
+
+        // PUT THE SLOTS BACK TO SLEEP!
+        if (InventoryManager.Instance != null)
+        {
+            DisableSlots(InventoryManager.Instance.primaryGauntlet);
+            DisableSlots(InventoryManager.Instance.secondaryGauntlet);
+        }
+    }
+
+    private void DisableSlots(Transform gauntletParent)
+    {
+        if (gauntletParent == null) return;
+        GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>();
+        if (gm != null)
+        {
+            // Put fingers to sleep
+            foreach (GameObject slot in gm.fingerSlots)
+            {
+                Button btn = slot.GetComponent<Button>();
+                if (btn != null) btn.interactable = false;
+            }
+
+            // Put ultimate slot to sleep
+            if (gm.SkillSlot != null)
+            {
+                Button btn = gm.SkillSlot.GetComponent<Button>();
+                if (btn != null) btn.interactable = false;
             }
         }
     }
 
     private void HandlePlacementMode()
     {
-        if (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f)
+        if (Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 2.0f)
         {
             Vector3 mousePos = Mouse.current.position.ReadValue();
             _targetGem.transform.position = Vector3.Lerp(_targetGem.transform.position, mousePos + new Vector3(40f, -40f, 0f), Time.unscaledDeltaTime * 25f);
         }
-        else if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
+        else if (Gamepad.current != null && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
             if (currentSel.name.Contains("Slot"))
@@ -266,12 +302,15 @@ public class GemPopupMenu : MonoBehaviour
         if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
-            if (currentSel != null && currentSel.name.Contains("Slot") && currentSel.transform.childCount == 0)
+            if (currentSel != null)
             {
-                ConfirmPlacement(currentSel.transform);
+                if (currentSel.name.Contains("Slot")) ConfirmPlacement(currentSel.transform);
+                else if (currentSel.GetComponent<DraggableGem>() != null && currentSel.GetComponent<DraggableGem>().IsEquipped())
+                    ConfirmPlacement(currentSel.transform.parent);
             }
         }
 
+        // ... Keep existing Mouse Raycast confirmation ...
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             PointerEventData pointerData = new PointerEventData(EventSystem.current) { position = Mouse.current.position.ReadValue() };
@@ -281,14 +320,10 @@ public class GemPopupMenu : MonoBehaviour
             bool clickedValidSlot = false;
             foreach (RaycastResult result in results)
             {
-                if (result.gameObject.name.Contains("Slot") && result.gameObject.transform.childCount == 0)
-                {
-                    ConfirmPlacement(result.gameObject.transform);
-                    clickedValidSlot = true;
-                    break;
-                }
+                if (result.gameObject.name.Contains("Slot") && result.gameObject.GetComponent<Button>().interactable) { ConfirmPlacement(result.gameObject.transform); clickedValidSlot = true; break; }
+                DraggableGem clickedGem = result.gameObject.GetComponent<DraggableGem>();
+                if (clickedGem != null && clickedGem.IsEquipped()) { ConfirmPlacement(clickedGem.transform.parent); clickedValidSlot = true; break; }
             }
-
             if (!clickedValidSlot) CancelPlacement();
         }
 
@@ -301,47 +336,78 @@ public class GemPopupMenu : MonoBehaviour
 
     private void ConfirmPlacement(Transform targetSlot)
     {
-        RestoreGemVisuals();
+        DraggableGem swappedGem = null;
+        if (targetSlot.childCount > 0) swappedGem = targetSlot.GetChild(0).GetComponent<DraggableGem>();
+
+        EndPlacementMode(); // Visually restore gem AND disable slots!
 
         _targetGem.parentAfterDrag = targetSlot;
         _targetGem.transform.SetParent(targetSlot);
 
         RectTransform gemRect = _targetGem.GetComponent<RectTransform>();
         RectTransform slotRect = targetSlot.GetComponent<RectTransform>();
-        if (gemRect != null && slotRect != null)
-        {
-            gemRect.sizeDelta = slotRect.rect.size;
-        }
+        if (gemRect != null && slotRect != null) { gemRect.sizeDelta = slotRect.rect.size; }
 
         _targetGem.AnimateToNewHome();
 
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
-        {
             RewardMenuManager.Instance.OnGemSlotted(_targetGem);
-        }
 
-        CloseMenu();
+        if (swappedGem != null)
+        {
+            _displacedGem = swappedGem;
+            _targetGem = swappedGem;
+            _originalGemParent = null;
+
+            // Restart placement mode for the displaced gem (wakes slots back up!)
+            GauntletManager currentGauntlet = targetSlot.parent.GetComponent<GauntletManager>();
+            StartPlacementMode(currentGauntlet);
+        }
+        else
+        {
+            _displacedGem = null;
+            CloseMenu();
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                EventSystem.current.SetSelectedGameObject(_targetGem.gameObject); // Focus the newly slotted gem
+            }
+        }
     }
 
     private void CancelPlacement()
     {
-        RestoreGemVisuals();
+        EndPlacementMode();
 
-        _targetGem.transform.SetParent(_originalGemParent);
-        _targetGem.transform.localPosition = Vector3.zero;
-
-        OpenMenu(_targetGem, _targetGem.GetComponent<RectTransform>());
-    }
-
-    private void RestoreGemVisuals()
-    {
-        _isPlacingMode = false;
-
-        CanvasGroup cg = _targetGem.GetComponent<CanvasGroup>();
-        if (cg != null)
+        if (_originalGemParent != null)
         {
-            cg.alpha = 1f;
-            cg.blocksRaycasts = true;
+            _targetGem.transform.SetParent(_originalGemParent);
+            _targetGem.transform.localPosition = Vector3.zero;
+            OpenMenu(_targetGem, _targetGem.GetComponent<RectTransform>());
+        }
+        else if (_displacedGem != null)
+        {
+            // --- THE FIX: Revert the Swap! ---
+            // If we canceled while holding the displaced gem, drop it to the board,
+            // or return it to its rightful slot. (For safety, ARPG standard is to drop it to the board).
+            Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
+            _targetGem.parentAfterDrag = rewardContainer;
+            _targetGem.transform.SetParent(rewardContainer);
+            _targetGem.ReturnToInventory();
+
+            CloseMenu();
+            if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_targetGem.gameObject);
+        }
+        else
+        {
+            _targetGem.ReturnToInventory();
+            CloseMenu();
+
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                EventSystem.current.SetSelectedGameObject(_targetGem.gameObject);
+            }
         }
     }
 }

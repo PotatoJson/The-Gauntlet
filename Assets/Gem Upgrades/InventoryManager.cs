@@ -4,226 +4,297 @@ using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using DG.Tweening; // --- REQUIRED FOR SLIDES AND DROPS ---
+using DG.Tweening;
 
 public class InventoryManager : MonoBehaviour
 {
+    [Header("Starting Equipment")]
+    [SerializeField] private GameObject defaultGauntletPrefab;
+    [HideInInspector] public GameObject activePrimaryPrefab;
+    [HideInInspector] public GameObject activeSecondaryPrefab;
+
     private static InventoryManager _instance;
     public static InventoryManager Instance
     {
         get
         {
             if (_instance == null)
+            {
+                // This forces Unity to find the script even if the GameObject is disabled!
                 _instance = FindFirstObjectByType<InventoryManager>(FindObjectsInactive.Include);
+            }
             return _instance;
         }
     }
 
-    [Header("Input Action")]
-    [SerializeField] private InputActionReference inventoryToggleAction;
+    [Header("Header Navigation")]
+    [SerializeField] private Button headerTitleButton;
+    [SerializeField] private Button returnButton;
 
     [Header("Central Layout Configurations")]
-    public Transform primaryGauntlet;    // Drag "Gauntlet Primary" container here
-    public Transform secondaryGauntlet;  // Drag "Gauntlet Secondary" container here
-    [SerializeField] private RectTransform descriptionBoxAnchor; // Drag "small description" here
+    public Transform primaryGauntlet;
+    public Transform secondaryGauntlet;
     [SerializeField] private TMP_Text gauntletTitleText;
 
     [Header("Warning Dialog UI")]
     [SerializeField] private GameObject warningPanel;
-    [SerializeField] private Button warningConfirmBtn;
     [SerializeField] private Button warningCancelBtn;
+    [SerializeField] private Button warningConfirmBtn;
     [SerializeField] private TMP_Text warningBodyText;
 
     [Header("Details Panel Content bindings")]
+    [SerializeField] private GameObject descriptionBoxAnchor;
     [SerializeField] private TMP_Text detailNameText;
     [SerializeField] private TMP_Text detailDescriptionText;
     [SerializeField] private Image detailIcon;
 
-    [Header("Starter Equipment Asset Maps")]
-    public GameObject DefaultPrimaryPrefab;
-    public GameObject DefaultSecondaryPrefab;
-
     [Header("Tween Settings")]
     [SerializeField] private float slideDuration = 0.5f;
     [SerializeField] private Ease slideEase = Ease.OutCubic;
-    [SerializeField] private float offscreenXOffset = 900f; 
+    [SerializeField] private float offscreenXOffset = 900f;
 
-    [HideInInspector] public GameObject activePrimaryPrefab;
-    [HideInInspector] public GauntletRarity activePrimaryRarity;
-    [HideInInspector] public GameObject activeSecondaryPrefab;
-    [HideInInspector] public GauntletRarity activeSecondaryRarity;
+    [Header("Replace Gauntlet UI")]
+    [SerializeField] private GameObject replaceGauntletPanel;
+    [SerializeField] private Button replacePrimaryBtn;
+    [SerializeField] private Button replaceSecondaryBtn;
+    [SerializeField] private Button replaceDiscardBtn;
 
-    private GameObject _lastSelectedSlot;
+
+    private GameObject _pendingGauntletPrefab;
+    private GauntletRarity _pendingGauntletRarity;
+    private bool _isReplaceUIPending = false;
+
+    private DraggableGem _lastSelectedGem;
     private bool _isWarningActive = false;
     private bool _isDisplayingPrimary = true;
     private bool _isTransitioning = false;
+    private DraggableGem _hoveredGem;
+    private DraggableGem _focusedGem;
 
     private void Awake()
     {
-        if (_instance == null) _instance = this;
         if (warningPanel != null) warningPanel.SetActive(false);
+        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
     }
 
     private void Start()
     {
-        // 1. Recover equipment setups from persistent memory data layers if active
+        // --- THE FIX: Check the Backpack first! ---
         if (PersistentEquipment.Instance != null && PersistentEquipment.Instance.hasSavedData)
         {
-            if (PersistentEquipment.Instance.primaryGauntletPrefab != null)
-                EquipBaseGauntletObject(PersistentEquipment.Instance.primaryGauntletPrefab, PersistentEquipment.Instance.primaryRarity, true);
-
-            if (PersistentEquipment.Instance.secondaryGauntletPrefab != null)
-                EquipBaseGauntletObject(PersistentEquipment.Instance.secondaryGauntletPrefab, PersistentEquipment.Instance.secondaryRarity, false);
-
-            LoadSavedGems(primaryGauntlet, PersistentEquipment.Instance.primaryGems);
-            LoadSavedGems(secondaryGauntlet, PersistentEquipment.Instance.secondaryGems);
-
-            PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
-            if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+            LoadEquipmentFromBackpack();
         }
         else
         {
-            // 2. Fallback execution pipeline delivering common default gauntlet equipment nodes
-            if (primaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultPrimaryPrefab != null)
-                EquipBaseGauntletObject(DefaultPrimaryPrefab, GauntletRarity.Common, true);
-
-            if (secondaryGauntlet.GetComponentInChildren<GauntletManager>() == null && DefaultSecondaryPrefab != null)
-                EquipBaseGauntletObject(DefaultSecondaryPrefab, GauntletRarity.Common, false);
+            InitializeDefaultEquipment();
         }
-
-        // Initialize spatial transforms before presentation layer calculations activate
-        ResetGauntletPositionsInstant();
     }
 
-    private void EquipBaseGauntletObject(GameObject prefab, GauntletRarity rarity, bool isPrimary)
+    private void LoadEquipmentFromBackpack()
     {
-        Transform targetContainer = isPrimary ? primaryGauntlet : secondaryGauntlet;
-        GameObject newGauntlet = Instantiate(prefab, targetContainer);
-        newGauntlet.GetComponent<GauntletManager>().InitializeGauntlet(isPrimary, rarity);
+        PersistentEquipment pack = PersistentEquipment.Instance;
 
-        if (isPrimary)
+        // 1. Restore Primary Gauntlet
+        if (pack.primaryGauntletPrefab != null && primaryGauntlet != null)
         {
-            activePrimaryPrefab = prefab;
-            activePrimaryRarity = rarity;
-        }
-        else
-        {
-            activeSecondaryPrefab = prefab;
-            activeSecondaryRarity = rarity;
-        }
+            activePrimaryPrefab = pack.primaryGauntletPrefab;
+            GameObject newPrimary = Instantiate(pack.primaryGauntletPrefab, primaryGauntlet);
+            newPrimary.transform.localPosition = Vector3.zero;
+            newPrimary.transform.localScale = Vector3.one;
 
-        SetupHoverEvents(targetContainer);
-    }
-
-    private void LoadSavedGems(Transform gauntletParent, List<GameObject> savedGemPrefabs)
-    {
-        GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>();
-        if (gm != null)
-        {
-            for (int i = 0; i < savedGemPrefabs.Count; i++)
+            GauntletManager pm = newPrimary.GetComponent<GauntletManager>();
+            if (pm != null)
             {
-                if (i < gm.currentActiveSlots && savedGemPrefabs[i] != null)
+                pm.InitializeGauntlet(true, pack.primaryRarity);
+                RestoreGemsToGauntlet(pm, pack.primaryGems);
+
+                if (pack.ultimateGemPrefab != null && pm.SkillSlot != null)
                 {
-                    GameObject newlySpawnedGem = Instantiate(savedGemPrefabs[i], gm.fingerSlots[i].transform);
-                    RectTransform gemRect = newlySpawnedGem.GetComponent<RectTransform>();
+                    GameObject spawnedSkillGem = Instantiate(pack.ultimateGemPrefab, pm.SkillSlot.transform);
+                    DraggableGem skillGemScript = spawnedSkillGem.GetComponent<DraggableGem>();
+                    SkillSlotManager skillSlotManager = pm.SkillSlot.GetComponent<SkillSlotManager>();
 
-                    gemRect.localPosition = Vector3.zero;
-                    gemRect.localScale = Vector3.one;
-                    gemRect.sizeDelta = gm.fingerSlots[i].GetComponent<RectTransform>().rect.size;
+                    if (skillGemScript != null && skillSlotManager != null)
+                    {
+                        skillGemScript.parentAfterDrag = pm.SkillSlot.transform;
+                        skillSlotManager.SlotSkillGem(skillGemScript);
+                    }
+                }
+            }
+        }
 
-                    newlySpawnedGem.GetComponent<DraggableGem>().originalPrefab = savedGemPrefabs[i];
+        // 2. Restore Secondary Gauntlet
+        if (pack.secondaryGauntletPrefab != null && secondaryGauntlet != null)
+        {
+            activeSecondaryPrefab = pack.secondaryGauntletPrefab;
+            GameObject newSecondary = Instantiate(pack.secondaryGauntletPrefab, secondaryGauntlet);
+            newSecondary.transform.localPosition = Vector3.zero;
+            newSecondary.transform.localScale = Vector3.one;
 
-                    // Match structural layout images matching backend initialization colors
-                    Image slotImage = gm.fingerSlots[i].GetComponent<Image>();
-                    Image gemImage = newlySpawnedGem.GetComponent<Image>();
-                    if (slotImage != null && gemImage != null) slotImage.color = gemImage.color;
+            GauntletManager sm = newSecondary.GetComponent<GauntletManager>();
+            if (sm != null)
+            {
+                sm.InitializeGauntlet(false, pack.secondaryRarity);
+                RestoreGemsToGauntlet(sm, pack.secondaryGems); // Put gems back in slots!
+            }
+        }
+    }
+
+    private void RestoreGemsToGauntlet(GauntletManager gm, List<GameObject> savedGems)
+    {
+        // Loop through the saved gem list and put them back exactly where they were
+        for (int i = 0; i < gm.fingerSlots.Count && i < savedGems.Count; i++)
+        {
+            if (savedGems[i] != null && gm.fingerSlots[i].activeInHierarchy)
+            {
+                GameObject spawnedGem = Instantiate(savedGems[i], gm.fingerSlots[i].transform);
+                spawnedGem.transform.localPosition = Vector3.zero;
+                spawnedGem.transform.localScale = Vector3.one;
+
+                DraggableGem gemScript = spawnedGem.GetComponent<DraggableGem>();
+                if (gemScript != null)
+                {
+                    // Ensure the gem knows it belongs in this slot so it doesn't fly away
+                    gemScript.parentAfterDrag = gm.fingerSlots[i].transform;
                 }
             }
         }
     }
 
+    public void InitializeDefaultEquipment()
+    {
+        // Don't do anything if we forgot to assign the prefab in the Inspector
+        if (defaultGauntletPrefab == null) return;
+
+        // 1. If Primary is empty, spawn a Basic Primary Gauntlet
+        if (primaryGauntlet != null && primaryGauntlet.childCount == 0)
+        {
+            activePrimaryPrefab = defaultGauntletPrefab;
+
+            GameObject newPrimary = Instantiate(defaultGauntletPrefab, primaryGauntlet);
+            newPrimary.transform.localPosition = Vector3.zero;
+            newPrimary.transform.localScale = Vector3.one;
+
+            GauntletManager pm = newPrimary.GetComponent<GauntletManager>();
+            if (pm != null) pm.InitializeGauntlet(true, GauntletRarity.Common); // true = Primary, Normal rarity
+        }
+
+        // 2. If Secondary is empty, spawn a Basic Secondary Gauntlet
+        if (secondaryGauntlet != null && secondaryGauntlet.childCount == 0)
+        {
+            activeSecondaryPrefab = defaultGauntletPrefab;
+
+            GameObject newSecondary = Instantiate(defaultGauntletPrefab, secondaryGauntlet);
+            newSecondary.transform.localPosition = Vector3.zero;
+            newSecondary.transform.localScale = Vector3.one;
+
+            GauntletManager sm = newSecondary.GetComponent<GauntletManager>();
+            if (sm != null) sm.InitializeGauntlet(false, GauntletRarity.Common); // false = Secondary, Normal rarity
+        }
+    }
+
+    private void OnEnable()
+    {
+        ResetGauntletPositionsInstant();
+        RefreshDescriptionPanel();
+        FocusFirstAvailableGem();
+    }
+
+    private void Update()
+    {
+        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
+
+        HandleCancelInput();
+    }
+
+    private void HandleCancelInput()
+    {
+        bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                             (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+
+        if (cancelPressed)
+        {
+            if (_isReplaceUIPending)
+            {
+                DiscardPendingGauntlet();
+            }
+            else if (_isWarningActive)
+            {
+                CancelClose();
+            }
+            else
+            {
+                GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+                // If highlighting a Gem, jump up to the Return Button
+                if (currentSel != null && currentSel.GetComponent<DraggableGem>() != null)
+                {
+                    if (returnButton != null)
+                    {
+                        EventSystem.current.SetSelectedGameObject(null);
+                        EventSystem.current.SetSelectedGameObject(returnButton.gameObject);
+                    }
+                }
+                else
+                {
+                    // Already on the header buttons -> Open the exit warning
+                    TryCloseCharacterScreen();
+                }
+            }
+        }
+    }
+
+    // --- REFINED GAUNTLET ANIMATIONS ---
     private void ResetGauntletPositionsInstant()
     {
-        RectTransform primaryRect = primaryGauntlet.GetComponent<RectTransform>();
-        RectTransform secondaryRect = secondaryGauntlet.GetComponent<RectTransform>();
+        primaryGauntlet.GetComponent<RectTransform>().DOKill();
+        secondaryGauntlet.GetComponent<RectTransform>().DOKill();
 
-        primaryRect.DOKill();
-        secondaryRect.DOKill();
-
-        primaryRect.anchoredPosition = Vector2.zero;
+        primaryGauntlet.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
         primaryGauntlet.gameObject.SetActive(true);
 
-        secondaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
+        secondaryGauntlet.GetComponent<RectTransform>().anchoredPosition = new Vector2(-offscreenXOffset, 0f);
         secondaryGauntlet.gameObject.SetActive(false);
 
         _isDisplayingPrimary = true;
         _isTransitioning = false;
-
         if (gauntletTitleText != null) gauntletTitleText.text = "Gauntlet Primary";
     }
 
-    // --- NEW JUICY DOTWEEN GAUNTLET TRANSITION SCROLL ---
     public void ToggleEquippedGauntletDisplay()
     {
         if (_isTransitioning) return;
         _isTransitioning = true;
 
         if (gauntletTitleText != null)
-        {
             gauntletTitleText.text = _isDisplayingPrimary ? "Gauntlet Secondary" : "Gauntlet Primary";
-        }
 
         RectTransform primaryRect = primaryGauntlet.GetComponent<RectTransform>();
         RectTransform secondaryRect = secondaryGauntlet.GetComponent<RectTransform>();
 
-        primaryRect.DOKill();
-        secondaryRect.DOKill();
-
         if (_isDisplayingPrimary)
         {
-            // Transition from Primary -> Secondary
-            // Move Primary out to the right side of the screen frame limits
-            primaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration)
-                .SetEase(slideEase)
-                .SetUpdate(true)
+            primaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => primaryGauntlet.gameObject.SetActive(false));
 
-            // Ensure Secondary wakes up tracking into position smoothly coming from the left hand side
             secondaryGauntlet.gameObject.SetActive(true);
             secondaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
-            secondaryRect.DOAnchorPos(Vector2.zero, slideDuration)
-                .SetEase(slideEase)
-                .SetUpdate(true)
-                .OnComplete(() => {
-                    _isDisplayingPrimary = false;
-                    _isTransitioning = false;
-                    FocusActiveGauntletFirstSlot();
-                });
+            secondaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
+                .OnComplete(() => { _isDisplayingPrimary = false; _isTransitioning = false; FocusFirstAvailableGem(); });
         }
         else
         {
-            // Transition from Secondary -> Primary
-            // Slide secondary out toward the right side boundary frames
-            secondaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration)
-                .SetEase(slideEase)
-                .SetUpdate(true)
+            secondaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => secondaryGauntlet.gameObject.SetActive(false));
 
-            // Snap primary from left entry markers moving towards dead center
             primaryGauntlet.gameObject.SetActive(true);
             primaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
-            primaryRect.DOAnchorPos(Vector2.zero, slideDuration)
-                .SetEase(slideEase)
-                .SetUpdate(true)
-                .OnComplete(() => {
-                    _isDisplayingPrimary = true;
-                    _isTransitioning = false;
-                    FocusActiveGauntletFirstSlot();
-                });
+            primaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
+                .OnComplete(() => { _isDisplayingPrimary = true; _isTransitioning = false; FocusFirstAvailableGem(); });
         }
     }
 
-    // --- NEW JUICY DOTWEEN REWARD SCATTER DROPS ---
     public void AnimateGemArrivalDrops(List<GameObject> spawnedGems)
     {
         foreach (GameObject gem in spawnedGems)
@@ -231,131 +302,33 @@ public class InventoryManager : MonoBehaviour
             RectTransform rect = gem.GetComponent<RectTransform>();
             Vector2 targetPos = rect.anchoredPosition;
 
-            // Start far above the viewing canvas mimicking a physical board dropping mechanism
             rect.anchoredPosition = new Vector2(targetPos.x, targetPos.y + 600f);
             rect.localScale = Vector3.zero;
 
-            // Chain arrival drop scales alongside slight bounce impact mechanics
             Sequence dropSeq = DOTween.Sequence();
             dropSeq.Join(rect.DOAnchorPos(targetPos, 0.45f).SetEase(Ease.OutBounce));
             dropSeq.Join(rect.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack));
-            dropSeq.SetUpdate(true); // Ignore Frozen TimeScale constraints safely
+            dropSeq.SetUpdate(true);
         }
     }
 
-    public void SetupHoverEvents(Transform gauntletParent)
+    public void AnimateSingleGemDrop(DraggableGem gem)
     {
-        if (gauntletParent == null) return;
-
-        foreach (Transform child in gauntletParent.GetComponentsInChildren<Transform>(true))
-        {
-            if (child.name.Contains("Slot") && child.GetComponent<EventTrigger>() == null)
-            {
-                EventTrigger trigger = child.gameObject.AddComponent<EventTrigger>();
-                EventTrigger.Entry entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-                entry.callback.AddListener((data) => {
-                    if (!_isWarningActive)
-                    {
-                        _lastSelectedSlot = child.gameObject;
-                        UpdateDetailsPanel(child.gameObject);
-                    }
-                });
-                trigger.triggers.Add(entry);
-
-                Button slotBtn = child.GetComponent<Button>();
-                if (slotBtn != null)
-                {
-                    slotBtn.onClick.RemoveAllListeners();
-                    slotBtn.onClick.AddListener(() =>
-                    {
-                        bool isUsingMouseOrKeyboard = Gamepad.current == null || (Mouse.current != null && Mouse.current.wasUpdatedThisFrame);
-                        if (isUsingMouseOrKeyboard) return;
-
-                        DraggableGem equippedGem = child.GetComponentInChildren<DraggableGem>();
-                        if (equippedGem != null && GemPopupMenu.Instance != null && !GemPopupMenu.Instance.IsPlacingMode)
-                        {
-                            GemPopupMenu.Instance.OpenMenu(equippedGem, equippedGem.GetComponent<RectTransform>());
-                        }
-                    });
-                }
-            }
-        }
+        if (gem == null) return;
+        gem.transform.DOKill();
+        AnimateGemArrivalDrops(new List<GameObject> { gem.gameObject });
     }
 
-    private void OnEnable()
-    {
-        ResetGauntletPositionsInstant();
-        if (Gamepad.current != null && EventSystem.current != null)
-        {
-            FocusActiveGauntletFirstSlot();
-        }
-        if (inventoryToggleAction != null) inventoryToggleAction.action.Enable();
-    }
-
-    private void OnDisable()
-    {
-        if (inventoryToggleAction != null) inventoryToggleAction.action.Disable();
-    }
-
-    private void Update()
-    {
-        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
-
-        bool togglePressed = (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame());
-
-        bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
-                             (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame) ||
-                             togglePressed;
-
-        if (cancelPressed)
-        {
-            if (_isWarningActive) CancelClose();
-            else TryCloseCharacterScreen();
-        }
-
-        if (!_isWarningActive && EventSystem.current != null && EventSystem.current.currentSelectedGameObject != _lastSelectedSlot)
-        {
-            GameObject currentSel = EventSystem.current.currentSelectedGameObject;
-            if (currentSel != null && currentSel.name.Contains("Slot"))
-            {
-                _lastSelectedSlot = currentSel;
-                UpdateDetailsPanel(_lastSelectedSlot);
-            }
-        }
-    }
-
-    private void UpdateDetailsPanel(GameObject slot)
-    {
-        if (slot == null) return;
-        DraggableGem equippedGem = slot.GetComponentInChildren<DraggableGem>();
-
-        if (equippedGem != null)
-        {
-            detailNameText.text = equippedGem.gemName;
-            detailDescriptionText.text = equippedGem.gemDescription;
-            if (detailIcon != null) { detailIcon.sprite = equippedGem.gemIcon; detailIcon.color = Color.white; }
-        }
-        else
-        {
-            detailNameText.text = "Empty Slot";
-            detailDescriptionText.text = "No gem equipped here.";
-            if (detailIcon != null) detailIcon.color = Color.clear;
-        }
-    }
-
+    // --- CLOSING & WARNINGS ---
     public void TryCloseCharacterScreen()
     {
         _isWarningActive = true;
         warningPanel.SetActive(true);
 
         bool hasUnequippedGems = false;
-
-        DraggableGem[] allActiveGems = GetComponentsInChildren<DraggableGem>(false);
-
-        foreach (DraggableGem gem in allActiveGems)
+        foreach (DraggableGem gem in GetComponentsInChildren<DraggableGem>(false))
         {
             bool isRewardGem = (RewardMenuManager.Instance != null && !RewardMenuManager.Instance.CanDragGem(gem));
-
             if (!gem.IsEquipped() && !isRewardGem)
             {
                 hasUnequippedGems = true;
@@ -372,7 +345,6 @@ public class InventoryManager : MonoBehaviour
 
         warningConfirmBtn.onClick.RemoveAllListeners();
         warningConfirmBtn.onClick.AddListener(ConfirmClose);
-
         warningCancelBtn.onClick.RemoveAllListeners();
         warningCancelBtn.onClick.AddListener(CancelClose);
 
@@ -383,39 +355,16 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public void FocusActiveGauntletFirstSlot()
-    {
-        Transform activeContainer = _isDisplayingPrimary ? primaryGauntlet : secondaryGauntlet;
-        GauntletManager gauntlet = activeContainer.GetComponentInChildren<GauntletManager>();
-
-        if (gauntlet != null && gauntlet.fingerSlots != null)
-        {
-            foreach (GameObject slot in gauntlet.fingerSlots)
-            {
-                if (slot.activeInHierarchy)
-                {
-                    if (EventSystem.current != null)
-                    {
-                        EventSystem.current.SetSelectedGameObject(null);
-                        EventSystem.current.SetSelectedGameObject(slot);
-                    }
-                    _lastSelectedSlot = slot;
-                    UpdateDetailsPanel(slot);
-                    return;
-                }
-            }
-        }
-    }
-
     public void CancelClose()
     {
         _isWarningActive = false;
         warningPanel.SetActive(false);
 
-        if (Gamepad.current != null && _lastSelectedSlot != null && EventSystem.current != null)
+        if (Gamepad.current != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(_lastSelectedSlot);
+            if (_lastSelectedGem != null) EventSystem.current.SetSelectedGameObject(_lastSelectedGem.gameObject);
+            else FocusFirstAvailableGem();
         }
     }
 
@@ -425,10 +374,7 @@ public class InventoryManager : MonoBehaviour
         warningPanel.SetActive(false);
 
         PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
-        if (statsManager != null)
-        {
-            statsManager.SyncWithUI(primaryGauntlet, secondaryGauntlet);
-        }
+        if (statsManager != null) statsManager.SyncWithUI(primaryGauntlet, secondaryGauntlet);
 
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
         if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
@@ -443,23 +389,191 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public void UpdateDetailsPanelFromGem(DraggableGem equippedGem)
+    // --- UX HELPERS ---
+    public void FocusFirstAvailableGem()
     {
-        if (equippedGem != null)
+        if (Gamepad.current == null || EventSystem.current == null) return;
+
+        DraggableGem[] allGems = GetComponentsInChildren<DraggableGem>();
+        if (allGems.Length > 0)
         {
-            detailNameText.text = equippedGem.gemName;
-            detailDescriptionText.text = equippedGem.gemDescription;
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(allGems[0].gameObject);
+        }
+    }
+
+
+    public bool TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletRarity rarity)
+    {
+        if (gauntletPrefab == null) return false;
+
+        // --- THE FIX: Force the inventory open so the player sees what is happening! ---
+        if (!gameObject.activeInHierarchy)
+        {
+            gameObject.SetActive(true);
+            Time.timeScale = 0f;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            // Note: If you have a player input script to disable (like camera look), disable it here!
+        }
+
+        // Check Primary First
+        if (primaryGauntlet.childCount == 0)
+        {
+            ForceReplaceGauntlet(true, gauntletPrefab, rarity);
+            return true;
+        }
+        // Check Secondary Next
+        else if (secondaryGauntlet.childCount == 0)
+        {
+            ForceReplaceGauntlet(false, gauntletPrefab, rarity);
+            return true;
+        }
+
+        // Both are full! Trigger the Replace UI
+        ShowReplaceGauntletPanel(gauntletPrefab, rarity);
+        return false;
+    }
+
+    // --- NEW: Gauntlet Swap UI Methods ---
+    private void ShowReplaceGauntletPanel(GameObject prefab, GauntletRarity rarity)
+    {
+        _pendingGauntletPrefab = prefab;
+        _pendingGauntletRarity = rarity;
+        _isReplaceUIPending = true;
+
+        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(true);
+
+        replacePrimaryBtn.onClick.RemoveAllListeners();
+        replacePrimaryBtn.onClick.AddListener(() => ConfirmReplace(true));
+
+        replaceSecondaryBtn.onClick.RemoveAllListeners();
+        replaceSecondaryBtn.onClick.AddListener(() => ConfirmReplace(false));
+
+        if (replaceDiscardBtn != null)
+        {
+            replaceDiscardBtn.onClick.RemoveAllListeners();
+            replaceDiscardBtn.onClick.AddListener(DiscardPendingGauntlet);
+        }
+
+        // Lock controller focus to the popup!
+        if (Gamepad.current != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(replacePrimaryBtn.gameObject);
+        }
+    }
+
+    private void ConfirmReplace(bool isPrimary)
+    {
+        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
+        _isReplaceUIPending = false;
+
+        ForceReplaceGauntlet(isPrimary, _pendingGauntletPrefab, _pendingGauntletRarity);
+        _pendingGauntletPrefab = null;
+    }
+
+    private void DiscardPendingGauntlet()
+    {
+        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
+        _isReplaceUIPending = false;
+        _pendingGauntletPrefab = null;
+
+        FocusFirstAvailableGem();
+    }
+
+    // 2. FORCE REPLACE: Overwrites a specific hand and safely evicts its gems.
+    public void ForceReplaceGauntlet(bool isPrimary, GameObject gauntletPrefab, GauntletRarity rarity)
+    {
+        if (isPrimary) activePrimaryPrefab = gauntletPrefab;
+        else activeSecondaryPrefab = gauntletPrefab;
+
+        Transform targetSlot = isPrimary ? primaryGauntlet : secondaryGauntlet;
+
+        // Step 1: Safely EVICT any slotted gems so the player doesn't lose them!
+        GauntletManager oldManager = targetSlot.GetComponentInChildren<GauntletManager>();
+        if (oldManager != null)
+        {
+            foreach (GameObject slot in oldManager.fingerSlots)
+            {
+                DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
+                if (gem != null)
+                {
+                    // Toss the gem onto the board safely
+                    Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
+                    gem.parentAfterDrag = rewardContainer;
+                    gem.transform.SetParent(rewardContainer);
+
+                    RectTransform gemRect = gem.GetComponent<RectTransform>();
+                    if (RewardMenuManager.Instance != null)
+                        gemRect.anchoredPosition = RewardMenuManager.Instance.CalculateSafeScatterPoint(gemRect);
+
+                    gem.ReturnToInventory();
+                    AnimateSingleGemDrop(gem);
+                }
+            }
+        }
+
+        // Step 2: Destroy the old gauntlet
+        foreach (Transform child in targetSlot)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Step 3: Spawn the new gauntlet
+        GameObject newGauntlet = Instantiate(gauntletPrefab, targetSlot);
+        newGauntlet.transform.localPosition = Vector3.zero;
+        newGauntlet.transform.localScale = Vector3.one;
+
+        GauntletManager gm = newGauntlet.GetComponent<GauntletManager>();
+        if (gm != null) gm.InitializeGauntlet(isPrimary, rarity);
+
+        // Step 4: Reset UI layout so the player sees their new gear
+        if (isPrimary && !_isDisplayingPrimary) ToggleEquippedGauntletDisplay();
+        else if (!isPrimary && _isDisplayingPrimary) ToggleEquippedGauntletDisplay();
+
+        FocusFirstAvailableGem();
+    }
+
+    // --- SMART DESCRIPTION UI ---
+
+    public void SetHoveredGem(DraggableGem gem, bool isHovering)
+    {
+        if (isHovering) _hoveredGem = gem;
+        else if (_hoveredGem == gem) _hoveredGem = null;
+        RefreshDescriptionPanel();
+    }
+
+    public void SetFocusedGem(DraggableGem gem, bool isFocused)
+    {
+        if (isFocused) _focusedGem = gem;
+        else if (_focusedGem == gem) _focusedGem = null;
+        RefreshDescriptionPanel();
+    }
+
+    public void RefreshDescriptionPanel()
+    {
+        // If the Gem Menu is open, freeze the panel so the description doesn't vanish!
+        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+
+        // Prioritize mouse hover. If no mouse hover, fall back to controller focus.
+        DraggableGem targetGem = _hoveredGem != null ? _hoveredGem : _focusedGem;
+
+        if (targetGem != null)
+        {
+            descriptionBoxAnchor.gameObject.SetActive(true);
+            detailNameText.text = targetGem.gemName;
+            detailDescriptionText.text = targetGem.gemDescription;
             if (detailIcon != null)
             {
-                detailIcon.sprite = equippedGem.gemIcon;
+                detailIcon.sprite = targetGem.gemIcon;
                 detailIcon.color = Color.white;
             }
         }
         else
         {
-            detailNameText.text = "Empty Slot";
-            detailDescriptionText.text = "No gem equipped here.";
-            if (detailIcon != null) detailIcon.color = Color.clear;
+            // Nothing is hovered or focused, completely hide the panel!
+            descriptionBoxAnchor.gameObject.SetActive(false);
         }
     }
 }

@@ -33,6 +33,12 @@ public class GemDropSlot : MonoBehaviour, IDropHandler
         DraggableGem incomingGem = droppedObject.GetComponent<DraggableGem>();
         if (incomingGem != null)
         {
+            if (incomingGem.LinkedGemData.gemType != GemType.Stat)
+            {
+                Debug.Log("Invalid Gem: Only Stat Gems can be equipped in finger slots.");
+                return; // Stops the drop completely!
+            }
+
             // If it is locked, ignore the drop completely!
             if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             {

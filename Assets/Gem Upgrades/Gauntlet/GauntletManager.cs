@@ -13,6 +13,8 @@ public class GauntletManager : MonoBehaviour
     [Tooltip("Drag the child 'Slot' objects here IN ORDER (Slot 1, Slot 2, etc.)")]
     public List<GameObject> fingerSlots;
 
+    [Tooltip("Drag the child 'Ultimate Slot' object here")]
+    public GameObject SkillSlot;
     public int currentActiveSlots { get; private set; }
     public GauntletRarity currentRarity { get; private set; }
 

@@ -4,11 +4,12 @@ using DG.Tweening;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
+public enum GemType { Stat, Skill }
+
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
 //IPointerClickHandler
 {
-
     [Header("Back End Stuff")]
     public GemData LinkedGemData;
 
@@ -168,18 +169,19 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void OnSelect(BaseEventData eventData)
     {
         if (selectionOutline != null) selectionOutline.enabled = true;
-        UpdateGlobalDescription();
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, true);
     }
 
     public void OnDeselect(BaseEventData eventData)
     {
         if (selectionOutline != null) selectionOutline.enabled = false;
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, false);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (selectionOutline != null) selectionOutline.enabled = true;
-        UpdateGlobalDescription();
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -188,19 +190,12 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             if (selectionOutline != null) selectionOutline.enabled = false;
         }
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, false);
     }
 
     public void OnSubmit(BaseEventData eventData)
     {
         ForceOpenPopUI();
-    }
-
-    private void UpdateGlobalDescription()
-    {
-        if (InventoryManager.Instance != null && InventoryManager.Instance.gameObject.activeInHierarchy)
-        {
-            InventoryManager.Instance.UpdateDetailsPanelFromGem(this);
-        }
     }
 
     private void OnDestroy()

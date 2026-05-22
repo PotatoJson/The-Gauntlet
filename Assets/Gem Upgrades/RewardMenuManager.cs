@@ -48,6 +48,7 @@ public class RewardMenuManager : MonoBehaviour
     private bool _isWarningActive = false;
     private DraggableGem _currentlySlottedGem;
     private bool _isOverflowMode = false;
+    private bool _isCurrentlyRewardPhase = false;
 
     private List<DraggableGem> _activeRewardGems = new List<DraggableGem>();
 
@@ -59,7 +60,7 @@ public class RewardMenuManager : MonoBehaviour
 
     public bool IsRewardModeActive()
     {
-        return characterScreenRoot != null && characterScreenRoot.activeSelf;
+        return characterScreenRoot != null && characterScreenRoot.activeSelf && _isCurrentlyRewardPhase;
     }
 
     public bool CanDragGem(DraggableGem gem)
@@ -108,6 +109,7 @@ public class RewardMenuManager : MonoBehaviour
 
     public void OpenRewardMenu()
     {
+        _isCurrentlyRewardPhase = true; // Set flag
         _isOverflowMode = false;
         SetupMenuExecution();
         GenerateScatterRewards(3);
@@ -115,6 +117,7 @@ public class RewardMenuManager : MonoBehaviour
 
     public void OpenOverflowMenu(List<GameObject> overflowGemPrefabs)
     {
+        _isCurrentlyRewardPhase = true;
         _isOverflowMode = true;
         SetupMenuExecution();
 
@@ -141,6 +144,8 @@ public class RewardMenuManager : MonoBehaviour
         Time.timeScale = 0f;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        if (lookAction != null) lookAction.action.Disable();
 
         characterScreenRoot.SetActive(true);
         if (expBarRoot != null) expBarRoot.SetActive(false);
@@ -238,16 +243,19 @@ public class RewardMenuManager : MonoBehaviour
         return spawnedGem;
     }
 
-    private Vector2 CalculateSafeScatterPoint(RectTransform gemRect)
+    public Vector2 CalculateSafeScatterPoint(RectTransform gemRect)
     {
         RectTransform spawnAreaCanvas = gemSpawnAreaRoot.GetComponent<RectTransform>();
 
-        // --- THE FIX: Define the valid spawn area using the Paper Plate's internal size! ---
+        int maxAttempts = 50; // --- NEW: Safety limit ---
+        int currentAttempt = 0;
+
         float halfWidth = (mainPaperPlate.rect.width / 2f) - 60f;
         float halfHeight = (mainPaperPlate.rect.height / 2f) - 60f;
 
-        for (int attempts = 0; attempts < 200; attempts++)
+        while (currentAttempt < maxAttempts)
         {
+            currentAttempt++;
             // 1. Pick a random point relative to the Paper Plate
             float randX = Random.Range(-halfWidth, halfWidth);
             float randY = Random.Range(-halfHeight, halfHeight);
@@ -260,17 +268,23 @@ public class RewardMenuManager : MonoBehaviour
             if (IsPointInsideBlocker(testPoint, titleBannerHolder, spawnAreaCanvas)) continue;
             if (IsPointInsideBlocker(testPoint, switchGauntletBtn, spawnAreaCanvas)) continue;
 
-            // 4. THE FIX: Avoid the Gauntlets! 
+            // 4.Avoid the Gauntlets! 
             if (InventoryManager.Instance != null)
             {
                 if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.primaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
                 if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.secondaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
+            }
+            if (descriptionPanelGroup != null)
+            {
+                if (IsPointInsideBlocker(testPoint, descriptionPanelGroup.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
             }
 
             return testPoint;
         }
 
         // Fallback: slightly offset so they don't perfectly stack
+        float spreadX = mainPaperPlate.rect.width * 0.4f;
+        float spreadY = mainPaperPlate.rect.height * 0.4f;
         return new Vector2(Random.Range(-150, -50), Random.Range(-100, 100));
     }
 
@@ -332,6 +346,9 @@ public class RewardMenuManager : MonoBehaviour
     private void Update()
     {
         if (!characterScreenRoot.activeSelf) return;
+
+        if (!_isCurrentlyRewardPhase) return;
+
         if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
 
         if (!_isWarningActive && EventSystem.current != null)
@@ -375,6 +392,17 @@ public class RewardMenuManager : MonoBehaviour
         _isWarningActive = true;
         warningPanel.SetActive(true);
 
+        if (warningBodyText != null)
+        {
+            // --- THE FIX: Smart Contextual Text ---
+            if (_isOverflowMode)
+                warningBodyText.text = "Discard unequipped gems permanently?";
+            else if (_currentlySlottedGem != null)
+                warningBodyText.text = "Confirm your reward selection and leave?";
+            else
+                warningBodyText.text = "Leave without taking a reward?";
+        }
+
         if (Gamepad.current != null && warningCancelButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -409,6 +437,7 @@ public class RewardMenuManager : MonoBehaviour
 
     private void CloseRewardMenu()
     {
+        _isCurrentlyRewardPhase = false;
         characterScreenRoot.SetActive(false);
         if (expBarRoot != null) expBarRoot.SetActive(true);
         if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;

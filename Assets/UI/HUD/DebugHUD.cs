@@ -60,7 +60,7 @@ public class DebugHUD : MonoBehaviour
 
             Debug.Log($"Spawning {gauntletPrefab.name} with rarity: {randomRarity}");
 
-            //inventoryManager.TryEquipNewGauntlet(gauntletPrefab, randomRarity);
+            inventoryManager.TryEquipNewGauntlet(gauntletPrefab, randomRarity);
         }
         else
         {
