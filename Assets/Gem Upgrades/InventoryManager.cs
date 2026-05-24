@@ -379,7 +379,6 @@ public class InventoryManager : MonoBehaviour
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
         if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
         {
-            gauntletMenu.CloseUpgradeMenu();
             gauntletMenu.ResumeGame();
         }
         else

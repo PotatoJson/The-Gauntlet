@@ -12,7 +12,6 @@ public class GauntletMenu : MonoBehaviour
     [SerializeField] private RectTransform gauntletImage;
     [SerializeField] private GameObject menuCanvas;
     [SerializeField] private Button firstSelectedButton;
-    [SerializeField] private Button restartButton; // Separate slot for the finger button
     [SerializeField] private SettingsTabManager settingsTabManager;
 
     [Header("Buttons for Navigation")]
@@ -40,12 +39,10 @@ public class GauntletMenu : MonoBehaviour
 
     [Header("Character Menu References")]
     [SerializeField] private GameObject characterScreenRoot;
-    [SerializeField] private GameObject pauseMenuUpgradeButton;
 
     private bool _isPaused = false;
     private Vector2 _centerPosition = Vector2.zero;
     private float _offscreenPosX;
-    private Vector3 _originalGauntletScale;
     private Dictionary<RectTransform, Vector3> _originalButtonScales = new Dictionary<RectTransform, Vector3>();
 
     private void Awake()
@@ -55,7 +52,6 @@ public class GauntletMenu : MonoBehaviour
         _pauseAction = _playerMap.FindAction("Pause");
 
         _offscreenPosX = -Screen.width;
-        _originalGauntletScale = gauntletImage.localScale;
 
         // Collect all buttons including Restart for the animation
         List<Button> allButtons = new List<Button>(menuButtons);
@@ -320,22 +316,7 @@ public class GauntletMenu : MonoBehaviour
         mainButtonsGroup.interactable = false;
         mainButtonsGroup.blocksRaycasts = false;
     }
-
-    // Call this from the Character Screen's "Return" Button AND your InventoryManager UnityEvent
-    public void CloseUpgradeMenu()
-    {
-        characterScreenRoot.SetActive(false);
-
-        mainButtonsGroup.interactable = true;
-        mainButtonsGroup.blocksRaycasts = true;
-
-        // Pass controller focus safely back to the Pause Menu
-        if (EventSystem.current != null && pauseMenuUpgradeButton != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(pauseMenuUpgradeButton);
-        }
-    }
+    
     public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
     public void ReturnToMainMenu() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); ShowCursor(); }
     public void QuitGame() { Application.Quit(); }

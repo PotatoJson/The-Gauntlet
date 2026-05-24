@@ -222,7 +222,7 @@ public class TutorialManager : MonoBehaviour
     private IEnumerator TypeDialogueCoroutine(string textToType)
     {
         WaitForSecondsRealtime waitTime = new WaitForSecondsRealtime(textSpeed);
-        foreach (char letter in textToType.ToCharArray())
+        foreach (char letter in textToType)
         {
             dialogueText.text += letter;
             yield return waitTime;
