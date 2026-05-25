@@ -12,7 +12,6 @@ public class GauntletMenu : MonoBehaviour
     [SerializeField] private RectTransform gauntletImage;
     [SerializeField] private GameObject menuCanvas;
     [SerializeField] private Button firstSelectedButton;
-    [SerializeField] private Button restartButton; // Separate slot for the finger button
     [SerializeField] private SettingsTabManager settingsTabManager;
 
     [Header("Buttons for Navigation")]
@@ -21,6 +20,7 @@ public class GauntletMenu : MonoBehaviour
 
     [Header("Input References")]
     [SerializeField] private InputActionAsset inputActions;
+    [SerializeField] private InputActionReference inventoryToggleAction;
     private InputActionMap _playerMap;
     private InputActionMap _uiMap;
     private InputAction _pauseAction;
@@ -39,12 +39,10 @@ public class GauntletMenu : MonoBehaviour
 
     [Header("Character Menu References")]
     [SerializeField] private GameObject characterScreenRoot;
-    [SerializeField] private GameObject pauseMenuUpgradeButton;
 
     private bool _isPaused = false;
     private Vector2 _centerPosition = Vector2.zero;
     private float _offscreenPosX;
-    private Vector3 _originalGauntletScale;
     private Dictionary<RectTransform, Vector3> _originalButtonScales = new Dictionary<RectTransform, Vector3>();
 
     private void Awake()
@@ -54,7 +52,6 @@ public class GauntletMenu : MonoBehaviour
         _pauseAction = _playerMap.FindAction("Pause");
 
         _offscreenPosX = -Screen.width;
-        _originalGauntletScale = gauntletImage.localScale;
 
         // Collect all buttons including Restart for the animation
         List<Button> allButtons = new List<Button>(menuButtons);
@@ -74,19 +71,35 @@ public class GauntletMenu : MonoBehaviour
     {
         _pauseAction.Enable();
         _pauseAction.performed += OnPausePerformed;
+        if (inventoryToggleAction != null) inventoryToggleAction.action.Enable(); 
     }
 
     private void OnDisable()
     {
         _pauseAction.Disable();
         _pauseAction.performed -= OnPausePerformed;
+        if (inventoryToggleAction != null) inventoryToggleAction.action.Disable();
     }
 
     private void Update()
     {
-        if (!_isPaused) return;
+        if (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame())
+        {
+            if (!_isPaused && characterScreenRoot != null && !characterScreenRoot.activeSelf)
+            {
+                PauseGame();
+                OpenUpgradeMenu();
+            }
+            else if (characterScreenRoot != null && characterScreenRoot.activeSelf)
+            {
+                // Do not allow closing the inventory via toggle if we are in the middle of a reward phase!
+                if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
 
-        // REMOVE the settingsPanel check so mouse detection works in all menus
+                ResumeGame();
+            }
+        }
+
+        if (!_isPaused) return;
 
         bool mouseMoved = Mouse.current != null && Mouse.current.delta.ReadValue().sqrMagnitude > 0.1f;
         bool keyboardPressed = Keyboard.current != null &&
@@ -186,6 +199,13 @@ public class GauntletMenu : MonoBehaviour
         Time.timeScale = 0f;
         menuCanvas.SetActive(true);
 
+        // Reset main buttons interactability in case we were in character screen
+        if (mainButtonsGroup != null)
+        {
+            mainButtonsGroup.interactable = true;
+            mainButtonsGroup.blocksRaycasts = true;
+        }
+
         _playerMap.Disable();
         _uiMap.Enable();
         _pauseAction.Enable();
@@ -213,6 +233,9 @@ public class GauntletMenu : MonoBehaviour
         _isPaused = false;
         //_uiMap.Disable();
         _playerMap.Enable();
+
+        // Ensure sub-menus are closed and buttons re-enabled
+        CloseUpgradeMenu();
 
         // Lock cursor after pressing Esc
         Cursor.lockState = CursorLockMode.Locked;
@@ -311,21 +334,25 @@ public class GauntletMenu : MonoBehaviour
         mainButtonsGroup.blocksRaycasts = false;
     }
 
-    // Call this from the Character Screen's "Return" Button AND your InventoryManager UnityEvent
     public void CloseUpgradeMenu()
     {
-        characterScreenRoot.SetActive(false);
-
-        mainButtonsGroup.interactable = true;
-        mainButtonsGroup.blocksRaycasts = true;
-
-        // Pass controller focus safely back to the Pause Menu
-        if (EventSystem.current != null && pauseMenuUpgradeButton != null)
+        if (characterScreenRoot != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(pauseMenuUpgradeButton);
+            characterScreenRoot.SetActive(false);
+        }
+
+        if (mainButtonsGroup != null)
+        {
+            mainButtonsGroup.interactable = true;
+            mainButtonsGroup.blocksRaycasts = true;
+        }
+
+        if (Gamepad.current != null && firstSelectedButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
         }
     }
+    
     public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
     public void ReturnToMainMenu() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene("MainMenu"); ShowCursor(); }
     public void QuitGame() { Application.Quit(); }

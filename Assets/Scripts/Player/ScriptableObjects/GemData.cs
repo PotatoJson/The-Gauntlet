@@ -5,5 +5,8 @@ public abstract class GemData : BaseItemData
 {
   [Header("Gem Properties")]
   public int GemTier;
-  //potential socketing sound ADD HERE
+
+  public GemType gemType;
+    //potential socketing sound ADD HERE
+
 }

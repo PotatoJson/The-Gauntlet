@@ -4,11 +4,12 @@ using DG.Tweening;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
+public enum GemType { Stat, Skill }
+
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
 //IPointerClickHandler
 {
-
     [Header("Back End Stuff")]
     public GemData LinkedGemData;
 
@@ -18,7 +19,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [HideInInspector] public Transform originalInventoryGrid;
 
     [Header("Visuals")]
-    [SerializeField] private Outline selectionOutline;
+    [SerializeField] private GameObject selectionBracket;
 
     [Header("Gem Details")]
     public string gemName = "Unknown Gem";
@@ -44,7 +45,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private void Start()
     {
         originalInventoryGrid = transform.parent;
-        if (selectionOutline != null) selectionOutline.enabled = false;
+        if (selectionBracket != null) selectionBracket.SetActive(false);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -83,6 +84,22 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         if (!_canDrag) return;
         _rectTransform.position = eventData.position;
+
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.mainPaperPlate != null)
+        {
+            Vector3[] plateCorners = new Vector3[4];
+            RewardMenuManager.Instance.mainPaperPlate.GetWorldCorners(plateCorners);
+
+            Vector3 clampedPos = _rectTransform.position;
+
+            float halfWidth = (_rectTransform.rect.width * _rectTransform.lossyScale.x) / 2f;
+            float halfHeight = (_rectTransform.rect.height * _rectTransform.lossyScale.y) / 2f;
+
+            clampedPos.x = Mathf.Clamp(clampedPos.x, plateCorners[0].x + halfWidth, plateCorners[2].x - halfWidth);
+            clampedPos.y = Mathf.Clamp(clampedPos.y, plateCorners[0].y + halfHeight, plateCorners[2].y - halfHeight);
+
+            _rectTransform.position = clampedPos;
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -116,33 +133,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         return transform.parent != null && transform.parent.name.Contains("Slot");
     }
 
-    /*public void OnPointerClick(PointerEventData eventData)
-    {
-        if (eventData.button == PointerEventData.InputButton.Left)
-        {   //These BREAK GEMS
-            if (Mouse.current != null && (Mouse.current.leftButton.wasReleasedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)) return;
-            if (Keyboard.current != null && (Keyboard.current.enterKey.wasReleasedThisFrame || Keyboard.current.spaceKey.wasReleasedThisFrame)) return;
 
-            if (!IsEquipped())
-            {
-                if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
-                {
-                    if (!RewardMenuManager.Instance.CanDragGem(this))
-                    {
-                        return;
-                    }
-                }
-            }
-
-            if (GemPopupMenu.Instance != null)
-            {
-                RectTransform myRect = GetComponent<RectTransform>();
-                GemPopupMenu.Instance.OpenMenu(this, myRect);
-            }
-        }
-    }*/
-
-    // --- UPDATED: Block the gamepad's submit button if the gem is locked! ---
     public void ForceOpenPopUI()
     {
         if (!IsEquipped())
@@ -166,7 +157,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void AnimateToNewHome()
     {
-        if (transform.parent != null && transform.parent.GetComponent<UnityEngine.UI.LayoutGroup>() == null)
+        if (IsEquipped())
         {
             _rectTransform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.OutQuad).SetUpdate(true);
         }
@@ -177,29 +168,39 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnSelect(BaseEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = true;
+        if (selectionBracket != null) selectionBracket.SetActive(true);
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, true);
     }
 
     public void OnDeselect(BaseEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = false;
+        if (selectionBracket != null) selectionBracket.SetActive(false);
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, false);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = true;
+        if (selectionBracket != null) selectionBracket.SetActive(true);
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != gameObject)
         {
-            if (selectionOutline != null) selectionOutline.enabled = false;
+            if (selectionBracket != null) selectionBracket.SetActive(false);
         }
+        if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, false);
     }
 
     public void OnSubmit(BaseEventData eventData)
     {
         ForceOpenPopUI();
+    }
+
+    private void OnDestroy()
+    {
+        transform.DOKill();
+        if (_rectTransform != null) _rectTransform.DOKill();
     }
 }

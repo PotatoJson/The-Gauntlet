@@ -7,6 +7,10 @@ public class PersistentEquipment : MonoBehaviour
 
     public bool hasSavedData = false;
 
+    [Header("Master Gem Database")]
+    [Tooltip("Drag EVERY gem prefab in your game here so the Backpack can always find them!")]
+    public List<GameObject> masterGemDatabase = new List<GameObject>();
+
     [Header("Saved Primary")]
     public GameObject primaryGauntletPrefab;
     public GauntletRarity primaryRarity;
@@ -17,9 +21,11 @@ public class PersistentEquipment : MonoBehaviour
     public GauntletRarity secondaryRarity;
     public List<GameObject> secondaryGems = new List<GameObject>();
 
+    [Header("Saved Ultimate")]
+    public GameObject ultimateGemPrefab;
+
     private void Awake()
     {
-        // The Highlander Rule: Only one backpack allowed!
         if (Instance == null)
         {
             Instance = this;
@@ -31,24 +37,44 @@ public class PersistentEquipment : MonoBehaviour
         }
     }
 
-    // Call this right before you load the next scene!
     public void SaveEquipment(InventoryManager inv)
     {
         hasSavedData = true;
 
-        // 1. Save Gauntlet Data
         primaryGauntletPrefab = inv.activePrimaryPrefab;
-        primaryRarity = inv.activePrimaryRarity;
-
         secondaryGauntletPrefab = inv.activeSecondaryPrefab;
-        secondaryRarity = inv.activeSecondaryRarity;
 
-        // 2. Clear old gems and save the new ones
+        GauntletManager pManager = inv.primaryGauntlet.GetComponentInChildren<GauntletManager>();
+        GauntletManager sManager = inv.secondaryGauntlet.GetComponentInChildren<GauntletManager>();
+
+        if (pManager != null) primaryRarity = pManager.currentRarity;
+        if (sManager != null) secondaryRarity = sManager.currentRarity;
+
+        // 1. Clear old gems and save the new ones
         primaryGems.Clear();
         secondaryGems.Clear();
 
         ExtractGems(inv.primaryGauntlet, primaryGems);
         ExtractGems(inv.secondaryGauntlet, secondaryGems);
+
+        ultimateGemPrefab = null; // Reset it just in case it's empty now
+
+        if (pManager != null && pManager.SkillSlot != null)
+        {
+            SkillSlotManager skillSlot = pManager.SkillSlot.GetComponent<SkillSlotManager>();
+            if (skillSlot != null && skillSlot.CurrentSkillGem != null)
+            {
+                // Match the equipped skill gem to our Master Database
+                foreach (GameObject projectPrefab in masterGemDatabase)
+                {
+                    if (projectPrefab.GetComponent<DraggableGem>().LinkedGemData == skillSlot.CurrentSkillGem.LinkedGemData)
+                    {
+                        ultimateGemPrefab = projectPrefab;
+                        break;
+                    }
+                }
+            }
+        }
 
         Debug.Log("Equipment successfully saved to the Backpack!");
     }
@@ -62,10 +88,12 @@ public class PersistentEquipment : MonoBehaviour
             {
                 DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
 
-                if (gem != null && RewardMenuManager.Instance != null && gem.LinkedGemData != null)
+                if (gem != null && gem.LinkedGemData != null)
                 {
                     bool foundPrefab = false;
-                    foreach (GameObject projectPrefab in RewardMenuManager.Instance.allGemPrefabs)
+
+                    // Match the equipped gem to our Master Database
+                    foreach (GameObject projectPrefab in masterGemDatabase)
                     {
                         if (projectPrefab.GetComponent<DraggableGem>().LinkedGemData == gem.LinkedGemData)
                         {
@@ -75,12 +103,11 @@ public class PersistentEquipment : MonoBehaviour
                         }
                     }
 
-                    // Fallback to keep spacing aligned just in case a gem isn't found
                     if (!foundPrefab) gemList.Add(null);
                 }
                 else
                 {
-                    // --- THE FIX: Save a blank 'null' space to keep the exact slot indexes perfectly aligned! ---
+                    // Empty slot, save a null space to keep index alignment perfect
                     gemList.Add(null);
                 }
             }
