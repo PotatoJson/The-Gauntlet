@@ -19,7 +19,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [HideInInspector] public Transform originalInventoryGrid;
 
     [Header("Visuals")]
-    [SerializeField] private Outline selectionOutline;
+    [SerializeField] private GameObject selectionBracket;
 
     [Header("Gem Details")]
     public string gemName = "Unknown Gem";
@@ -45,7 +45,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private void Start()
     {
         originalInventoryGrid = transform.parent;
-        if (selectionOutline != null) selectionOutline.enabled = false;
+        if (selectionBracket != null) selectionBracket.SetActive(false);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -168,19 +168,19 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnSelect(BaseEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = true;
+        if (selectionBracket != null) selectionBracket.SetActive(true);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, true);
     }
 
     public void OnDeselect(BaseEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = false;
+        if (selectionBracket != null) selectionBracket.SetActive(false);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, false);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (selectionOutline != null) selectionOutline.enabled = true;
+        if (selectionBracket != null) selectionBracket.SetActive(true);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, true);
     }
 
@@ -188,7 +188,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != gameObject)
         {
-            if (selectionOutline != null) selectionOutline.enabled = false;
+            if (selectionBracket != null) selectionBracket.SetActive(false);
         }
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, false);
     }

@@ -90,6 +90,13 @@ public class GauntletMenu : MonoBehaviour
                 PauseGame();
                 OpenUpgradeMenu();
             }
+            else if (characterScreenRoot != null && characterScreenRoot.activeSelf)
+            {
+                // Do not allow closing the inventory via toggle if we are in the middle of a reward phase!
+                if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
+
+                ResumeGame();
+            }
         }
 
         if (!_isPaused) return;
@@ -192,6 +199,13 @@ public class GauntletMenu : MonoBehaviour
         Time.timeScale = 0f;
         menuCanvas.SetActive(true);
 
+        // Reset main buttons interactability in case we were in character screen
+        if (mainButtonsGroup != null)
+        {
+            mainButtonsGroup.interactable = true;
+            mainButtonsGroup.blocksRaycasts = true;
+        }
+
         _playerMap.Disable();
         _uiMap.Enable();
         _pauseAction.Enable();
@@ -219,6 +233,9 @@ public class GauntletMenu : MonoBehaviour
         _isPaused = false;
         //_uiMap.Disable();
         _playerMap.Enable();
+
+        // Ensure sub-menus are closed and buttons re-enabled
+        CloseUpgradeMenu();
 
         // Lock cursor after pressing Esc
         Cursor.lockState = CursorLockMode.Locked;
@@ -315,6 +332,25 @@ public class GauntletMenu : MonoBehaviour
         characterScreenRoot.SetActive(true);
         mainButtonsGroup.interactable = false;
         mainButtonsGroup.blocksRaycasts = false;
+    }
+
+    public void CloseUpgradeMenu()
+    {
+        if (characterScreenRoot != null)
+        {
+            characterScreenRoot.SetActive(false);
+        }
+
+        if (mainButtonsGroup != null)
+        {
+            mainButtonsGroup.interactable = true;
+            mainButtonsGroup.blocksRaycasts = true;
+        }
+
+        if (Gamepad.current != null && firstSelectedButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
+        }
     }
     
     public void RestartGame() { CleanupTweens();  Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }

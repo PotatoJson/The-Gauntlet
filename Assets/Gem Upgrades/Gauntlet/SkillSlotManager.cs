@@ -2,10 +2,26 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SkillSlotManager : MonoBehaviour, IDropHandler
+public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
 {
     [Header("Ultimate Slot Configuration")]
     public DraggableGem CurrentSkillGem;
+
+    private GauntletManager _manager;
+
+    private void Awake()
+    {
+        Button btn = GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.transition = Selectable.Transition.None;
+        }
+    }
+
+    public void Setup(GauntletManager manager)
+    {
+        _manager = manager;
+    }
 
     public void OnDrop(PointerEventData eventData)
     {
@@ -62,6 +78,25 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler
         if (slotRect != null && gemRect != null)
         {
             gemRect.sizeDelta = slotRect.rect.size;
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData) => ShowBracket();
+    public void OnPointerExit(PointerEventData eventData) => HideBracket();
+    public void OnSelect(BaseEventData eventData) => ShowBracket();
+    public void OnDeselect(BaseEventData eventData) => HideBracket();
+
+    private void ShowBracket()
+    {
+        if (_manager == null) return;
+        _manager.UpdateBracket(transform);
+    }
+
+    private void HideBracket()
+    {
+        if (_manager != null)
+        {
+            _manager.ClearBracket(transform);
         }
     }
 }

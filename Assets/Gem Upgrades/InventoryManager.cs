@@ -30,9 +30,10 @@ public class InventoryManager : MonoBehaviour
     [Header("Header Navigation")]
     [SerializeField] private Button headerTitleButton;
     [SerializeField] private Button returnButton;
+    [SerializeField] private Button switchGauntletButton;
 
     [Header("Central Layout Configurations")]
-    public Transform primaryGauntlet;
+public Transform primaryGauntlet;
     public Transform secondaryGauntlet;
     [SerializeField] private TMP_Text gauntletTitleText;
 
@@ -44,8 +45,9 @@ public class InventoryManager : MonoBehaviour
 
     [Header("Details Panel Content bindings")]
     [SerializeField] private GameObject descriptionBoxAnchor;
+    [SerializeField] private CanvasGroup detailCanvasGroup;
     [SerializeField] private TMP_Text detailNameText;
-    [SerializeField] private TMP_Text detailDescriptionText;
+[SerializeField] private TMP_Text detailDescriptionText;
     [SerializeField] private Image detailIcon;
 
     [Header("Tween Settings")]
@@ -75,6 +77,18 @@ public class InventoryManager : MonoBehaviour
     {
         if (warningPanel != null) warningPanel.SetActive(false);
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
+        if (detailCanvasGroup != null) detailCanvasGroup.alpha = 0f;
+
+        if (headerTitleButton != null)
+        {
+            headerTitleButton.onClick.AddListener(OnHeaderTitleClicked);
+        }
+    }
+
+    private void OnHeaderTitleClicked()
+    {
+        if (Gamepad.current == null) return;
+        FocusFirstGemOrSlot();
     }
 
     private void Start()
@@ -197,7 +211,21 @@ public class InventoryManager : MonoBehaviour
     {
         ResetGauntletPositionsInstant();
         RefreshDescriptionPanel();
-        FocusFirstAvailableGem();
+        
+        // If we are entering for a reward, let the RewardMenuManager handle focus!
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
+
+        // Use a coroutine to ensure the EventSystem is ready and visuals update correctly
+        StopAllCoroutines(); 
+        StartCoroutine(FocusTitleDelayed());
+    }
+
+    private System.Collections.IEnumerator FocusTitleDelayed()
+    {
+        // Wait for the end of frame or at least one frame to let UI settle
+        yield return null;
+        SetupNavigation();
+        FocusTitle();
     }
 
     private void Update()
@@ -206,6 +234,37 @@ public class InventoryManager : MonoBehaviour
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
 
         HandleCancelInput();
+        HandleControllerSwitch();
+    }
+
+    private void HandleControllerSwitch()
+    {
+        if (Gamepad.current == null || EventSystem.current == null) return;
+
+        // If nothing is selected, and we detect significant gamepad activity, snap focus to the title
+        if (EventSystem.current.currentSelectedGameObject == null)
+        {
+            bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.2f || 
+                             Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.2f;
+            bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
+            
+            // Check for any button press without enumerating everything
+            bool buttonPressed = false;
+            foreach (var control in Gamepad.current.allControls)
+            {
+                if (control is UnityEngine.InputSystem.Controls.ButtonControl button && button.wasPressedThisFrame)
+                {
+                    buttonPressed = true;
+                    break;
+                }
+            }
+
+            if (stickMoved || dpadPressed || buttonPressed)
+            {
+                SetupNavigation();
+                FocusTitle();
+            }
+        }
     }
 
     private void HandleCancelInput()
@@ -227,22 +286,27 @@ public class InventoryManager : MonoBehaviour
             {
                 GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
 
-                // If highlighting a Gem, jump up to the Return Button
-                if (currentSel != null && currentSel.GetComponent<DraggableGem>() != null)
+                // If highlighting a Gem or a Slot in the gauntlet, jump back to the Title
+                if (IsFocusedOnGauntletSlot(currentSel))
                 {
-                    if (returnButton != null)
-                    {
-                        EventSystem.current.SetSelectedGameObject(null);
-                        EventSystem.current.SetSelectedGameObject(returnButton.gameObject);
-                    }
+                    FocusTitle();
                 }
                 else
                 {
-                    // Already on the header buttons -> Open the exit warning
+                    // Already on the header buttons (like Title) or outside the gauntlet -> Open the exit warning
                     TryCloseCharacterScreen();
                 }
             }
         }
+    }
+
+    private bool IsFocusedOnGauntletSlot(GameObject obj)
+    {
+        if (obj == null) return false;
+
+        // Verify it belongs to one of the gauntlet containers
+        // This covers DraggableGems inside slots and the slots themselves
+        return obj.transform.IsChildOf(primaryGauntlet) || obj.transform.IsChildOf(secondaryGauntlet);
     }
 
     // --- REFINED GAUNTLET ANIMATIONS ---
@@ -281,7 +345,12 @@ public class InventoryManager : MonoBehaviour
             secondaryGauntlet.gameObject.SetActive(true);
             secondaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
             secondaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => { _isDisplayingPrimary = false; _isTransitioning = false; FocusFirstAvailableGem(); });
+                .OnComplete(() => { 
+                    _isDisplayingPrimary = false; 
+                    _isTransitioning = false; 
+                    SetupNavigation();
+                    FocusTitle(); 
+                });
         }
         else
         {
@@ -291,7 +360,12 @@ public class InventoryManager : MonoBehaviour
             primaryGauntlet.gameObject.SetActive(true);
             primaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
             primaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => { _isDisplayingPrimary = true; _isTransitioning = false; FocusFirstAvailableGem(); });
+                .OnComplete(() => { 
+                    _isDisplayingPrimary = true; 
+                    _isTransitioning = false; 
+                    SetupNavigation();
+                    FocusTitle(); 
+                });
         }
     }
 
@@ -364,7 +438,7 @@ public class InventoryManager : MonoBehaviour
         {
             EventSystem.current.SetSelectedGameObject(null);
             if (_lastSelectedGem != null) EventSystem.current.SetSelectedGameObject(_lastSelectedGem.gameObject);
-            else FocusFirstAvailableGem();
+            else FocusTitle();
         }
     }
 
@@ -383,12 +457,24 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
+            if (gauntletMenu != null) gauntletMenu.CloseUpgradeMenu();
             gameObject.SetActive(false);
             Time.timeScale = 1f;
         }
     }
 
     // --- UX HELPERS ---
+    public void FocusTitle()
+    {
+        if (Gamepad.current == null || EventSystem.current == null) return;
+
+        if (headerTitleButton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(headerTitleButton.gameObject);
+        }
+    }
+
     public void FocusFirstAvailableGem()
     {
         if (Gamepad.current == null || EventSystem.current == null) return;
@@ -401,6 +487,148 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    public void FocusFirstGemOrSlot()
+    {
+        GauntletManager activeManager = GetActiveGauntletManager();
+        if (activeManager == null) return;
+        
+        Selectable first = null;
+        foreach(var slot in activeManager.fingerSlots)
+        {
+            if (slot == null || !slot.activeInHierarchy) continue;
+            first = GetSelectableFromSlot(slot);
+            if (first != null && first.interactable) break;
+        }
+        
+        // If no finger slots found, try skill slot
+        if (first == null && activeManager.SkillSlot != null && activeManager.SkillSlot.activeInHierarchy)
+        {
+            first = GetSelectableFromSlot(activeManager.SkillSlot);
+        }
+        
+        if (first != null && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(first.gameObject);
+        }
+    }
+
+    private GauntletManager GetActiveGauntletManager()
+    {
+        Transform target = _isDisplayingPrimary ? primaryGauntlet : secondaryGauntlet;
+        if (target == null) return null;
+        return target.GetComponentInChildren<GauntletManager>();
+    }
+
+    private Selectable GetSelectableFromSlot(GameObject slotObj)
+    {
+        if (slotObj == null) return null;
+        
+        // Check for gem first
+        DraggableGem gem = slotObj.GetComponentInChildren<DraggableGem>();
+        if (gem != null)
+        {
+            Selectable gemSel = gem.GetComponent<Selectable>();
+            if (gemSel != null) return gemSel;
+        }
+        
+        // Fallback to slot itself
+        return slotObj.GetComponent<Selectable>();
+    }
+
+    public void SetupNavigation()
+    {
+        GauntletManager activeManager = GetActiveGauntletManager();
+        if (activeManager == null || headerTitleButton == null) return;
+
+        List<Selectable> selectables = new List<Selectable>();
+        
+        // Add finger slots (or their gems)
+        foreach (GameObject slotObj in activeManager.fingerSlots)
+        {
+            if (slotObj == null || !slotObj.activeInHierarchy) continue;
+            Selectable sel = GetSelectableFromSlot(slotObj);
+            // Check if it is a real slot (not disabled)
+            if (sel != null && sel.interactable) selectables.Add(sel);
+        }
+        
+        // Add skill slot
+        if (activeManager.SkillSlot != null && activeManager.SkillSlot.activeInHierarchy)
+        {
+            Selectable sel = GetSelectableFromSlot(activeManager.SkillSlot);
+            if (sel != null && sel.interactable) selectables.Add(sel);
+        }
+        
+        if (selectables.Count == 0) return;
+        
+        // 1. HEADER NAVIGATION: Return <-> Title <-> SwitchGauntlet (Closed Horizontal Loop)
+        Navigation titleNav = headerTitleButton.navigation;
+        titleNav.mode = Navigation.Mode.Explicit;
+        titleNav.selectOnUp = null;
+        titleNav.selectOnDown = null; // South button still jumps via code, but D-pad Down is disabled
+
+        if (returnButton != null)
+        {
+            Navigation returnNav = returnButton.navigation;
+            returnNav.mode = Navigation.Mode.Explicit;
+            returnNav.selectOnUp = null;
+            returnNav.selectOnDown = null;
+
+            titleNav.selectOnLeft = returnButton;
+            returnNav.selectOnRight = headerTitleButton;
+
+            if (switchGauntletButton != null)
+            {
+                returnNav.selectOnLeft = switchGauntletButton;
+            }
+            else
+            {
+                returnNav.selectOnLeft = headerTitleButton;
+            }
+            returnButton.navigation = returnNav;
+        }
+
+        if (switchGauntletButton != null)
+        {
+            Navigation switchNav = switchGauntletButton.navigation;
+            switchNav.mode = Navigation.Mode.Explicit;
+            switchNav.selectOnUp = null;
+            switchNav.selectOnDown = null;
+
+            titleNav.selectOnRight = switchGauntletButton;
+            switchNav.selectOnLeft = headerTitleButton;
+
+            if (returnButton != null)
+            {
+                switchNav.selectOnRight = returnButton;
+            }
+            else
+            {
+                switchNav.selectOnRight = headerTitleButton;
+            }
+            switchGauntletButton.navigation = switchNav;
+        }
+
+        headerTitleButton.navigation = titleNav;
+        
+        // 2. SLOT LOOP: Linear navigation that wraps around
+        int count = selectables.Count;
+        for (int i = 0; i < count; i++)
+        {
+            Navigation nav = selectables[i].navigation;
+            nav.mode = Navigation.Mode.Explicit;
+            
+            // Loop left/right
+            nav.selectOnLeft = selectables[(i == 0) ? count - 1 : i - 1];
+            nav.selectOnRight = selectables[(i == count - 1) ? 0 : i + 1];
+            
+            // Loop up/down (so d-pad vertical also stays in the loop)
+            nav.selectOnUp = selectables[(i == 0) ? count - 1 : i - 1];
+            nav.selectOnDown = selectables[(i == count - 1) ? 0 : i + 1];
+
+            selectables[i].navigation = nav;
+        }
+    }
 
     public bool TryEquipNewGauntlet(GameObject gauntletPrefab, GauntletRarity rarity)
     {
@@ -561,6 +789,8 @@ public class InventoryManager : MonoBehaviour
         if (targetGem != null)
         {
             descriptionBoxAnchor.gameObject.SetActive(true);
+            if (detailCanvasGroup != null) detailCanvasGroup.alpha = 1f;
+
             detailNameText.text = targetGem.gemName;
             detailDescriptionText.text = targetGem.gemDescription;
             if (detailIcon != null)
@@ -573,6 +803,7 @@ public class InventoryManager : MonoBehaviour
         {
             // Nothing is hovered or focused, completely hide the panel!
             descriptionBoxAnchor.gameObject.SetActive(false);
+            if (detailCanvasGroup != null) detailCanvasGroup.alpha = 0f;
         }
     }
 }
