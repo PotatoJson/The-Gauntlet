@@ -2744,10 +2744,10 @@ PrefabInstance:
       addedObject: {fileID: 5973997621393844908}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 579e3fe56932d49479901ccfce805052, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3691794824845665695}
+      addedObject: {fileID: 3392927004038333664}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 579e3fe56932d49479901ccfce805052, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5886137514497576185}
+      addedObject: {fileID: 1815861545619287840}
   m_SourcePrefab: {fileID: 100100000, guid: 579e3fe56932d49479901ccfce805052, type: 3}
 --- !u!4 &4469600053554375976 stripped
 Transform:
@@ -2776,6 +2776,131 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2432b3efe90d864fa7a4549276b52cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimationEventRelay
+--- !u!82 &3392927004038333664
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5807499601235421083}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1815861545619287840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5807499601235421083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e70ab3e148fe1a94d8369ba1faf4f6de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioManager
+  audioSource: {fileID: 3392927004038333664}
+  footstepSound: {fileID: 8300000, guid: 785ab1f75af12454eb785de82382ee1b, type: 3}
+  rollSound: {fileID: 8300000, guid: cfc71182f2b93684c8b10df543152124, type: 3}
+  lightWhooshSounds:
+  - {fileID: 8300000, guid: 4b4f83c7f464157448d2d9c1b9ea3e44, type: 3}
+  - {fileID: 8300000, guid: a87a740ae3416c7478f91f0b33896979, type: 3}
+  heavyWhooshSound: {fileID: 8300000, guid: a62fb3af63dc4ee4a8c6d3ea0c12cbf1, type: 3}
+  enemyImpactSounds:
+  - {fileID: 8300000, guid: 368bf1611d446784b9b5e87ba7989e6e, type: 3}
+  - {fileID: 8300000, guid: 9ac54913cfc1b5e42969c4103525ff01, type: 3}
+  wallImpactSound: {fileID: 8300000, guid: dae2f6796ed61924cb49393cafb2561b, type: 3}
+  potionSound: {fileID: 8300000, guid: c68702db946d3de4f8df98320e6d455a, type: 3}
+  pitchMin: 0.9
+  pitchMax: 1.1
+  volume: 0.8
+  footstepCooldown: 0.2
 --- !u!4 &6616828758171876641 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 579e3fe56932d49479901ccfce805052, type: 3}
