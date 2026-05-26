@@ -6,6 +6,9 @@ public class FireballProjectile : BaseSkillProjectile
     [Header("Fire Specifics")]
     public float ExplosionRadius = 5f;
     public GameObject ExplosionVFX;
+
+    public float BurnDps = 5f;
+    public float BurnDuration = 4f;
     
     protected override void OnTriggerEnter(Collider other)
     {
@@ -28,7 +31,11 @@ public class FireballProjectile : BaseSkillProjectile
                 if (alreadyHit.Add(enemyRoot))
                 {
                     enemyScript.TakeDamage(_calculatedDamage);
-                    
+                    if (enemyScript.TryGetComponent<StatusManager>(out StatusManager statusManager))
+                    {
+                        statusManager.ApplyStatus(new BurnStatus(BurnDps, BurnDuration));
+                    }
+
                     if (MetricsTracker.Instance != null)
                     {
                         //if we want to track fire ball things
