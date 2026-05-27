@@ -12,13 +12,22 @@ public abstract class BaseSkillProjectile : MonoBehaviour
 
     protected float _calculatedDamage;
     protected int _calculatedPoise;
+    protected Transform _target;
+    protected Rigidbody _rb;
     
-    public virtual void Initialize(float playerDamage, float playerPoise)
+    public virtual void Initialize(float playerDamage, float playerPoise, Transform target = null)
     {
         _calculatedDamage = playerDamage * DamageMultiplier;
         _calculatedPoise = Mathf.RoundToInt(playerPoise * DamageMultiplier);
-        
         Rigidbody rb = GetComponent<Rigidbody>();
+
+        // This is the default targetting system for Physical, Ice, and Lightning projectiles
+        if(_target != null)
+        {
+            Vector3 aimPoint = _target.position + (Vector3.up * 1f);
+            transform.LookAt(aimPoint);
+        }
+        
         if (rb != null)
         {
             rb.linearVelocity = transform.forward * Speed; 

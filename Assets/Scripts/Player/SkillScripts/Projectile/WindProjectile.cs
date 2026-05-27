@@ -11,6 +11,19 @@ public class WindProjectile : BaseSkillProjectile
 
     private float _tickTimer;
 
+    public override void Initialize(float playerDamage, float playerPoise, Transform target = null)
+    {
+        base.Initialize(playerDamage, playerPoise, target);
+
+        Vector3 flatForward = transform.forward;
+        flatForward.y = 0; 
+
+        if (_rb != null)
+        {
+            _rb.linearVelocity = flatForward.normalized * Speed;
+        }
+    }
+
     protected override void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Environment"))

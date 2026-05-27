@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 public class EarthProjectile : BaseSkillProjectile
 {
+    [Header("The Throw")]
+    public float UpwardThrowForce = 5f; // to make this feel like a throw instead of just spawning and moving
+
     [Header("DirectHit Things")]
     public float KnockbackForce = 15f;
     //public int ExtraPoiseDmg = 30; when ever enemies can handle the incoming poise dmg
@@ -13,6 +16,17 @@ public class EarthProjectile : BaseSkillProjectile
 
     [Header("Visuals")]
     public GameObject ImpactVFX;
+
+    public override void Initialize(float playerDamage, float playerPoise, Transform target = null)
+    {
+        base.Initialize(playerDamage, playerPoise, target);
+
+        if (_rb != null)
+        {
+            _rb.useGravity = true; 
+            _rb.linearVelocity = (transform.forward * Speed) + (Vector3.up * UpwardThrowForce);
+        }
+    }
 
     protected override void OnTriggerEnter(Collider other)
     {

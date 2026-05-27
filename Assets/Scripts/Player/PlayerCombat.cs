@@ -230,7 +230,14 @@ public class PlayerCombat : MonoBehaviour
             BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
             if (projectileScript != null)
             {
-                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise); 
+                Transform currentTarget = null;
+                //handle the chance the player is locked on to an enemy
+                if (_stateManager.IsLockedOn && PlayerCamera.Instance != null)
+                {
+                    currentTarget = PlayerCamera.Instance.currentLockOnTarget;
+                }
+
+                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise, currentTarget);
             }
         }
 
