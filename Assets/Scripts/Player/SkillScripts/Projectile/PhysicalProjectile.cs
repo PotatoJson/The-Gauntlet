@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public class PhysicalProjectile : BaseSkillProjectile
 {
+    private int _pierceCount = 0;
+    public int MaxPierces = 2;
     [Header("Shockwave Specifics")]
     [Tooltip("Visual effect to spawn when slicing through an enemy")]
     public GameObject PierceVFX; 
@@ -19,6 +21,12 @@ public class PhysicalProjectile : BaseSkillProjectile
             if (_alreadyHit.Add(enemyRoot))
             {
                 enemyScript.TakeDamage(_calculatedDamage);
+                _pierceCount++;
+
+                if(_pierceCount >= MaxPierces)
+                {
+                    Destroy(gameObject);
+                }
                 if (PierceVFX != null)
                 {
                     Instantiate(PierceVFX, other.transform.position, Quaternion.identity);
