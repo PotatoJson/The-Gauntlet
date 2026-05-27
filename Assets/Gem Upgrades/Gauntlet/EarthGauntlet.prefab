@@ -13,8 +13,6 @@ GameObject:
   - component: {fileID: 370564081461989799}
   - component: {fileID: 2455552293766062445}
   - component: {fileID: 3234558464490132805}
-  - component: {fileID: 7162323759783040449}
-  - component: {fileID: 7172835289826500979}
   m_Layer: 5
   m_Name: Slot2
   m_TagString: Untagged
@@ -62,7 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -98,7 +96,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 1104284758062413111}
     m_SelectOnRight: {fileID: 6834286331667916028}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -118,7 +116,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 370564081461989799}
   m_OnClick:
     m_PersistentCalls:
@@ -135,34 +133,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
---- !u!114 &7162323759783040449
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 25809826393625559}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
---- !u!114 &7172835289826500979
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 25809826393625559}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc3ff83e32329404faf1c4026727e6c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIOutlineToggle
-  outlineThickness: {x: 5, y: -5}
 --- !u!1 &927469322979689366
 GameObject:
   m_ObjectHideFlags: 0
@@ -176,8 +146,6 @@ GameObject:
   - component: {fileID: 4220330856346409162}
   - component: {fileID: 7343138952621565321}
   - component: {fileID: 3855799798960295644}
-  - component: {fileID: 6366076834066813747}
-  - component: {fileID: 4279911810753909202}
   m_Layer: 5
   m_Name: Slot4
   m_TagString: Untagged
@@ -225,7 +193,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -261,7 +229,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 6834286331667916028}
     m_SelectOnRight: {fileID: 498888318714231941}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -281,7 +249,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 4220330856346409162}
   m_OnClick:
     m_PersistentCalls:
@@ -298,34 +266,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
---- !u!114 &6366076834066813747
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 927469322979689366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
---- !u!114 &4279911810753909202
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 927469322979689366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc3ff83e32329404faf1c4026727e6c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIOutlineToggle
-  outlineThickness: {x: 5, y: -5}
 --- !u!1 &2328096594623563879
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,8 +279,6 @@ GameObject:
   - component: {fileID: 4184832710976621910}
   - component: {fileID: 498888318714231941}
   - component: {fileID: 1131012283803073287}
-  - component: {fileID: 1599931436397654694}
-  - component: {fileID: 1765384453844711353}
   m_Layer: 5
   m_Name: Slot5
   m_TagString: Untagged
@@ -388,7 +326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -424,7 +362,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 7343138952621565321}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -444,7 +382,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 4184832710976621910}
   m_OnClick:
     m_PersistentCalls:
@@ -461,34 +399,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
---- !u!114 &1599931436397654694
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2328096594623563879}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
---- !u!114 &1765384453844711353
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2328096594623563879}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc3ff83e32329404faf1c4026727e6c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIOutlineToggle
-  outlineThickness: {x: 5, y: -5}
 --- !u!1 &3126867015515638456
 GameObject:
   m_ObjectHideFlags: 0
@@ -502,8 +412,6 @@ GameObject:
   - component: {fileID: 4906603520063193282}
   - component: {fileID: 1104284758062413111}
   - component: {fileID: 341017554705233777}
-  - component: {fileID: 6736165323601373328}
-  - component: {fileID: 4398628391915402402}
   m_Layer: 5
   m_Name: Slot1
   m_TagString: Untagged
@@ -551,7 +459,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -587,7 +495,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 2455552293766062445}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -607,7 +515,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 4906603520063193282}
   m_OnClick:
     m_PersistentCalls:
@@ -624,34 +532,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
---- !u!114 &6736165323601373328
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126867015515638456}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
---- !u!114 &4398628391915402402
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3126867015515638456}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc3ff83e32329404faf1c4026727e6c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIOutlineToggle
-  outlineThickness: {x: 5, y: -5}
 --- !u!1 &6068620792313812498
 GameObject:
   m_ObjectHideFlags: 0
@@ -740,8 +620,6 @@ GameObject:
   - component: {fileID: 1663009406540565321}
   - component: {fileID: 6834286331667916028}
   - component: {fileID: 4387089827797797262}
-  - component: {fileID: 199770996950314261}
-  - component: {fileID: 5141570671096444832}
   m_Layer: 5
   m_Name: Slot3
   m_TagString: Untagged
@@ -789,7 +667,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -825,7 +703,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 2455552293766062445}
     m_SelectOnRight: {fileID: 7343138952621565321}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
@@ -845,7 +723,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1663009406540565321}
   m_OnClick:
     m_PersistentCalls:
@@ -862,34 +740,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e4fd8e50f29ec045a75a8be99a2f024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemDropSlot
---- !u!114 &199770996950314261
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6910806317698172384}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
---- !u!114 &5141570671096444832
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6910806317698172384}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc3ff83e32329404faf1c4026727e6c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIOutlineToggle
-  outlineThickness: {x: 5, y: -5}
 --- !u!1 &6912230105925256729
 GameObject:
   m_ObjectHideFlags: 0
@@ -926,6 +776,7 @@ RectTransform:
   - {fileID: 7302389804756058823}
   - {fileID: 4460977323498784977}
   - {fileID: 8063514390254629072}
+  - {fileID: 3903598783302952368}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -954,6 +805,9 @@ MonoBehaviour:
   - {fileID: 927469322979689366}
   - {fileID: 2328096594623563879}
   SkillSlot: {fileID: 7172356225668452112}
+  crossSprite: {fileID: 21300000, guid: 5c33900c7a595f440b759750e93ad926, type: 3}
+  selectionBracket: {fileID: 0}
+  selectionBracketScale: 1.4
 --- !u!1 &7172356225668452112
 GameObject:
   m_ObjectHideFlags: 0
@@ -1118,3 +972,129 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSlotManager
   CurrentSkillGem: {fileID: 0}
+--- !u!1001 &5067036050660251070
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2189271249735356386}
+    m_Modifications:
+    - target: {fileID: 1828289269707003039, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1828289269707003039, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_PixelsPerUnitMultiplier
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 6882002166640137805, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_Name
+      value: Gem_Selection_Bracket
+      objectReference: {fileID: 0}
+    - target: {fileID: 6882002166640137805, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 73.8496
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 102.4738
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -4.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 180.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+--- !u!224 &3903598783302952368 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8105885697675145230, guid: d2e72a08ec68dbe4bb082f36a528833d, type: 3}
+  m_PrefabInstance: {fileID: 5067036050660251070}
+  m_PrefabAsset: {fileID: 0}

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.Localization;
 
 public class RewardMenuManager : MonoBehaviour
 {
@@ -18,6 +19,11 @@ public class RewardMenuManager : MonoBehaviour
             return _instance;
         }
     }
+
+    [Header("Localized Strings")]
+    public LocalizedString warningDiscardOverflowString;
+    public LocalizedString warningConfirmSelectionString;
+    public LocalizedString warningLeaveNoRewardString;
 
     [Header("Screen Configuration")]
     [SerializeField] private GameObject characterScreenRoot;
@@ -163,7 +169,9 @@ public class RewardMenuManager : MonoBehaviour
 
         if (warningBodyText != null)
         {
-            warningBodyText.text = _isOverflowMode ? "Discard unequipped gems permanently?" : "Leave without taking a reward?";
+            warningBodyText.text = _isOverflowMode 
+                ? warningDiscardOverflowString.GetLocalizedString() 
+                : warningLeaveNoRewardString.GetLocalizedString();
         }
     }
 
@@ -394,13 +402,12 @@ public class RewardMenuManager : MonoBehaviour
 
         if (warningBodyText != null)
         {
-            // --- THE FIX: Smart Contextual Text ---
             if (_isOverflowMode)
-                warningBodyText.text = "Discard unequipped gems permanently?";
+                warningBodyText.text = warningDiscardOverflowString.GetLocalizedString();
             else if (_currentlySlottedGem != null)
-                warningBodyText.text = "Confirm your reward selection and leave?";
+                warningBodyText.text = warningConfirmSelectionString.GetLocalizedString();
             else
-                warningBodyText.text = "Leave without taking a reward?";
+                warningBodyText.text = warningLeaveNoRewardString.GetLocalizedString();
         }
 
         if (Gamepad.current != null && warningCancelButton != null && EventSystem.current != null)

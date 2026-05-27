@@ -5,9 +5,16 @@ using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEngine.Localization;
 
 public class InventoryManager : MonoBehaviour
 {
+    [Header("Localized Strings")]
+    public LocalizedString gauntletPrimaryString;
+    public LocalizedString gauntletSecondaryString;
+    public LocalizedString warningUnequippedGemsString;
+    public LocalizedString warningLeaveInventoryString;
+    
     [Header("Starting Equipment")]
     [SerializeField] private GameObject defaultGauntletPrefab;
     [HideInInspector] public GameObject activePrimaryPrefab;
@@ -323,7 +330,8 @@ public Transform primaryGauntlet;
 
         _isDisplayingPrimary = true;
         _isTransitioning = false;
-        if (gauntletTitleText != null) gauntletTitleText.text = "Gauntlet Primary";
+        if (gauntletTitleText != null) 
+            gauntletTitleText.text = gauntletPrimaryString.GetLocalizedString();
     }
 
     public void ToggleEquippedGauntletDisplay()
@@ -332,7 +340,7 @@ public Transform primaryGauntlet;
         _isTransitioning = true;
 
         if (gauntletTitleText != null)
-            gauntletTitleText.text = _isDisplayingPrimary ? "Gauntlet Secondary" : "Gauntlet Primary";
+            gauntletTitleText.text = _isDisplayingPrimary ? gauntletSecondaryString.GetLocalizedString() : gauntletPrimaryString.GetLocalizedString();
 
         RectTransform primaryRect = primaryGauntlet.GetComponent<RectTransform>();
         RectTransform secondaryRect = secondaryGauntlet.GetComponent<RectTransform>();
@@ -413,8 +421,8 @@ public Transform primaryGauntlet;
         if (warningBodyText != null)
         {
             warningBodyText.text = hasUnequippedGems
-                ? "You have unequipped gems left on the board!\nAre you sure you want to leave?"
-                : "Are you sure you want to leave the inventory?";
+                ? warningUnequippedGemsString.GetLocalizedString()
+                : warningLeaveInventoryString.GetLocalizedString();
         }
 
         warningConfirmBtn.onClick.RemoveAllListeners();
