@@ -421,6 +421,16 @@ public class PlayerCamera : MonoBehaviour
         {
             Vector3 targetWorldPos = GetLockOnTargetPosition(currentLockOnTarget);
             Vector3 targetScreenPos = cameraObject.WorldToScreenPoint(targetWorldPos);
+
+            if (cameraObject.targetTexture != null)
+            {
+                float scaleX = (float)Screen.width / cameraObject.targetTexture.width;
+                float scaleY = (float)Screen.height / cameraObject.targetTexture.height;
+
+                targetScreenPos.x *= scaleX;
+                targetScreenPos.y *= scaleY;
+            }
+
             lockOnReticle.transform.position = targetScreenPos;
         }
     }
