@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Localization;
 
 public class ControlsSubTabManager : MonoBehaviour
 {
@@ -12,6 +13,10 @@ public class ControlsSubTabManager : MonoBehaviour
     public GameObject leftArrowGroup;  // The group containing the Left Arrow & "Q" icon
     public GameObject rightArrowGroup; // The group containing the Right Arrow & "E" icon
 
+[Header("Localized Strings")]
+    // 2. Add these variables to link your translation keys in the Inspector
+    public LocalizedString keyboardTitleString; 
+    public LocalizedString gamepadTitleString;
     private int _currentSubTab = 0; // 0 = Keyboard, 1 = Gamepad
 
     private void OnEnable()
@@ -29,7 +34,7 @@ public class ControlsSubTabManager : MonoBehaviour
             keyboardPage.SetActive(true);
             gamepadPage.SetActive(false);
 
-            titleText.text = "KeyBoard";
+            titleText.text = keyboardTitleString.GetLocalizedString();
 
             leftArrowGroup.SetActive(false); // Can't go left from Keyboard
             rightArrowGroup.SetActive(true); // Can go right to Gamepad
@@ -39,7 +44,7 @@ public class ControlsSubTabManager : MonoBehaviour
             keyboardPage.SetActive(false);
             gamepadPage.SetActive(true);
 
-            titleText.text = "GamePad";
+            titleText.text = gamepadTitleString.GetLocalizedString();
 
             leftArrowGroup.SetActive(true);  // Can go left to Keyboard
             rightArrowGroup.SetActive(false); // Can't go right from Gamepad

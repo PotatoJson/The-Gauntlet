@@ -16,7 +16,8 @@ MonoBehaviour:
     m_Code: en
   m_SharedData: {fileID: 11400000, guid: 3a1773ea831a2e54f9141cd746841f52, type: 2}
   m_Metadata:
-    m_Items: []
+    m_Items:
+    - rid: 7996175833089179828
   m_TableData:
   - m_Id: 5222060032
     m_Localized: Fire Gauntlet
@@ -48,10 +49,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 5326917632
     m_Localized: Main Menu
-    m_Metadata:
-      m_Items: []
-  - m_Id: 5326917633
-    m_Localized: Quit
     m_Metadata:
       m_Items: []
   - m_Id: 5326917634
@@ -163,9 +160,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 5381443584
-    m_Localized: New Text
+    m_Localized: <b>{0}</b> is already used by <b>{1}</b>.\nBinding it to <b>{2}</b>
+      will create a conflict!
     m_Metadata:
-      m_Items: []
+      m_Items:
+      - rid: 7996175833089179828
   - m_Id: 5381443585
     m_Localized: OK
     m_Metadata:
@@ -227,9 +226,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 5394026499
-    m_Localized: Are you sure? Any unselected rewards will be lost!
+    m_Localized: You have unequipped gems left on the board!\nAre you sure you want
+      to leave?
     m_Metadata:
-      m_Items: []
+      m_Items:
+      - rid: 7996175833089179828
   - m_Id: 5394026500
     m_Localized: Confrim
     m_Metadata:
@@ -270,6 +271,49 @@ MonoBehaviour:
     m_Localized: Game Over
     m_Metadata:
       m_Items: []
+  - m_Id: 231486379778048
+    m_Localized: GamePad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 303765419712512
+    m_Localized: Gauntlet Secondary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 304642650005504
+    m_Localized: Are you sure you want to leave the inventory?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305386606288896
+    m_Localized: Discard unequipped gems permanently?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305474934136832
+    m_Localized: Confirm your reward selection and leave?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305728995713024
+    m_Localized: Leave without taking a reward?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 309272628944896
+    m_Localized: Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 310159954927616
+    m_Localized: Tutorial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 310217773408256
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7996175833089179828
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 5381443584
+        - id: 5394026499

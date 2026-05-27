@@ -16,7 +16,8 @@ MonoBehaviour:
     m_Code: de
   m_SharedData: {fileID: 11400000, guid: 3a1773ea831a2e54f9141cd746841f52, type: 2}
   m_Metadata:
-    m_Items: []
+    m_Items:
+    - rid: 7996175833089179829
   m_TableData:
   - m_Id: 5222060032
     m_Localized: Feuerstulpe
@@ -48,10 +49,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 5326917632
     m_Localized: "Hauptmen\xFC"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 5326917633
-    m_Localized: Beenden
     m_Metadata:
       m_Items: []
   - m_Id: 5326917634
@@ -163,9 +160,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 5381443584
-    m_Localized: Neuer Text
+    m_Localized: "<b>{0}</b> wird bereits f\xFCr <b>{1}</b> verwendet.\\nEine Zuweisung
+      an <b>{2}</b> f\xFChrt zu einem Konflikt!"
     m_Metadata:
-      m_Items: []
+      m_Items:
+      - rid: 7996175833089179829
   - m_Id: 5381443585
     m_Localized: OK
     m_Metadata:
@@ -215,7 +214,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 5394026496
-    m_Localized: Hauptstulpe
+    m_Localized: "Prim\xE4rer Fehdehandschuh"
     m_Metadata:
       m_Items: []
   - m_Id: 5394026497
@@ -227,9 +226,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 5394026499
-    m_Localized: "Bist du sicher? Alle nicht ausgew\xE4hlten Belohnungen gehen verloren!"
+    m_Localized: "Du hast noch nicht ausger\xFCstete Edelsteine auf dem Feld!\\nBist
+      du sicher, dass du gehen willst?"
     m_Metadata:
-      m_Items: []
+      m_Items:
+      - rid: 7996175833089179829
   - m_Id: 5394026500
     m_Localized: "Best\xE4tigen"
     m_Metadata:
@@ -270,6 +271,49 @@ MonoBehaviour:
     m_Localized: Game Over
     m_Metadata:
       m_Items: []
+  - m_Id: 231486379778048
+    m_Localized: das Gamepad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 303765419712512
+    m_Localized: "Sekund\xE4rer Fehdehandschuh"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 304642650005504
+    m_Localized: "Bist du sicher, dass du das Inventar verlassen m\xF6chtest?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305386606288896
+    m_Localized: "Nicht ausger\xFCstete Edelsteine dauerhaft verwerfen?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305474934136832
+    m_Localized: "Belohnungsauswahl best\xE4tigen und verlassen?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 305728995713024
+    m_Localized: Verlassen, ohne eine Belohnung zu nehmen?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 309272628944896
+    m_Localized: Spielen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 310159954927616
+    m_Localized: Anleitung
+    m_Metadata:
+      m_Items: []
+  - m_Id: 310217773408256
+    m_Localized: Beenden
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7996175833089179829
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 5381443584
+        - id: 5394026499
