@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class WindProjectile : BaseSkillProjectile
 {
@@ -38,6 +39,8 @@ public class WindProjectile : BaseSkillProjectile
         bool shouldTickDamage = _tickTimer >= DamageTickRate;
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, PullRadius);
 
+        HashSet<GameObject> hitThisTick = new HashSet<GameObject>();
+
         foreach (Collider hit in hitColliders)
         {
             if (hit.CompareTag("Player")) continue;
@@ -49,8 +52,16 @@ public class WindProjectile : BaseSkillProjectile
 
                 if (shouldTickDamage)
                 {
-                    float tickDamage = _calculatedDamage * DamagePerTickMultiplier;
-                    enemy.TakeDamage(tickDamage);
+                    GameObject enemyRoot = enemy.transform.root.gameObject;
+                    
+                    // Only apply damage if haven't already hit this enemy during this specific tick
+                    if (hitThisTick.Add(enemyRoot)) 
+                    {
+                        float tickDamage = _calculatedDamage * DamagePerTickMultiplier;
+                        enemy.TakeDamage(tickDamage);
+                        if (HitVfx != null) Instantiate(HitVfx, enemy.transform.position, Quaternion.identity);
+                    }
+                    
                 }
             }
         }

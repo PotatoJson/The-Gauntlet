@@ -20,7 +20,8 @@ public enum ElementType
     Fire,
     Ice,
     Earth,
-    Wind
+    Wind,
+    Lightning
 }
 
 public enum EquipSlot

@@ -19,7 +19,8 @@ public abstract class BaseSkillProjectile : MonoBehaviour
     {
         _calculatedDamage = playerDamage * DamageMultiplier;
         _calculatedPoise = Mathf.RoundToInt(playerPoise * DamageMultiplier);
-        Rigidbody rb = GetComponent<Rigidbody>();
+        _target = target;
+        _rb = GetComponent<Rigidbody>();
 
         // This is the default targetting system for Physical, Ice, and Lightning projectiles
         if(_target != null)
@@ -28,9 +29,9 @@ public abstract class BaseSkillProjectile : MonoBehaviour
             transform.LookAt(aimPoint);
         }
         
-        if (rb != null)
+        if (_rb != null)
         {
-            rb.linearVelocity = transform.forward * Speed; 
+            _rb.linearVelocity = transform.forward * Speed; 
         }
 
         Destroy(gameObject, Lifetime);

@@ -4,9 +4,13 @@ using System.Collections.Generic;
 public class FireballProjectile : BaseSkillProjectile
 {
     [Header("Fire Movement")]
-    public float MaxSpeed = 25f;
-    public float Acceleration = 15f;
+    public float MaxSpeed = 10f;
+    public float Acceleration = 5f;
     public float TrackingTurnSpeed = 5f;
+
+    [Header("Fire Ball Expansion")]
+    public float MaxScaleMult = 3f;
+    public float GrowthDuration = 2f;
 
     [Header("Fire Specifics")]
     public float ExplosionRadius = 5f;
@@ -15,6 +19,9 @@ public class FireballProjectile : BaseSkillProjectile
     public float BurnDps = 5f;
     public float BurnDuration = 4f;
     private float _currentSpeed;
+
+    private float _growthTimer = 0f;
+    private Vector3 _initialScale;
     
     public override void Initialize(float playerDamage, float playerPoise, Transform target)
     {
@@ -25,6 +32,13 @@ public class FireballProjectile : BaseSkillProjectile
     private void FixedUpdate()
     {
         if(_rb == null) return;
+
+        if(_growthTimer < GrowthDuration)
+        {
+            _growthTimer += Time.fixedDeltaTime;
+            float progress = Mathf.Clamp01(_growthTimer / GrowthDuration);
+            transform.localScale = Vector3.Lerp(_initialScale, _initialScale * MaxScaleMult, progress);
+        }
 
         _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * Time.fixedDeltaTime, MaxSpeed);
 
