@@ -11,6 +11,7 @@ public class FireballProjectile : BaseSkillProjectile
     [Header("Fire Ball Expansion")]
     public float MaxScaleMult = 3f;
     public float GrowthDuration = 2f;
+    public float SpawnHeightOffset = 2.5f;
 
     [Header("Fire Specifics")]
     public float ExplosionRadius = 5f;
@@ -26,7 +27,15 @@ public class FireballProjectile : BaseSkillProjectile
     public override void Initialize(float playerDamage, float playerPoise, Transform target)
     {
         base.Initialize(playerDamage, playerPoise, target);
+        transform.position += Vector3.up * SpawnHeightOffset;
+        
         _currentSpeed = Speed;
+        _initialScale = transform.localScale;
+
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector3.zero;
+        }
     }
 
     private void FixedUpdate()
@@ -38,6 +47,9 @@ public class FireballProjectile : BaseSkillProjectile
             _growthTimer += Time.fixedDeltaTime;
             float progress = Mathf.Clamp01(_growthTimer / GrowthDuration);
             transform.localScale = Vector3.Lerp(_initialScale, _initialScale * MaxScaleMult, progress);
+
+            _rb.linearVelocity = Vector3.zero;
+            return;
         }
 
         _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * Time.fixedDeltaTime, MaxSpeed);
