@@ -517,16 +517,6 @@ public abstract class BaseEnemy : MonoBehaviour
             return;
         }
 
-        //Play the sound with a safety log
-        if (playerAudioManager != null)
-        {
-            playerAudioManager.PlayEnemyImpact(transform.position); 
-        }
-        else
-        {
-            Debug.LogError("<color=red>TakeDamage fired, but Audio Manager is STILL null!</color>");
-        }
-
         playerManager?.SetInCombat();
         
         if (!isAware) { isAware = true; navAgent.isStopped = false; }

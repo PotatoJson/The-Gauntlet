@@ -61,6 +61,15 @@ public class HitboxController : MonoBehaviour
                 enemyScript.TakeDamage(_currentDamage);
                 SpawnBlood(other);
 
+                if (_currentAttackType == CombatInput.Heavy)
+                {
+                    FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Heavy", other.transform.position);
+                }
+                else if (_currentAttackType == CombatInput.Light)
+                {
+                    FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", other.transform.position);
+                }
+
                 if (MetricsTracker.Instance != null)
                 {
                     MetricsTracker.Instance.RecordMeleeHit(_currentAttackType, _currentDamage);

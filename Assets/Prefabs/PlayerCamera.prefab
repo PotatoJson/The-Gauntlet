@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5133161351627810811}
   - component: {fileID: 89867713486464048}
-  - component: {fileID: 3532508306022834610}
   - component: {fileID: 7020639282136545411}
   - component: {fileID: 8471623997778356245}
+  - component: {fileID: 7120256190004895158}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
@@ -86,14 +86,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &3532508306022834610
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 76376749891951822}
-  m_Enabled: 1
 --- !u!114 &7020639282136545411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,6 +147,20 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   ghostMaterial: {fileID: 2100000, guid: bc504ddcd894ed54995aac136469984d, type: 2}
+--- !u!114 &7120256190004895158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 76376749891951822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioListener
+  nonRigidbodyVelocity: 0
+  attenuationObject: {fileID: 0}
 --- !u!1 &1225580928740709540
 GameObject:
   m_ObjectHideFlags: 0
@@ -264,6 +270,7 @@ MonoBehaviour:
   controllerSwitchThreshold: 0.5
   mouseSwitchThreshold: 30
   targetSwitchCooldown: 0.3
+  maximumLockOnDownAngle: 25
   closeFramingDistance: 2
   farFramingDistance: 15
   closeVerticalOffset: -0.25
