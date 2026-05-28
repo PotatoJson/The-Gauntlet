@@ -75,7 +75,9 @@ public class AnimatedHealthBar : MonoBehaviour
         if (_animator == null) return;
 
         // Invert it because Frame 0 is Full, Frame 73 is Empty
-        float animationScrubTime = 1f - Mathf.Clamp01(percent);
+        // Clamp to 0.99f to ensure we stay on the last frame of the empty state 
+        // and don't accidentally wrap around to the first frame (full state).
+        float animationScrubTime = Mathf.Clamp(1f - percent, 0f, 0.99f);
         _animator.Play(animationStateName, 0, animationScrubTime);
     }
 }

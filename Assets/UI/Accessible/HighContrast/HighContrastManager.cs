@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class HighContrastManager : MonoBehaviour
@@ -13,20 +14,14 @@ public class HighContrastManager : MonoBehaviour
     [SerializeField] private Material structureOutlineMat;
 
     [Header("UI References")]
-    [SerializeField] private FlexibleColorPicker fcp;
     [SerializeField] private Toggle hcToggle;
-    [SerializeField] private GameObject targetButtonParent; // Fixes CS0103
-    [SerializeField] private GameObject pickerAndPreviewGroup;
+    [SerializeField] private Toggle grayscaleToggle;
 
-    [Header("Preview Models")]
-    [SerializeField] private GameObject playerPreview;
-    [SerializeField] private GameObject enemyPreview;
-    [SerializeField] private GameObject structurePreview;
-
-    private enum EditingTarget { Player, Enemy, Structure }
-    private EditingTarget _currentTarget = EditingTarget.Player;
+    [Header("Post Processing")]
+    [SerializeField] private VolumeProfile globalProfile;
 
     private static bool _isEnabled = false; // Fixes CS0103
+    private static bool _grayscaleEnabled = false;
     private static Color _pColor = Color.green;
     private static Color _eColor = Color.red;
     private static Color _sColor = Color.black;
@@ -50,13 +45,13 @@ public class HighContrastManager : MonoBehaviour
     private void OnEnable()
     {
         if (hcToggle != null) hcToggle.isOn = _isEnabled;
-        if (targetButtonParent != null) targetButtonParent.SetActive(_isEnabled);
+        if (grayscaleToggle != null) grayscaleToggle.isOn = _grayscaleEnabled;
         UpdateFeatureStates();
+        UpdateGrayscale();
     }
 
     private void Start()
     {
-        if (fcp != null) fcp.onColorChange.AddListener(OnPickerColorChanged);
         UpdateAllMaterialColors();
     }
 
@@ -71,12 +66,13 @@ public class HighContrastManager : MonoBehaviour
     public void ToggleHighContrast(bool isOn)
     {
         _isEnabled = isOn;
-        if (targetButtonParent != null) targetButtonParent.SetActive(isOn);
-
-        // Hide the color picker group if the main toggle is turned off
-        if (!isOn && pickerAndPreviewGroup != null) pickerAndPreviewGroup.SetActive(false);
-
         UpdateFeatureStates();
+    }
+
+    public void ToggleGrayscale(bool isOn)
+    {
+        _grayscaleEnabled = isOn;
+        UpdateGrayscale();
     }
 
     private void UpdateFeatureStates()
@@ -86,40 +82,14 @@ public class HighContrastManager : MonoBehaviour
         if (_sFeature != null) _sFeature.SetActive(_isEnabled);
     }
 
-    public void SelectTarget(int index)
+    private void UpdateGrayscale()
     {
-        _currentTarget = (EditingTarget)index;
-        if (pickerAndPreviewGroup != null) pickerAndPreviewGroup.SetActive(true);
-
-        SyncPickerToTarget();
-        UpdatePreviewVisibility();
-    }
-
-    private void OnPickerColorChanged(Color newColor)
-    {
-        switch (_currentTarget)
+        if (globalProfile == null) return;
+        if (globalProfile.TryGet<ColorAdjustments>(out var ca))
         {
-            case EditingTarget.Player:
-                _pColor = newColor;
-                if (playerOutlineMat != null) playerOutlineMat.SetColor("_Color", newColor); // Matches Shader Graph property
-                break;
-            case EditingTarget.Enemy:
-                _eColor = newColor;
-                if (enemyOutlineMat != null) enemyOutlineMat.SetColor("_Color", newColor);
-                break;
-            case EditingTarget.Structure:
-                _sColor = newColor;
-                if (structureOutlineMat != null) structureOutlineMat.SetColor("_Color", newColor);
-                break;
+            ca.saturation.overrideState = true;
+            ca.saturation.value = _grayscaleEnabled ? -100f : 0f;
         }
-    }
-
-    private void UpdatePreviewVisibility()
-    {
-        // Toggle the specific 3D model in your UI menu
-        if (playerPreview != null) playerPreview.SetActive(_currentTarget == EditingTarget.Player);
-        if (enemyPreview != null) enemyPreview.SetActive(_currentTarget == EditingTarget.Enemy);
-        if (structurePreview != null) structurePreview.SetActive(_currentTarget == EditingTarget.Structure);
     }
 
     private void UpdateAllMaterialColors()
@@ -127,16 +97,5 @@ public class HighContrastManager : MonoBehaviour
         if (playerOutlineMat != null) playerOutlineMat.SetColor("_Color", _pColor);
         if (enemyOutlineMat != null) enemyOutlineMat.SetColor("_Color", _eColor);
         if (structureOutlineMat != null) structureOutlineMat.SetColor("_Color", _sColor);
-    }
-
-    private void SyncPickerToTarget()
-    {
-        if (fcp == null) return;
-        fcp.color = _currentTarget switch
-        {
-            EditingTarget.Player => _pColor,
-            EditingTarget.Enemy => _eColor,
-            _ => _sColor
-        };
     }
 }

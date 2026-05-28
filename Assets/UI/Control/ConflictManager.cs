@@ -3,7 +3,8 @@ using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
 using System.Linq;
-using UnityEngine.EventSystems; // Required for focus control
+using UnityEngine.EventSystems;
+using UnityEngine.Localization;
 
 public class ConflictManager : MonoBehaviour
 {
@@ -12,11 +13,14 @@ public class ConflictManager : MonoBehaviour
     [SerializeField] private GameObject conflictPopup;
     [SerializeField] private TextMeshProUGUI conflictText;
 
+    [Header("Localized Strings")]
+    [Tooltip("Requires 3 Smart Arguments: {0} = Key, {1} = Old Action, {2} = New Action")]
+    public LocalizedString conflictWarningString;
+
     [Header("Focus Management")]
     [SerializeField] private GameObject okButton; // NEW: The button to highlight
     private GameObject _previousSelection; // Remembers where you were before the popup
 
-    // CHANGED: Instead of showing the warning instantly, just return the message so RebindHandler can control the flow.
     public string GetConflictMessage(InputAction action, int bindingIndex, string newPath)
     {
         var duplicate = action.actionMap.bindings.FirstOrDefault(b =>
@@ -28,8 +32,7 @@ public class ConflictManager : MonoBehaviour
             string keyName = InputControlPath.ToHumanReadableString(newPath,
                 InputControlPath.HumanReadableStringOptions.OmitDevice);
 
-            return $"<b>{keyName}</b> is already used by <b>{duplicate.action}</b>.\n" +
-                   $"Binding it to <b>{action.name}</b> will create a conflict!";
+            return conflictWarningString.GetLocalizedString(keyName, duplicate.action, action.name);
         }
 
         return null; // No conflict!
