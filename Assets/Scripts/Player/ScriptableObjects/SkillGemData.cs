@@ -6,7 +6,8 @@ public struct SkillVariation
 {
     public ElementType RequiredElement;
     public GameObject SkillPrefab;
-    public AnimationClip CastAnimationOverride;
+    public AnimationClip LeftGauntletAnim;
+    public AnimationClip RightGauntletAnim;
 }
 
 [CreateAssetMenu(fileName = "New Skill Gem", menuName = "Items/Gems/Skill Gem")]
