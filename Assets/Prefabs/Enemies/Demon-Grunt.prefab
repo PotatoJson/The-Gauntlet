@@ -703,6 +703,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9099812824960674512}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3163023720817333196}
   m_SourcePrefab: {fileID: 100100000, guid: 13e0fc4eaf3cbfd4f8ab1b318060cca3, type: 3}
 --- !u!4 &8328344247673724784 stripped
 Transform:
@@ -833,3 +836,17 @@ MonoBehaviour:
   dissolveDuration: 2
   dissolveDelay: 0.5
   destroyOnComplete: 1
+--- !u!114 &3163023720817333196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8709935683431744970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a808218633df1b74f8d92233c2d65ddd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio
+  footstepEventPath: event:/Enemies/Grunt_Footstep
+  strideLength: 1.8

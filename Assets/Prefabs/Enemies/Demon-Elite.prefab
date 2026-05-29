@@ -875,6 +875,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8370123445370941434}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4238039588053657207}
   m_SourcePrefab: {fileID: 100100000, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
 --- !u!4 &6850766431219870963 stripped
 Transform:
@@ -1036,6 +1039,20 @@ MonoBehaviour:
   dissolveDuration: 2
   dissolveDelay: 0.5
   destroyOnComplete: 1
+--- !u!114 &4238039588053657207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8262436188853443978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a808218633df1b74f8d92233c2d65ddd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAudio
+  footstepEventPath: event:/Enemies/Elite_Footstep
+  strideLength: 1.8
 --- !u!4 &8782513243554924336 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d0dc6a2f4a7d3964385033d892c842f6, type: 3}
