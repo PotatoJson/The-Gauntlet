@@ -108,8 +108,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1204553987453834288, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3825004630522437926}
   m_SourcePrefab: {fileID: 100100000, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
+--- !u!1 &430432261810854684 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1204553987453834288, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
+  m_PrefabInstance: {fileID: 1535266385241689900}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3825004630522437926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 430432261810854684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Vase_Break
 --- !u!4 &1059158932757070246 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2016697653299449482, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
@@ -189,6 +210,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4960853704531896792, guid: 1f35768e10a4d994482e09727cbef3f6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3109882139079313468}
+    - targetCorrespondingSourceObject: {fileID: 4960853704531896792, guid: 1f35768e10a4d994482e09727cbef3f6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6878996257811647938}
   m_SourcePrefab: {fileID: 100100000, guid: 1f35768e10a4d994482e09727cbef3f6, type: 3}
 --- !u!1 &8113256287012980105 stripped
 GameObject:
@@ -263,6 +287,19 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls: []
   currentRefractureCount: 0
+--- !u!114 &6878996257811647938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8113256287012980105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Vase_Break
 --- !u!4 &8922689931863482163 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5734118639041098594, guid: 1f35768e10a4d994482e09727cbef3f6, type: 3}
@@ -331,13 +368,34 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9054867955494460665, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7572425440394877958}
   m_SourcePrefab: {fileID: 100100000, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
 --- !u!4 &4892128659143621760 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8566562010762888771, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
   m_PrefabInstance: {fileID: 3820987462711491267}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &5237551900088542778 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9054867955494460665, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
+  m_PrefabInstance: {fileID: 3820987462711491267}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7572425440394877958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5237551900088542778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Vase_Break
 --- !u!1001 &4306200049419470236
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -401,13 +459,34 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1204553987453834288, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4238864563180765380}
   m_SourcePrefab: {fileID: 100100000, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
 --- !u!4 &2323309806257818390 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2016697653299449482, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
   m_PrefabInstance: {fileID: 4306200049419470236}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &3131652490288533932 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1204553987453834288, guid: 67d9622741536044c82bf887ef238ab0, type: 3}
+  m_PrefabInstance: {fileID: 4306200049419470236}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4238864563180765380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3131652490288533932}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Vase_Break
 --- !u!1001 &5919441751646090542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -471,13 +550,34 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9054867955494460665, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4750363252499824584}
   m_SourcePrefab: {fileID: 100100000, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
 --- !u!4 &2649416391653585773 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8566562010762888771, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
   m_PrefabInstance: {fileID: 5919441751646090542}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &3427044184726153687 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9054867955494460665, guid: d6048a1a34c4f4a4797d3eb9c4bbf3af, type: 3}
+  m_PrefabInstance: {fileID: 5919441751646090542}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4750363252499824584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3427044184726153687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Vase_Break
 --- !u!1001 &8478894149248306330
 PrefabInstance:
   m_ObjectHideFlags: 0

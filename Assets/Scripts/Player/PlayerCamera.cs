@@ -407,7 +407,6 @@ public class PlayerCamera : MonoBehaviour
         
         if (lockOnReticle != null) lockOnReticle.SetActive(false);
 
-        // NOTE: Make sure your PlayerMovement script handles this correctly
         PlayerMovement pm = playerTarget.GetComponentInParent<PlayerMovement>();
         if (pm != null)
         {
