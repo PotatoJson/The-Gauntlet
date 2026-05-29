@@ -113,7 +113,6 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private PlayerHealth playerHealth;
     protected PlayerManager playerManager;
-    protected PlayerAudioManager playerAudioManager;
 
     //death event
     public static event System.Action<BaseEnemy> OnAnyEnemyDied;
@@ -133,7 +132,6 @@ public abstract class BaseEnemy : MonoBehaviour
             playerHealth = player.GetComponent<PlayerHealth>();
             playerManager = player.GetComponent<PlayerManager>();
         }
-        playerAudioManager = FindAnyObjectByType<PlayerAudioManager>();
     }
 
     protected virtual void Start()

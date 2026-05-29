@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -7248633605103728579}
   - component: {fileID: 3743866269216485389}
   - component: {fileID: -1544068814509621743}
+  - component: {fileID: 3127587124737871392}
   m_Layer: 9
   m_Name: wooden box
   m_TagString: Untagged
@@ -182,3 +183,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.005455893, y: 0.005455892, z: 0.005455892}
   m_Center: {x: -2.3283063e-10, y: -2.3283059e-10, z: 0.000000002444721}
+--- !u!114 &3127587124737871392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 925060732026147691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Crate_Break

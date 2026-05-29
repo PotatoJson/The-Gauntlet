@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6751291088573216080}
   - component: {fileID: 6163329504036937553}
   - component: {fileID: 5698178257124090674}
+  - component: {fileID: 2408891698668620417}
   m_Layer: 9
   m_Name: skull
   m_TagString: Untagged
@@ -182,6 +183,19 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.005
   m_Center: {x: 0, y: -0.001, z: 0.001}
+--- !u!114 &2408891698668620417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5326467575876427688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1621eabaefd443901801a664555ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakAudio
+  breakSoundPath: event:/Environment/Skull_Break
 --- !u!1 &5797771356954726860
 GameObject:
   m_ObjectHideFlags: 0
