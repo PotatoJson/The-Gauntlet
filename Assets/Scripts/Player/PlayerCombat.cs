@@ -57,6 +57,7 @@ public class PlayerCombat : MonoBehaviour
     [Header("Skill Setings")]
     [SerializeField] private Transform _leftSkillSpawnPoint;
     [SerializeField] private Transform _rightSkillSpawnPoint;
+    private AnimatorOverrideController _overrideController;
 
     private float _leftSkillCooldownTimer = 0f;
     private float _rightSkillCooldownTimer = 0f;
@@ -88,6 +89,8 @@ public class PlayerCombat : MonoBehaviour
     void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+        _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
+        _animator.runtimeAnimatorController = _overrideController;
         _stateManager = GetComponent<PlayerManager>();
         _statsManager = GetComponent<PlayerStatsManager>();
         _staminaScript = GetComponent<PlayerStamina>();
@@ -204,12 +207,30 @@ public class PlayerCombat : MonoBehaviour
 
         ConsumeBuffer();
         _stateManager.SetPlayerState(PlayerState.Attacking); 
+
+        SkillVariation? variant = slottedSkill.GetVariationForElement(targetGauntlet.BaseGauntlet.Element);
         
-        if (isLeftGauntlet) _animator.SetTrigger("CastLeftSkill");
-        else _animator.SetTrigger("CastRightSkill");
-        
-        if (isLeftGauntlet) _leftSkillCooldownTimer = slottedSkill.Cooldown;
-        else _rightSkillCooldownTimer = slottedSkill.Cooldown;
+        if (variant.HasValue)
+        {
+            if (isLeftGauntlet && variant.Value.LeftGauntletAnim != null)
+            {
+                // Swap the empty dummy state with the actual left-handed animation
+                _overrideController["CastLeft_Dummy"] = variant.Value.LeftGauntletAnim;
+                _animator.SetTrigger("CastLeftSkill");
+                _leftSkillCooldownTimer = slottedSkill.Cooldown;
+            }
+            else if (!isLeftGauntlet && variant.Value.RightGauntletAnim != null)
+            {
+                // Swap the empty dummy state with the actual right-handed animation
+                _overrideController["CastRight_Dummy"] = variant.Value.RightGauntletAnim;
+                _animator.SetTrigger("CastRightSkill");
+                _rightSkillCooldownTimer = slottedSkill.Cooldown;
+            }
+            else
+            {
+                Debug.LogWarning($"Missing animation clip on {slottedSkill.Name} for the active gauntlet!");
+            }
+        }
     }
 
     public void ExecuteSkillSpawn()
@@ -240,6 +261,11 @@ public class PlayerCombat : MonoBehaviour
                 }
 
                 projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise, currentTarget);
+
+                if (projectileScript is FireballProjectile fireball)
+                {
+                    fireball.AttachFeedingVFX(_currentSpawnPoint);
+                }
             }
         }
 

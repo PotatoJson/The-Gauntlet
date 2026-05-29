@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7030985203513856954}
   - component: {fileID: 8181339798942723934}
   m_Layer: 12
-  m_Name: TestFireBall
+  m_Name: FireBallPF
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -98,14 +98,16 @@ MonoBehaviour:
   Speed: 3
   Lifetime: 8
   DamageMultiplier: 1
-  MaxSpeed: 15
-  Acceleration: 4
-  TrackingTurnSpeed: 5
-  MaxScaleMult: 1.8
+  MaxSpeed: 12
+  Acceleration: 2.5
+  TrackingTurnSpeed: 4
+  AutoTargetRadius: 30
+  MaxScaleMult: 2
   GrowthDuration: 2
-  SpawnHeightOffset: 2.5
+  SpawnHeightOffset: 1.4
   ExplosionRadius: 5
-  ExplosionVFX: {fileID: 0}
+  ExplosionVFX: {fileID: 6981941031284743971, guid: 28f0c0babe4e03f41a95d7df2054386c, type: 3}
+  FeedingVFXPrefab: {fileID: 0}
   BurnDps: 5
   BurnDuration: 4
 --- !u!1001 &1934114672762225810
@@ -116,9 +118,65 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 297969402346739603}
     m_Modifications:
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: lengthInSec
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: startDelay.scalar
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSize.minScalar
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSize.minMaxState
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSizeY.minMaxState
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2703626282775683275, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSizeZ.minMaxState
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3943203491594813630, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
       propertyPath: m_Name
       value: FireballVFXTest
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: lengthInSec
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: SizeModule.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: SizeModule.curve.maxCurve.m_Curve.Array.data[1].time
+      value: 0.49700928
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: SizeModule.curve.maxCurve.m_Curve.Array.data[0].value
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6168176643519885951, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: SizeModule.curve.maxCurve.m_Curve.Array.data[1].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6375710688155029295, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: lengthInSec
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7637094799649891488, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
       propertyPath: m_LocalPosition.x
@@ -159,6 +217,22 @@ PrefabInstance:
     - target: {fileID: 7637094799649891488, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8168322826847336662, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: lengthInSec
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 8168322826847336662, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: startDelay.scalar
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8168322826847336662, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8683938590151440747, guid: 4d6e2c122a33846429c4f6de6a38ee22, type: 3}
+      propertyPath: lengthInSec
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
