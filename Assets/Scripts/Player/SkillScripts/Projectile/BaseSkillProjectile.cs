@@ -23,10 +23,28 @@ public abstract class BaseSkillProjectile : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
 
         // This is the default targetting system for Physical, Ice, and Lightning projectiles
-        if(_target != null)
+        if (_target != null)
         {
-            Vector3 aimPoint = _target.position + (Vector3.up * 1f);
-            transform.LookAt(aimPoint);
+            Vector3 aimPoint = _target.position + (Vector3.up * 1.4f);
+            
+            float flatDistance = Vector2.Distance(
+                new Vector2(transform.position.x, transform.position.z),
+                new Vector2(aimPoint.x, aimPoint.z)
+            );
+            //make sure enemy is far enough away to actually use the aiming math
+            if (flatDistance < 3f)
+            {
+                Vector3 flatForward = transform.forward;
+                flatForward.y = 0;
+                if (flatForward != Vector3.zero)
+                {
+                    transform.rotation = Quaternion.LookRotation(flatForward);
+                }
+            }
+            else
+            {
+                transform.LookAt(aimPoint);
+            }
         }
         
         if (_rb != null)

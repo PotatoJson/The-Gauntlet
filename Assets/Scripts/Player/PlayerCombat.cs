@@ -233,6 +233,21 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    public void ExecuteSkillWindUpVFX()
+    {
+        if (_currentlyCastingGauntlet == null || _currentlyCastingGauntlet.ActiveSkillGem == null) return;
+
+        SkillVariation? variant = _currentlyCastingGauntlet.ActiveSkillGem.GetVariationForElement(_currentlyCastingGauntlet.BaseGauntlet.Element);
+        
+        if (variant.HasValue && variant.Value.WindUpVFXPrefab != null && _currentSpawnPoint != null)
+        {
+            // Instantiate the VFX and set the hand (_currentSpawnPoint) as its parent
+            GameObject vfx = Instantiate(variant.Value.WindUpVFXPrefab, _currentSpawnPoint.position, _currentSpawnPoint.rotation, _currentSpawnPoint);
+            //Destroy if Particle System doesnt stop on its own
+            Destroy(vfx, 2f); 
+        }
+    }
+
     public void ExecuteSkillSpawn()
     {
         if (_currentlyCastingGauntlet == null || _currentlyCastingGauntlet.ActiveSkillGem == null)

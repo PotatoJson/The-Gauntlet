@@ -21,7 +21,7 @@ public class LightningProjectile : BaseSkillProjectile
             GameObject enemyRoot = other.transform.root.gameObject;
             if (_alreadyHit.Add(enemyRoot))
             {
-                StrikeEnemy(initialEnemy, other.transform.position);
+                StrikeEnemy(initialEnemy, ((Vector3.up * 1.5f) + other.transform.position));
                 if (_chainsCompleted < maxChains)
                 {
                     BaseEnemy nextTarget = FindNextTarget(transform.position);
@@ -63,25 +63,6 @@ public class LightningProjectile : BaseSkillProjectile
         
         if (lightningHitVFX != null) Instantiate(lightningHitVFX, hitPos, Quaternion.identity);
     }
-
-    /*private void ExecuteChainLightning(Vector3 startPos)
-    {
-        Vector3 currentPos = startPos;
-        int chainsCompleted = 0;
-
-        while (chainsCompleted < maxChains)
-        {
-            BaseEnemy nextTarget = FindNextTarget(currentPos);
-            if (nextTarget == null) break; 
-
-            GameObject targetRoot = nextTarget.transform.root.gameObject;
-            _alreadyHit.Add(targetRoot);
-
-            StrikeEnemy(nextTarget, nextTarget.transform.position);
-            currentPos = nextTarget.transform.position; 
-            chainsCompleted++;
-        }
-    }*/
 
     private BaseEnemy FindNextTarget(Vector3 pos)
     {

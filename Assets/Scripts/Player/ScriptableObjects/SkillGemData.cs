@@ -8,6 +8,9 @@ public struct SkillVariation
     public GameObject SkillPrefab;
     public AnimationClip LeftGauntletAnim;
     public AnimationClip RightGauntletAnim;
+
+    [Header("Pre-Cast Visual")]
+    public GameObject WindUpVFXPrefab;
 }
 
 [CreateAssetMenu(fileName = "New Skill Gem", menuName = "Items/Gems/Skill Gem")]
