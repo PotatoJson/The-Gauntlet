@@ -799,8 +799,8 @@ public Transform primaryGauntlet;
             descriptionBoxAnchor.gameObject.SetActive(true);
             if (detailCanvasGroup != null) detailCanvasGroup.alpha = 1f;
 
-            detailNameText.text = targetGem.gemName;
-            detailDescriptionText.text = targetGem.gemDescription;
+            detailNameText.text = targetGem.gemName.GetLocalizedString();
+            detailDescriptionText.text = targetGem.gemDescription.GetLocalizedString();
             if (detailIcon != null)
             {
                 detailIcon.sprite = targetGem.gemIcon;

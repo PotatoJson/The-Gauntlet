@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using DG.Tweening;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-
+using UnityEngine.Localization;
 public enum GemType { Stat, Skill }
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -22,9 +22,8 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [SerializeField] private GameObject selectionBracket;
 
     [Header("Gem Details")]
-    public string gemName = "Unknown Gem";
-    [TextArea(3, 5)]
-    public string gemDescription = "A mysterious gem with untold power.";
+    public LocalizedString gemName;
+    public LocalizedString gemDescription;
     public Sprite gemIcon;
 
     private CanvasGroup _canvasGroup;

@@ -13,8 +13,9 @@ public class FocusDebugger : MonoBehaviour
         GUIStyle style = new GUIStyle(GUI.skin.label);
         style.fontSize = 24;
         style.normal.textColor = Color.yellow;
+        style.alignment = TextAnchor.UpperRight;
         
-        // Draw at top left
-        GUI.Label(new Rect(20, 20, 500, 50), text, style);
+        // Draw at top right
+        GUI.Label(new Rect(Screen.width - 520, 20, 500, 50), text, style);
     }
 }

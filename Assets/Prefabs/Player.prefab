@@ -50,6 +50,7 @@ GameObject:
   - component: {fileID: 1490983485963244258}
   - component: {fileID: 7300029207042372441}
   - component: {fileID: 1328476746531781019}
+  - component: {fileID: 1951633073746790973}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -333,6 +334,24 @@ MonoBehaviour:
   _statsManager: {fileID: 7300029207042372441}
   hasExecutionerGem: 0
   hasBerserkerGem: 0
+--- !u!114 &1951633073746790973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 359c10df3598da24a8fafc73cd71316c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnTeleportEffect
+  useTeleportEffect: 1
+  teleportEffectPrefab: {fileID: 7761031033666763820, guid: d7a8b426b640af241943f5b610be1c50, type: 3}
+  effectDuration: 1
+  spawnOffset: {x: 0, y: 0, z: 0}
+  useRevealEffect: 1
+  revealShader: {fileID: 4800000, guid: 7f220144c4e227247a7db7f9e1b0c703, type: 3}
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0
