@@ -381,7 +381,11 @@ public Transform primaryGauntlet;
     {
         foreach (GameObject gem in spawnedGems)
         {
+            if (gem == null) continue;
+
             RectTransform rect = gem.GetComponent<RectTransform>();
+            if (rect == null) continue;
+
             Vector2 targetPos = rect.anchoredPosition;
 
             rect.anchoredPosition = new Vector2(targetPos.x, targetPos.y + 600f);
@@ -391,6 +395,7 @@ public Transform primaryGauntlet;
             dropSeq.Join(rect.DOAnchorPos(targetPos, 0.45f).SetEase(Ease.OutBounce));
             dropSeq.Join(rect.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack));
             dropSeq.SetUpdate(true);
+            dropSeq.SetLink(gem); // Link to the gem's lifecycle to avoid Safe Mode warnings
         }
     }
 

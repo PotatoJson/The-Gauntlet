@@ -63,7 +63,9 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 _canDrag = false;
 
                 transform.DOKill();
-                transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true).SetUpdate(true);
+                transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true)
+                    .SetUpdate(true)
+                    .SetLink(gameObject);
                 return;
             }
         }
@@ -142,7 +144,9 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 if (!RewardMenuManager.Instance.CanDragGem(this))
                 {
                     transform.DOKill();
-                    transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true).SetUpdate(true);
+                    transform.DOShakePosition(0.4f, new Vector3(15, 0, 0), 25, 90, false, true)
+                        .SetUpdate(true)
+                        .SetLink(gameObject);
                     return;
                 }
             }
@@ -158,11 +162,17 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         if (IsEquipped())
         {
-            _rectTransform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.OutQuad).SetUpdate(true);
+            _rectTransform.DOLocalMove(Vector3.zero, 0.25f)
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         transform.localScale = Vector3.one * 0.6f;
-        transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack).SetUpdate(true);
+        transform.DOScale(Vector3.one, 0.35f)
+            .SetEase(Ease.OutBack)
+            .SetUpdate(true)
+            .SetLink(gameObject);
     }
 
     public void OnSelect(BaseEventData eventData)

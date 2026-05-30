@@ -37760,6 +37760,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 123482298768817384, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerCombat
+      value: 
+      objectReference: {fileID: 1464312946}
+    - target: {fileID: 123482298768817384, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: statsManager
+      value: 
+      objectReference: {fileID: 1464312947}
     - target: {fileID: 809021339637959330, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerManager
       value: 
@@ -86648,6 +86656,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8760963343898537160, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
   m_PrefabInstance: {fileID: 1464312944}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1464312946 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5221296846589769512, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+  m_PrefabInstance: {fileID: 1464312944}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4dcbd721ca24a040aedb4334936e376, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
 --- !u!114 &1464312947 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7300029207042372441, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
