@@ -26,33 +26,33 @@ public class SkillCooldownUI : MonoBehaviour
     {
         if (playerCombat == null || statsManager == null) return;
 
-        // --- Left Skill (Secondary Gauntlet) ---
-        bool hasLeftSkill = statsManager.SecondaryGauntlet != null && statsManager.SecondaryGauntlet.ActiveSkillGem != null;
-        if (leftSkillContainer != null) leftSkillContainer.SetActive(hasLeftSkill);
+        // --- Left UI: Primary Gauntlet ---
+        bool hasPrimarySkill = statsManager.PrimaryGauntlet != null && statsManager.PrimaryGauntlet.ActiveSkillGem != null;
+        if (leftSkillContainer != null) leftSkillContainer.SetActive(hasPrimarySkill);
 
-        if (hasLeftSkill && leftSkillOverlay != null && playerCombat.LeftMaxCooldown > 0)
+        if (hasPrimarySkill && leftSkillOverlay != null && playerCombat.RightMaxCooldown > 0)
         {
-            float leftTimer = playerCombat.LeftSkillTimer;
-            leftSkillOverlay.fillAmount = leftTimer / playerCombat.LeftMaxCooldown;
+            float primaryTimer = playerCombat.RightSkillTimer;
+            leftSkillOverlay.fillAmount = primaryTimer / playerCombat.RightMaxCooldown;
 
             if (leftSkillText != null)
             {
-                leftSkillText.text = leftTimer > 0 ? Mathf.CeilToInt(leftTimer).ToString() : "";
+                leftSkillText.text = primaryTimer > 0 ? Mathf.CeilToInt(primaryTimer).ToString() : "";
             }
         }
 
-        // --- Right Skill (Primary Gauntlet) ---
-        bool hasRightSkill = statsManager.PrimaryGauntlet != null && statsManager.PrimaryGauntlet.ActiveSkillGem != null;
-        if (rightSkillContainer != null) rightSkillContainer.SetActive(hasRightSkill);
+        // --- Right UI: Secondary Gauntlet ---
+        bool hasSecondarySkill = statsManager.SecondaryGauntlet != null && statsManager.SecondaryGauntlet.ActiveSkillGem != null;
+        if (rightSkillContainer != null) rightSkillContainer.SetActive(hasSecondarySkill);
 
-        if (hasRightSkill && rightSkillOverlay != null && playerCombat.RightMaxCooldown > 0)
+        if (hasSecondarySkill && rightSkillOverlay != null && playerCombat.LeftMaxCooldown > 0)
         {
-            float rightTimer = playerCombat.RightSkillTimer;
-            rightSkillOverlay.fillAmount = rightTimer / playerCombat.RightMaxCooldown;
+            float secondaryTimer = playerCombat.LeftSkillTimer;
+            rightSkillOverlay.fillAmount = secondaryTimer / playerCombat.LeftMaxCooldown;
 
             if (rightSkillText != null)
             {
-                rightSkillText.text = rightTimer > 0 ? Mathf.CeilToInt(rightTimer).ToString() : "";
+                rightSkillText.text = secondaryTimer > 0 ? Mathf.CeilToInt(secondaryTimer).ToString() : "";
             }
         }
     }
