@@ -47,12 +47,32 @@ public class HitboxController : MonoBehaviour
         // Don't hit ourselves
         if(other.transform.root == transform.root) return;
 
+        ShieldHealth shieldHealth = other.GetComponentInParent<ShieldHealth>();
+        if(shieldHealth != null)
+        {
+            shieldHealth.RegisterShieldHit(this);
+            return;
+        }
+
         // THE FIX: Search the object and its parents for the BaseEnemy script
         BaseEnemy enemyScript = other.GetComponentInParent<BaseEnemy>();
 
         // If we successfully found the script...
         if(enemyScript != null)
         {
+            ShieldEnemy shieldEnemy = enemyScript as ShieldEnemy;
+            if(shieldEnemy != null)
+            {
+                ShieldHealth blockingShield = shieldEnemy.GetComponentInChildren<ShieldHealth>();
+                if(blockingShield != null && blockingShield.IsHitboxBlocked(_collider))
+                {
+                    blockingShield.RegisterShieldHit(this);
+                    return;
+                }
+
+                if(shieldEnemy.IsShieldBlockingHit(this)) return;
+            }
+
             GameObject enemyRoot = other.transform.root.gameObject;
             
             // Make sure we only hit this enemy once per swing

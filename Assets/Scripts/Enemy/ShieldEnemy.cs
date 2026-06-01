@@ -21,6 +21,9 @@ public class ShieldEnemy : BaseEnemy
     [SerializeField] private string locomotionStateName = "Locomotion";
     [SerializeField] private float locomotionBlendDuration = 0.1f;
 
+    [Header("Shield Block Settings")]
+    [SerializeField] private float shieldBlockWindow = 0.1f;
+
     private bool shieldBroken;
     private bool isShieldRecovering;
     private bool isBlocking;
@@ -29,6 +32,10 @@ public class ShieldEnemy : BaseEnemy
     private float aiDecisionTimer;
     private float aiDecisionInterval = 0.4f;
 
+    private float lastShieldBlockTime;
+    private int lastShieldBlockHitboxId = -1;
+    private int locomotionStateHash;
+
     protected static readonly int AnimBlock = Animator.StringToHash("Block");
     protected static readonly int AnimBlockHit = Animator.StringToHash("BlockHit");
 
@@ -36,6 +43,7 @@ public class ShieldEnemy : BaseEnemy
     {
         base.Start();
         ResetShieldBashTimer();
+        locomotionStateHash = Animator.StringToHash(locomotionStateName);
     }
 
     protected override void Update()
@@ -100,7 +108,6 @@ public class ShieldEnemy : BaseEnemy
     {
         if (shieldBroken)
         {
-            base.ContinueCombat();
             return;
         }
 
@@ -153,16 +160,7 @@ public class ShieldEnemy : BaseEnemy
 
         if (distance <= attackDistance)
         {
-            float roll = Random.value;
-
-            if (roll < heavyAttackChance)
-            {
-                HeavyAttack();
-            }
-            else
-            {
-                LightAttack();
-            }
+            HeavyAttack();
         }
         else
         {
@@ -174,6 +172,12 @@ public class ShieldEnemy : BaseEnemy
     private void ShieldBash()
     {
         if (!CanPerformAction()) return;
+
+        if (shieldBroken)
+        {
+            HeavyAttack();
+            return;
+        }
 
         isBlocking = false;
         isAttacking = true;
@@ -200,10 +204,10 @@ public class ShieldEnemy : BaseEnemy
         isBlocking = false;
         animator?.ResetTrigger(AnimBlock);
 
-        if (!string.IsNullOrEmpty(locomotionStateName))
-        {
-            animator?.CrossFadeInFixedTime(locomotionStateName, locomotionBlendDuration);
-        }
+        if (animator == null || string.IsNullOrEmpty(locomotionStateName)) return;
+        if (!animator.HasState(0, locomotionStateHash)) return;
+
+        animator.CrossFadeInFixedTime(locomotionStateHash, locomotionBlendDuration);
     }
 
     private void ResetShieldBashTimer()
@@ -221,17 +225,24 @@ public class ShieldEnemy : BaseEnemy
         isAttacking = false;
         isBlocking = false;
 
+        animator?.ResetTrigger(AnimLightAttack);
+        animator?.ResetTrigger(AnimBlock);
+
         ResetShieldBashTimer();
         animator?.SetTrigger(AnimBlockHit);
     }
 
     public void OnShieldBashHit()
     {
-        TryDamagePlayerHitbox(shieldBashDamage, 20, shieldBashHitboxOffset, shieldBashHitboxSize);
+        if (shieldBroken) return;
+
+        bool hitPlayer = TryDamagePlayerHitbox(0f, 100, shieldBashHitboxOffset, shieldBashHitboxSize);
+
     }
 
     public void OnShieldBashEnd()
     {
+        if (shieldBroken) return;
         isAttacking = false;
         StartCoroutine(ShieldRecoveryRoutine());
     }
@@ -252,5 +263,21 @@ public class ShieldEnemy : BaseEnemy
     {
         isBlocking = false;
         base.ApplyStun(duration);
+    }
+
+    public void RegisterShieldHit(HitboxController hitbox)
+    {
+        if (shieldBroken || hitbox == null) return;
+
+        lastShieldBlockHitboxId = hitbox.GetInstanceID();
+        lastShieldBlockTime = Time.time;
+    }
+
+    public bool IsShieldBlockingHit(HitboxController hitbox)
+    {
+        if (shieldBroken || hitbox == null) return false;
+        if (lastShieldBlockHitboxId != hitbox.GetInstanceID()) return false;
+
+        return Time.time - lastShieldBlockTime <= shieldBlockWindow;
     }
 }
