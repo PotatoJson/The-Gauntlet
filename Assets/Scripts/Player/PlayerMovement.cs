@@ -298,6 +298,41 @@ public class PlayerMovement : MonoBehaviour
 
         if(!_controller.isGrounded && !isHealing) _stateManager.SetPlayerState(PlayerState.Airborne);
 
+        if (!_controller.isGrounded)
+        {
+            if (_moveInput.magnitude > 0.1f)
+            {
+                // Calculate camera-relative input direction
+                Vector3 camFwd = _cameraTransform.forward;
+                Vector3 camRt = _cameraTransform.right;
+                camFwd.y = 0; camRt.y = 0;
+                camFwd.Normalize(); camRt.Normalize();
+                
+                Vector3 airMoveDir = (camFwd * _moveInput.y + camRt * _moveInput.x).normalized;
+
+                // Add a small amount of velocity in the air
+                float airAcceleration = 12f; 
+                _horizontalVelocity += airMoveDir * (airAcceleration * Time.deltaTime);
+
+                // Cap speed so they can't infinitely accelerate
+                float currentMaxSpeed = Mathf.Max(_smoothSpeed, walkSpeed); 
+                if (_horizontalVelocity.magnitude > currentMaxSpeed)
+                {
+                    _horizontalVelocity = _horizontalVelocity.normalized * currentMaxSpeed;
+                }
+
+                // Sync the smooth speed so landing transitions seamlessly without weird hitches
+                _smoothSpeed = _horizontalVelocity.magnitude;
+
+                // Allow the character model to face the new direction
+                if (!isTargetLocked)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(airMoveDir), rotationSpeed * Time.deltaTime);
+                }
+            }
+            return; // Skip grounded logic
+        }
+
         if (_moveInput.magnitude < 0.1f) 
         {
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, 0f, 10f * Time.deltaTime);

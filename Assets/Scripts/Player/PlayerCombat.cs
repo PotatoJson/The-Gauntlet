@@ -41,6 +41,8 @@ public class PlayerCombat : MonoBehaviour
     private bool _isCharging = false;
     private bool _isRotationLocked = true;
 
+    private bool _hasPlayedHeavyAudio = false;
+
     [Header("ChargeSettings")]
     [SerializeField] private float _pullBackSpeed;
     [SerializeField] private float _normHeavyWindUp;
@@ -310,6 +312,8 @@ public class PlayerCombat : MonoBehaviour
             _currentAttackType = attackType;
             _canCombo = false;
             _comboQueued = true;
+
+            _hasPlayedHeavyAudio = false;
             
             //_stateManager.CurrentLungeSpeed = node.LungeForce; Removed for Testing a better way
             _stateManager.CanCancelAttack = false;
@@ -474,6 +478,18 @@ public class PlayerCombat : MonoBehaviour
         _animator.speed = 1f;
         _isCharging = false;
         _chargeTimer = 0f;
+
+        if (!_hasPlayedHeavyAudio)
+        {
+            PlayerAudio audioScript = GetComponentInChildren<PlayerAudio>();
+            if (audioScript != null)
+            {
+                audioScript.PlayHeavyAttack();
+            }
+            
+            // Close the latch so the timeline bookmark can't trigger it again
+            _hasPlayedHeavyAudio = true; 
+        }
     }
 
     public void ApplyLungeForce()

@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8195759787244779321}
   - component: {fileID: 8910073527973273634}
   - component: {fileID: 5433243826567604236}
+  - component: {fileID: 734149526088980551}
+  - component: {fileID: 1246255935135564390}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -48,18 +50,22 @@ MonoBehaviour:
   gauntletImage: {fileID: 0}
   menuCanvas: {fileID: 0}
   firstSelectedButton: {fileID: 0}
-  restartButton: {fileID: 0}
   settingsTabManager: {fileID: 0}
-  menuButtons: []
-  inputActions: {fileID: 0}
-  slideDuration: 1
+  menuButtons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  inventoryToggleAction: {fileID: 2597762019290743180, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  slideDuration: 0.5
   slideEase: 27
   breathScale: 1.05
   breathSpeed: 1.5
   settingsPanel: {fileID: 0}
   mainButtonsGroup: {fileID: 0}
   characterScreenRoot: {fileID: 0}
-  pauseMenuUpgradeButton: {fileID: 0}
 --- !u!114 &5433243826567604236
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,3 +78,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddbccbc843e033446bee4c6ec3f1c732, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  playerManager: {fileID: 0}
+  lookAction: {fileID: -5630151704836100654, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  altMenuCanvasGroup: {fileID: 0}
+--- !u!114 &734149526088980551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8281800283524944606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 462f634bbdca8964caf12f99096347de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DeathScreenShatter
+  shatterCanvasGroup: {fileID: 0}
+  leftHalf: {fileID: 0}
+  rightHalf: {fileID: 0}
+  mainHUD: {fileID: 0}
+  gameOverPanel: {fileID: 0}
+  playerMovement: {fileID: 0}
+  crackMaterial: {fileID: 2100000, guid: 10ddce5ff9929844186284ac1dc18fa8, type: 2}
+  crackSpreadDuration: 0.4
+  maxDistortion: 0.5
+  freezeTimeBeforeFall: 0.5
+  fallDuration: 1.5
+  fallDistance: 1500
+  hudPanel: {fileID: 0}
+--- !u!114 &1246255935135564390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8281800283524944606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 312ed23fed5d5e64da90e0c2dced9a30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpawnBasicGauntlet
+  characterScreenRoot: {fileID: 0}
+  defaultGauntletPrefab: {fileID: 6912230105925256729, guid: ae677e6277a10ae4eb230d09645cb4f6, type: 3}

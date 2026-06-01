@@ -57,7 +57,6 @@ public class HitboxController : MonoBehaviour
         // THE FIX: Search the object and its parents for the BaseEnemy script
         BaseEnemy enemyScript = other.GetComponentInParent<BaseEnemy>();
 
-        // If we successfully found the script...
         if(enemyScript != null)
         {
             ShieldEnemy shieldEnemy = enemyScript as ShieldEnemy;
@@ -75,18 +74,25 @@ public class HitboxController : MonoBehaviour
 
             GameObject enemyRoot = other.transform.root.gameObject;
             
-            // Make sure we only hit this enemy once per swing
             if(_alreadyHit.Add(enemyRoot))
             {
                 enemyScript.TakeDamage(_currentDamage);
                 SpawnBlood(other);
+
+                if (_currentAttackType == CombatInput.Heavy)
+                {
+                    FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Heavy", other.transform.position);
+                }
+                else if (_currentAttackType == CombatInput.Light)
+                {
+                    FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", other.transform.position);
+                }
 
                 if (MetricsTracker.Instance != null)
                 {
                     MetricsTracker.Instance.RecordMeleeHit(_currentAttackType, _currentDamage);
                 }
                 
-                // Moved the log INSIDE so it only prints when you actually damage an enemy!
                 Debug.Log($"<color=orange>Successfully Damaged {enemyRoot.name} for {_currentDamage}</color>");
             }
         }
