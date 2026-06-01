@@ -30,21 +30,46 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
 
     private List<RendererData> _rendererDataList = new List<RendererData>();
 
-    private void Start()
+    private void Awake()
     {
-        if (!useTeleportEffect) return;
-
         _movement = GetComponent<PlayerMovement>();
         _manager = GetComponent<PlayerManager>();
         _combat = GetComponent<PlayerCombat>();
-
+        
         if (revealShader == null)
         {
             revealShader = Shader.Find("Custom/TopDownReveal");
         }
 
-        if (teleportEffectPrefab != null)
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        if (scene.name == "MainMenu") return;
+        if (!useTeleportEffect) return;
+
+        TriggerEffect();
+    }
+
+    private void Start()
+    {
+        // First time spawn logic
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "MainMenu") return;
+        TriggerEffect();
+    }
+
+    private void TriggerEffect()
+    {
+        if (!useTeleportEffect) return;
+        if (this.gameObject.activeInHierarchy)
         {
+            StopAllCoroutines();
             StartCoroutine(PlaySpawnEffect());
         }
     }
@@ -54,6 +79,9 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         // 1. Disable movement and combat
         if (_movement != null) _movement.enabled = false;
         if (_combat != null) _combat.enabled = false;
+
+        // Wait a frame to ensure all other systems (like PlayerPersistence) have moved the player
+        yield return null;
 
         // 2. Setup Reveal
         float playerHeight = 2.0f;
@@ -65,25 +93,21 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         if (useRevealEffect && revealShader != null)
         {
             PrepareReveal();
-            SetRevealHeight(groundY + playerHeight + 1f); // Initially hide everything (reveal line above head)
+            SetRevealHeight(groundY + playerHeight + 1f); 
         }
         else
         {
-            // Simple invisibility if no shader
             SetRenderersEnabled(false);
         }
 
-        // 3. Camera Sync
+        // 3. Camera Initial Snap
         if (PlayerCamera.Instance != null)
         {
             if (PlayerCamera.Instance.playerTarget == null)
                 PlayerCamera.Instance.playerTarget = transform;
 
             PlayerCamera.Instance.SnapToTarget();
-            for (int i = 0; i < 20; i++)
-            {
-                PlayerCamera.Instance.HandleAllCameraActions(Vector2.zero, false);
-            }
+            PlayerCamera.Instance.ResetRotation(); // --- THE FIX: Snap rotation behind player ---
         }
 
         // 4. VFX
@@ -96,7 +120,7 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
             }
         }
 
-        // 5. Animate Reveal
+        // 5. Animate Reveal & Keep Camera Updated
         float elapsed = 0;
         float startRevealY = groundY + playerHeight + 0.1f;
         float endRevealY = groundY - 0.1f;
@@ -106,13 +130,19 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / effectDuration;
             
+            // Reveal logic
             if (useRevealEffect && revealShader != null)
             {
-                // Animate from top to bottom
-                // _RevealHeight is the threshold: if y < height, discard.
-                // So start at Top (shows nothing below top), end at Bottom (shows everything above bottom).
                 float currentRevealY = Mathf.Lerp(startRevealY, endRevealY, t);
                 SetRevealHeight(currentRevealY);
+            }
+
+            // --- THE FIX: Keep the camera following and in Third Person ---
+            // Since PlayerMovement is disabled, we must drive the camera manually.
+            // We pass Vector2.zero to keep it from rotating away from its default.
+            if (PlayerCamera.Instance != null)
+            {
+                PlayerCamera.Instance.HandleAllCameraActions(Vector2.zero, false);
             }
 
             yield return null;

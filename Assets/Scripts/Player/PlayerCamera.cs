@@ -181,6 +181,15 @@ public class PlayerCamera : MonoBehaviour
             ClearLockOnTarget();
         }
     }
+
+    public void ResetRotation()
+    {
+        if (playerTarget != null)
+        {
+            _leftAndRightLookAngle = playerTarget.eulerAngles.y;
+            _upAndDownLookAngle = 0; // Look level
+        }
+    }
     #endregion
 
     #region Main Update Loop
