@@ -29,9 +29,22 @@ public class ShieldHealth : MonoBehaviour
 
         if (!other.TryGetComponent<HitboxController>(out HitboxController hitbox)) return;
 
+        RegisterShieldHit(hitbox);
         Debug.Log($"{gameObject.name}: Shield hit for {hitbox.CurrentDamage} damage by {other.name}.");
         ApplyDamage(hitbox.CurrentDamage);
         hitbox.DisableCollider();
+    }
+
+    public void RegisterShieldHit(HitboxController hitbox)
+    {
+        ownerEnemy?.RegisterShieldHit(hitbox);
+    }
+
+    public bool IsHitboxBlocked(Collider hitboxCollider)
+    {
+        if (isBroken || shieldCollider == null || !shieldCollider.enabled || hitboxCollider == null) return false;
+
+        return shieldCollider.bounds.Intersects(hitboxCollider.bounds);
     }
 
     private void ApplyDamage(float damage)

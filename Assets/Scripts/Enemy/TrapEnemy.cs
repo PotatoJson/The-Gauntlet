@@ -4,50 +4,84 @@ using UnityEngine;
 public class TrapEnemy : MonoBehaviour
 {
     [Header("Trap Settings")]
-    [Tooltip("Amount of damage to deal when the arm hits the player.")]
-    [SerializeField] private float damageAmount = 9999f;
+    [Tooltip("How long targets stay trapped.")]
+    [SerializeField] private float trapDuration = 5f;
+
+    [Tooltip("Optional damage on grab (set to 0 for none).")]
+    [SerializeField] private float damageAmount = 0f;
+
     [Tooltip("Can the trap be triggered multiple times?")]
     [SerializeField] private bool oneShotTrap = true;
 
     [Tooltip("The trigger parameter name in the Animator.")]
     [SerializeField] private string grabTriggerName = "Grab";
 
+    [Header("Grab Hitbox")]
+    [SerializeField] private TrapGrabHitbox grabHitbox;
+
     private Animator animator;
-    private bool hasTriggered = false;
+    private bool hasTriggered;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
+
+        if (grabHitbox != null)
+        {
+            grabHitbox.SetOwner(this);
+        }
     }
 
-    // This is called by the child TrapDetection script
     public void ActivateTrap()
     {
         if (hasTriggered && oneShotTrap) return;
 
         hasTriggered = true;
-        if (animator != null)
-        {
-            // Activate the animation using a Trigger instead of playing a state
-            animator.SetTrigger(grabTriggerName);
-        }
+        animator?.SetTrigger(grabTriggerName);
     }
 
-    // This handles the arm actually hitting the player and dealing damage
-    private void OnTriggerEnter(Collider other)
+    public void EnableGrabHitbox()
     {
-        if (other.CompareTag("Player"))
+        grabHitbox?.EnableHitbox();
+    }
+
+    public void DisableGrabHitbox()
+    {
+        grabHitbox?.DisableHitbox();
+    }
+
+    public void TryApplyTrap(Collider other)
+    {
+        if (other == null) return;
+
+        PlayerMovement playerMovement = other.GetComponentInParent<PlayerMovement>();
+        if (playerMovement != null)
         {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            if (damageAmount > 0f)
             {
-                // Replace 'TakeDamage' with your actual method if it's named differently
-                playerHealth.TakeDamage(damageAmount);
+                PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(damageAmount, 0, gameObject);
+                }
+            }
+
+            //playerMovement.ApplyTrap(trapDuration);
+            return;
+        }
+
+        BaseEnemy enemy = other.GetComponentInParent<BaseEnemy>();
+        if (enemy != null)
+        {
+            enemy.ApplyStun(trapDuration);
+
+            if (damageAmount > 0f)
+            {
+                enemy.TakeDamage(damageAmount);
             }
         }
     }
 
-    // Optional: Call this from an Animation Event at the end of the trap animation to reset it
     public void ResetTrap()
     {
         hasTriggered = false;
