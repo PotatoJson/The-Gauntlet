@@ -384,8 +384,8 @@ public class RewardMenuManager : MonoBehaviour
         DraggableGem gemData = highlightedGem.GetComponent<DraggableGem>();
         if (gemData != null)
         {
-            rewardNameText.text = gemData.gemName;
-            rewardDescText.text = gemData.gemDescription;
+            rewardNameText.text = gemData.gemName.GetLocalizedString();
+            rewardDescText.text = gemData.gemDescription.GetLocalizedString();
             if (rewardIcon != null)
             {
                 rewardIcon.sprite = gemData.gemIcon;

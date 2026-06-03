@@ -6,6 +6,11 @@ public class SkillCooldownUI : MonoBehaviour
 {
     [Header("Backend References")]
     [SerializeField] private PlayerCombat playerCombat;
+    [SerializeField] private PlayerStatsManager statsManager; // --- NEW: Added for gem check ---
+
+    [Header("UI Containers")] // --- NEW: Added to hide entire skill block ---
+    [SerializeField] private GameObject leftSkillContainer;
+    [SerializeField] private GameObject rightSkillContainer;
 
     [Header("UI Overlays")]
     [Tooltip("Drag the dark overlay images here")]
@@ -19,50 +24,35 @@ public class SkillCooldownUI : MonoBehaviour
 
     private void Update()
     {
-        if (playerCombat == null) return;
+        if (playerCombat == null || statsManager == null) return;
 
-        // --- Update the Left Skill UI (Secondary) ---
-        if (leftSkillOverlay != null && playerCombat.LeftMaxCooldown > 0)
+        // --- Left UI: Primary Gauntlet ---
+        bool hasPrimarySkill = statsManager.PrimaryGauntlet != null && statsManager.PrimaryGauntlet.ActiveSkillGem != null;
+        if (leftSkillContainer != null) leftSkillContainer.SetActive(hasPrimarySkill);
+
+        if (hasPrimarySkill && leftSkillOverlay != null && playerCombat.RightMaxCooldown > 0)
         {
-            float leftTimer = playerCombat.LeftSkillTimer;
+            float primaryTimer = playerCombat.RightSkillTimer;
+            leftSkillOverlay.fillAmount = primaryTimer / playerCombat.RightMaxCooldown;
 
-            // Update the dark radial sweep
-            leftSkillOverlay.fillAmount = leftTimer / playerCombat.LeftMaxCooldown;
-
-            // Update the Text Countdown
             if (leftSkillText != null)
             {
-                if (leftTimer > 0)
-                {
-                    // CeilToInt rounds 2.1 up to 3, giving a clean 3..2..1 countdown!
-                    leftSkillText.text = Mathf.CeilToInt(leftTimer).ToString();
-                }
-                else
-                {
-                    leftSkillText.text = ""; // Clear the text when the skill is ready
-                }
+                leftSkillText.text = primaryTimer > 0 ? Mathf.CeilToInt(primaryTimer).ToString() : "";
             }
         }
 
-        // --- Update the Right Skill UI (Primary) ---
-        if (rightSkillOverlay != null && playerCombat.RightMaxCooldown > 0)
+        // --- Right UI: Secondary Gauntlet ---
+        bool hasSecondarySkill = statsManager.SecondaryGauntlet != null && statsManager.SecondaryGauntlet.ActiveSkillGem != null;
+        if (rightSkillContainer != null) rightSkillContainer.SetActive(hasSecondarySkill);
+
+        if (hasSecondarySkill && rightSkillOverlay != null && playerCombat.LeftMaxCooldown > 0)
         {
-            float rightTimer = playerCombat.RightSkillTimer;
+            float secondaryTimer = playerCombat.LeftSkillTimer;
+            rightSkillOverlay.fillAmount = secondaryTimer / playerCombat.LeftMaxCooldown;
 
-            // Update the dark radial sweep
-            rightSkillOverlay.fillAmount = rightTimer / playerCombat.RightMaxCooldown;
-
-            // Update the Text Countdown
             if (rightSkillText != null)
             {
-                if (rightTimer > 0)
-                {
-                    rightSkillText.text = Mathf.CeilToInt(rightTimer).ToString();
-                }
-                else
-                {
-                    rightSkillText.text = ""; // Clear the text when the skill is ready
-                }
+                rightSkillText.text = secondaryTimer > 0 ? Mathf.CeilToInt(secondaryTimer).ToString() : "";
             }
         }
     }

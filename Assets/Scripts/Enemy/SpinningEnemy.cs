@@ -1,78 +1,52 @@
 using UnityEngine;
-using UnityEngine.AI;
 
 public class SpinningEnemy : BaseEnemy
 {
-    [Header("Spin Attack Settings")]
-    [SerializeField] private float spinMoveSpeed = 4f;
+    [Header("Spin Attack Damage")]
+    [SerializeField] private float spinDamage = 10f;
+
+    [Header("Spin Aggro Settings")]
     [SerializeField] private float spinAgroRange = 15f;
 
-    [Header("Spin Damage Settings")]
-    [SerializeField] private float spinDamage = 10f;
-    [SerializeField] private int spinPoiseDamage = 10;
-    [SerializeField] private float damageRange = 2f;
-    [SerializeField] private float damageTickRate = 0.5f; // How often the player takes damage while touching the enemy
+    [Header("Axe Spawn")]
+    [SerializeField] private GameObject axePrefab;
+    [SerializeField] private Transform axeSocket;
 
-    private bool isSpinning = false;
-    private float damageTimer = 0f;
+    [Header("Axe Hitbox")]
+    [SerializeField] private AxeHitbox axeHitbox;
+
+    private GameObject spawnedAxe;
+    private bool hasAggroPosePlayed;
+    private bool movementUnlocked;
+
+    private static readonly int AnimAggroPose = Animator.StringToHash("AggroPose");
 
     protected override void Update()
     {
-        // Let BaseEnemy do its normal updates (which natively sets speed parameters > 0 if moving)
         base.Update();
 
-        // Handle moving towards the player while spinning
-        if (isSpinning && !isStunned && !isInHitStun && !IsDead())
+        if (!isAware && !isEngaged && !isStunned && !isAttacking && !isCharging && !isInHitStun)
         {
-            if (player != null && navAgent.isOnNavMesh)
+            if (navAgent.isOnNavMesh)
             {
-                // Constantly override the target to slowly chase the player
-                navAgent.updatePosition = true;
-                navAgent.isStopped = false;
-                navAgent.speed = spinMoveSpeed;
-                navAgent.SetDestination(player.position);
-
-                // Keep facing the player immediately
-                FacePlayerImmediate();
-
-                // Attempt to damage the player continuously while they are within the spin hitbox
-                DamagePlayerIfClose();
-            }
-
-            // Stop spinning and return to idle if player gets out of range
-            if (GetDistanceToPlayer() > spinAgroRange)
-            {
-                StopSpinning();
+                navAgent.isStopped = true;
+                navAgent.ResetPath();
+                navAgent.velocity = Vector3.zero;
             }
         }
     }
 
-    private void DamagePlayerIfClose()
+    protected override void CheckAwareness()
     {
-        float distance = GetDistanceToPlayer();
+        bool wasAware = isAware;
+        base.CheckAwareness();
 
-        if (distance <= damageRange)
+        if (!wasAware && isAware)
         {
-            damageTimer -= Time.deltaTime;
-            if (damageTimer <= 0f)
-            {
-                // Use BaseEnemy's existing hitbox-based damage helper.
-                TryDamagePlayerHitbox(
-                    spinDamage,
-                    spinPoiseDamage,
-                    new Vector3(0f, 1f, damageRange * 0.5f),
-                    new Vector3(damageRange * 2f, 2f, damageRange * 2f));
-
-                damageTimer = damageTickRate;
-            }
-        }
-        else
-        {
-            damageTimer = 0f;
+            TriggerAggroPose();
         }
     }
 
-    // Override engagement to skip the base "Opener Charge" logic and replace it with spin aggro
     protected override void CheckEngagement()
     {
         if (player == null) return;
@@ -81,106 +55,119 @@ public class SpinningEnemy : BaseEnemy
 
         if (distance <= spinAgroRange)
         {
+            bool justEngaged = !isEngaged;
             isEngaged = true;
-            hasOpenedWithCharge = true; // Prevent base charge behavior
+            hasOpenedWithCharge = true;
 
-            if (!isSpinning && CanPerformAction())
+            if (justEngaged)
             {
-                StartSpinning();
+                SpawnAxeIfNeeded();
             }
         }
-        else
+        else if (isAware && movementUnlocked)
         {
-            // Player is out of range, stay idle
-            GoIdle();
+            isEngaged = true;
+            hasOpenedWithCharge = true;
+            ChasePlayer();
+            FacePlayer();
         }
     }
 
     protected override void ContinueCombat()
     {
-        if (isStunned || isInHitStun || IsDead()) return;
+        if (player == null || isStunned || isInHitStun || IsDead()) return;
+
+        if (!movementUnlocked)
+        {
+            navAgent.isStopped = true;
+            navAgent.velocity = Vector3.zero;
+            return;
+        }
 
         float distance = GetDistanceToPlayer();
 
         if (distance <= spinAgroRange)
         {
-            if (!isSpinning && CanPerformAction())
-            {
-                StartSpinning();
-            }
+            FacePlayer();
+            LightAttack();
         }
         else
         {
-            StopSpinning();
+            ChasePlayer();
+            FacePlayer();
         }
     }
 
-    private void StartSpinning()
+    private void TriggerAggroPose()
     {
-        isSpinning = true;
-        damageTimer = 0f; // Ready to damage immediately upon contact
+        if (hasAggroPosePlayed || animator == null) return;
 
-        if (navAgent.isOnNavMesh)
+        hasAggroPosePlayed = true;
+        movementUnlocked = false;
+        navAgent.isStopped = true;
+        navAgent.velocity = Vector3.zero;
+
+        SpawnAxeIfNeeded();
+        animator.SetTrigger(AnimAggroPose);
+    }
+
+    // Animation event at the end of the aggro pose clip
+    public void OnAggroPoseComplete()
+    {
+        movementUnlocked = true;
+        isAware = true;
+        isEngaged = true;
+        hasOpenedWithCharge = true;
+
+        if (player == null || isStunned || isInHitStun || !navAgent.isOnNavMesh) return;
+
+        navAgent.isStopped = false;
+        navAgent.speed = chaseSpeed;
+        ChasePlayer();
+        FacePlayer();
+    }
+
+    private void SpawnAxeIfNeeded()
+    {
+        if (spawnedAxe != null) return;
+
+        if (axePrefab == null || axeSocket == null)
         {
-            navAgent.updatePosition = true;
-            navAgent.speed = spinMoveSpeed;
-            navAgent.isStopped = false;
+            Debug.LogWarning($"{gameObject.name}: Axe spawn skipped (axePrefab or axeSocket missing).");
+            return;
         }
-    }
 
-    private void StopSpinning()
-    {
-        if (!isSpinning) return;
+        spawnedAxe = Instantiate(axePrefab, axeSocket);
+        spawnedAxe.transform.localPosition = Vector3.zero;
+        spawnedAxe.transform.localRotation = Quaternion.identity;
 
-        isSpinning = false;
-        GoIdle();
-    }
-
-    private void GoIdle()
-    {
-        isAware = false;
-        isEngaged = false;
-
-        if (navAgent.isOnNavMesh)
+        axeHitbox = spawnedAxe.GetComponentInChildren<AxeHitbox>(true);
+        if (axeHitbox == null)
         {
-            navAgent.isStopped = true;
-            navAgent.speed = chaseSpeed; // Reset to default speed
-            navAgent.velocity = Vector3.zero;
+            Debug.LogWarning($"{gameObject.name}: Spawned axe has no AxeHitbox in children.");
+        }
+        else
+        {
+            Debug.Log($"{gameObject.name}: AxeHitbox found on spawned axe ({axeHitbox.gameObject.name}).");
         }
     }
 
-    protected override bool CanPerformAction()
+    public void EnableAxeHitbox()
     {
-        return base.CanPerformAction() && !isSpinning;
+        axeHitbox?.EnableHitbox(spinDamage);
     }
 
-    // --- Damage Override Logic ---
-
-    /// <summary>
-    /// Overridden to prevent standard damage calculation since the body is invulnerable.
-    /// </summary>
-    public override void TakeDamage(float damage)
+    public void DisableAxeHitbox()
     {
-        Debug.Log($"{gameObject.name}: Ignored general body damage.");
-        // Do nothing!
+        axeHitbox?.DisableHitbox();
     }
 
-    /// <summary>
-    /// PUBLIC METHOD: Call this from the hit box script attached to the enemy's head.
-    /// </summary>
-    public void TakeWeakPointDamage(float damage)
+    public void OnSpinAttackEnd()
     {
-        Debug.Log($"{gameObject.name}: Weak point hit for {damage} damage!");
-
-        // Stop the spin sequence if severely damaged/stunned 
-        StopSpinning();
-
-        // Pass the damage down to the base enemy to process health reduction, hit reactions, and death.
-        base.TakeDamage(damage);
+        DisableAxeHitbox();
+        OnAttackEnd();
     }
 
-    // --- Disable Base Attack Logic so the Animator doesn't get interrupted ---
+
     public override void ChargeAttack() { }
-    public override void LightAttack() { }
-    public override void HeavyAttack() { }
 }
