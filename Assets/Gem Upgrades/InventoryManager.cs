@@ -729,11 +729,22 @@ public Transform primaryGauntlet;
         else activeSecondaryPrefab = gauntletPrefab;
 
         Transform targetSlot = isPrimary ? primaryGauntlet : secondaryGauntlet;
+        DraggableGem savedSkillGem = null;
 
         // Step 1: Safely EVICT any slotted gems so the player doesn't lose them!
         GauntletManager oldManager = targetSlot.GetComponentInChildren<GauntletManager>();
         if (oldManager != null)
         {
+            //saves skill gem as well now
+            if (oldManager.SkillSlot != null)
+            {
+                savedSkillGem = oldManager.SkillSlot.GetComponentInChildren<DraggableGem>();
+                if (savedSkillGem != null)
+                {
+                    savedSkillGem.transform.SetParent(transform); // Temporarily hide it in the inventory root
+                }
+            }
+
             foreach (GameObject slot in oldManager.fingerSlots)
             {
                 DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
@@ -757,6 +768,7 @@ public Transform primaryGauntlet;
         // Step 2: Destroy the old gauntlet
         foreach (Transform child in targetSlot)
         {
+            if (savedSkillGem != null && child == savedSkillGem.transform) continue; 
             Destroy(child.gameObject);
         }
 
@@ -766,13 +778,67 @@ public Transform primaryGauntlet;
         newGauntlet.transform.localScale = Vector3.one;
 
         GauntletManager gm = newGauntlet.GetComponent<GauntletManager>();
-        if (gm != null) gm.InitializeGauntlet(isPrimary, rarity);
+        if (gm != null)
+        {
+            gm.InitializeGauntlet(isPrimary, rarity);
+
+            if (savedSkillGem != null && gm.SkillSlot != null)
+            {
+                SkillSlotManager skillSlotManager = gm.SkillSlot.GetComponent<SkillSlotManager>();
+                if (skillSlotManager != null)
+                {
+                    savedSkillGem.parentAfterDrag = gm.SkillSlot.transform;
+                    skillSlotManager.SlotSkillGem(savedSkillGem);
+                }
+            }
+        }
 
         // Step 4: Reset UI layout so the player sees their new gear
         if (isPrimary && !_isDisplayingPrimary) ToggleEquippedGauntletDisplay();
         else if (!isPrimary && _isDisplayingPrimary) ToggleEquippedGauntletDisplay();
 
         FocusFirstAvailableGem();
+    }
+
+    public bool AutoSlotSkillGem(GameObject skillGemPrefab)
+    {
+        GauntletManager primaryManager = primaryGauntlet.GetComponentInChildren<GauntletManager>();
+        if (primaryManager != null && primaryManager.SkillSlot != null)
+        {
+            SkillSlotManager skillSlot = primaryManager.SkillSlot.GetComponent<SkillSlotManager>();
+            if (skillSlot != null && skillSlot.CurrentSkillGem == null) 
+            {
+                GameObject newGem = Instantiate(skillGemPrefab);
+                DraggableGem gemScript = newGem.GetComponent<DraggableGem>();
+                gemScript.parentAfterDrag = skillSlot.transform;
+                skillSlot.SlotSkillGem(gemScript);
+                
+                PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+                if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+                
+                return true; 
+            }
+        }
+
+        GauntletManager secondaryManager = secondaryGauntlet.GetComponentInChildren<GauntletManager>();
+        if (secondaryManager != null && secondaryManager.SkillSlot != null)
+        {
+            SkillSlotManager skillSlot = secondaryManager.SkillSlot.GetComponent<SkillSlotManager>();
+            if (skillSlot != null && skillSlot.CurrentSkillGem == null) 
+            {
+                GameObject newGem = Instantiate(skillGemPrefab);
+                DraggableGem gemScript = newGem.GetComponent<DraggableGem>();
+                gemScript.parentAfterDrag = skillSlot.transform;
+                skillSlot.SlotSkillGem(gemScript);
+                
+                PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+                if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // --- SMART DESCRIPTION UI ---

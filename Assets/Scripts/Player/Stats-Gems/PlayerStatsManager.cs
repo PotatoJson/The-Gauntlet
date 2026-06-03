@@ -76,10 +76,17 @@ public class PlayerStatsManager : MonoBehaviour
         //create the actual gauntlet from data
         RunTimeGauntlet newGauntlet = new RunTimeGauntlet(gManager.LinkedGauntletData, slotContext);
 
-        RunTimeGauntlet oldGauntlet = (slotContext == EquipSlot.Primary) ? PrimaryGauntlet : SecondaryGauntlet;
-        if (oldGauntlet != null && oldGauntlet.ActiveSkillGem != null)
+        if (gManager.SkillSlot != null)
         {
-            newGauntlet.ActiveSkillGem = oldGauntlet.ActiveSkillGem;
+            SkillSlotManager skillSlot = gManager.SkillSlot.GetComponent<SkillSlotManager>();
+            if (skillSlot != null && skillSlot.CurrentSkillGem != null)
+            {
+                newGauntlet.ActiveSkillGem = skillSlot.CurrentSkillGem.LinkedGemData as SkillGemData;
+            }
+            else
+            {
+                newGauntlet.ActiveSkillGem = null;
+            }
         }
 
         for (int i = 0; i < gManager.currentActiveSlots; i++)

@@ -17,7 +17,7 @@ public class ChamberRewardTrigger : MonoBehaviour
     [Range(0f, 1f)] public float skillGemChance = 0.15f;
 
     [Header("Skill Gem Settings")]
-    public SkillGemData skillGemReward;
+    public GameObject SkillGemUIPrefab;
     [Tooltip("Drag your pure visual cube prefab here (NO colliders/scripts needed)")]
     public GameObject skillGemVisualPrefab;
     [Tooltip("Where should the physical gem drop?")]
@@ -92,8 +92,7 @@ public class ChamberRewardTrigger : MonoBehaviour
 
             if (_isSkillGem)
             {
-                PlayerStatsManager stats = other.GetComponent<PlayerStatsManager>();
-                GiveSkillGem(stats);
+                GiveSkillGem();
                 
                 if (_spawnedGemVisual != null) Destroy(_spawnedGemVisual);
             }
@@ -119,34 +118,23 @@ public class ChamberRewardTrigger : MonoBehaviour
         }
     }
 
-    private void GiveSkillGem(PlayerStatsManager stats)
+    private void GiveSkillGem()
     {
-        if (stats == null || skillGemReward == null) return;
+        if (InventoryManager.Instance == null || SkillGemUIPrefab == null) return;
+        bool success = InventoryManager.Instance.AutoSlotSkillGem(SkillGemUIPrefab);
 
-        bool gemAssigned = false;
-        
-        // Try Primary Gauntlet first
-        if (stats.PrimaryGauntlet != null && stats.PrimaryGauntlet.ActiveSkillGem == null)
+        if (success)
         {
-            stats.PrimaryGauntlet.ActiveSkillGem = skillGemReward;
-            gemAssigned = true;
-            Debug.Log($"[Reward] {skillGemReward.name} slotted into Primary Gauntlet.");
+            Debug.Log($"[Reward] Skill Gem slotted into Gauntlet UI successfully.");
+            
+            if (TutorialNotificationManager.Instance != null)
+            {
+                TutorialNotificationManager.Instance.ShowTutorial(true, "Skill Gem");
+            }
         }
-        // Try Secondary Gauntlet next
-        else if (stats.SecondaryGauntlet != null && stats.SecondaryGauntlet.ActiveSkillGem == null)
+        else
         {
-            stats.SecondaryGauntlet.ActiveSkillGem = skillGemReward;
-            gemAssigned = true;
-            Debug.Log($"[Reward] {skillGemReward.name} slotted into Secondary Gauntlet.");
+            Debug.LogWarning($"[Reward] Both Gauntlets already have Skill Gems!");
         }
-        // Fallback: Overwrite Primary if both are full
-        else if (stats.PrimaryGauntlet != null)
-        {
-            stats.PrimaryGauntlet.ActiveSkillGem = skillGemReward;
-            gemAssigned = true;
-            Debug.Log($"[Reward] {skillGemReward.name} replaced Primary Gauntlet skill.");
-        }
-
-        if (gemAssigned) stats.RecalculateGlobalStats();
     }
 }
