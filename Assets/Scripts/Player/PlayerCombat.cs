@@ -206,6 +206,9 @@ public class PlayerCombat : MonoBehaviour
         _currentSpawnPoint = isLeftGauntlet ? _leftSkillSpawnPoint : _rightSkillSpawnPoint;
 
         ConsumeBuffer();
+
+        _stateManager.CarryMomentum = false;
+        _stateManager.CurrentLungeSpeed = 0f;
         _stateManager.SetPlayerState(PlayerState.Attacking); 
 
         SkillVariation? variant = slottedSkill.GetVariationForElement(targetGauntlet.BaseGauntlet.Element);
@@ -448,14 +451,20 @@ public class PlayerCombat : MonoBehaviour
         _isRotationLocked = false;
         _activeHitbox = _leftHitbox;
 
+        ElementType strikeElement = ElementType.Physical;
+
         if(_currentAttackNode.StrikingHand == StrikeHand.Right)
         {
             _activeHitbox = _rightHitbox;
+            if (_statsManager.PrimaryGauntlet != null && _statsManager.PrimaryGauntlet.BaseGauntlet != null)
+                strikeElement = _statsManager.PrimaryGauntlet.BaseGauntlet.Element;
         }
-        else if(_currentAttackNode.StrikingHand == StrikeHand.Both)
+        else // Left hand
         {
-            //future dual hand attack
+            if (_statsManager.SecondaryGauntlet != null && _statsManager.SecondaryGauntlet.BaseGauntlet != null)
+                strikeElement = _statsManager.SecondaryGauntlet.BaseGauntlet.Element;
         }
+
         int currentDamage = Mathf.RoundToInt(_statsManager.CurrentDamage);
         int currentPoise = Mathf.RoundToInt(_statsManager.CurrentPoiseDamage); // need to add poiseDamage to _statsManager
 
@@ -471,7 +480,7 @@ public class PlayerCombat : MonoBehaviour
 
         if(_activeHitbox != null)
         {
-            _activeHitbox.EnableCollider(finalDamage, finalPoise, _currentAttackType);
+            _activeHitbox.EnableCollider(finalDamage, finalPoise, _currentAttackType, strikeElement);
         }
     }
 

@@ -261,6 +261,7 @@ public class PlayerHealth : MonoBehaviour
         invincibilityTimer = invincibilityDuration;
 
         TriggerHaptics(damageRumbleLow, damageRumbleHigh, damageRumbleDuration);
+        TriggerHitFeedback(damage);
 
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + _currentHealth);
@@ -282,31 +283,31 @@ public class PlayerHealth : MonoBehaviour
 
         if (poiseDamage > 0)
         {
-            HandleStagger(poiseDamage);
+            HandleStagger(poiseDamage, attacker);
         }
     }
 
     #region Stagger Handling 
-    private void HandleStagger(int poiseDamage)
+    private void HandleStagger(int poiseDamage, GameObject attacker)
     {
         PoiseRecoveryTimer = PoiseRecoveryDelay;
         //see if player gets thrown from attack
         Debug.Log($"[POISE] Took {poiseDamage} poise damage! (Poise before hit: {CurrentPoise}/{_maxPoise})");
 
-        bool isKnockBack = poiseDamage >= InstantKnockback || (CurrentPoise + poiseDamage) >= (_maxPoise + OvercapKnockback);
+        bool isKnockBack = poiseDamage >= InstantKnockback/* || (CurrentPoise + poiseDamage) >= (_maxPoise + OvercapKnockback)*/;
         bool isHeavyStagger = (CurrentPoise + poiseDamage) >= _maxPoise;
 
         if (isKnockBack)
         {
             CurrentPoise = 0;
             Debug.Log("[POISE] BREAK! Knockback triggered. Poise reset to 0.");
-            TriggerKnockback();
+            TriggerKnockback(attacker);
         }
         else if (isHeavyStagger)
         {
             CurrentPoise = 0;
             Debug.Log("[POISE] BREAK! Large Stumble triggered. Poise reset to 0.");
-            TriggerLargeStumble();
+            TriggerLargeStumble(attacker);
         }
         else
         {
@@ -318,17 +319,41 @@ public class PlayerHealth : MonoBehaviour
         OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
     }
 
-    private void TriggerKnockback()
+    private void TriggerKnockback(GameObject attacker)
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+
+        if (attacker != null)
+        {
+            Vector3 directionToAttacker = attacker.transform.position - transform.position;
+            directionToAttacker.y = 0; // Keep rotation flat
+            
+            if (directionToAttacker.sqrMagnitude > 0.01f)
+            {
+                transform.rotation = Quaternion.LookRotation(directionToAttacker.normalized);
+            }
+        }
+
         _animator.Play("Empty", 1);
         _animator.SetTrigger("KnockbackHit");
         _stateManager.CurrentLungeSpeed = -15;
     }
 
-    private void TriggerLargeStumble()
+    private void TriggerLargeStumble(GameObject attacker)
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+
+        if (attacker != null)
+        {
+            Vector3 directionToAttacker = attacker.transform.position - transform.position;
+            directionToAttacker.y = 0;
+            
+            if (directionToAttacker.sqrMagnitude > 0.01f)
+            {
+                transform.rotation = Quaternion.LookRotation(directionToAttacker.normalized);
+            }
+        }
+
         _animator.Play("Empty", 1);
         _animator.SetTrigger("LargeStumble");
         _stateManager.CurrentLungeSpeed = -4f;
@@ -382,6 +407,30 @@ public class PlayerHealth : MonoBehaviour
         if (cc != null) cc.enabled = true; // Turn it back on
 
         if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
+    }
+
+    public void TriggerHitFeedback(float damageAmount)
+    {
+        // Trigger your hit animation
+        GetComponentInChildren<Animator>().SetTrigger("HitReaction");
+
+        // Only do Hitstop for big attacks so it doesn't get annoying
+        if (damageAmount > 15f) 
+        {
+            StartCoroutine(HitstopRoutine(0.1f)); // Freeze for 1/10th of a second
+        }
+    }
+
+    private System.Collections.IEnumerator HitstopRoutine(float duration)
+    {
+        // Freeze time!
+        Time.timeScale = 0.05f; 
+        
+        // Wait in real-time so the freeze actually ends
+        yield return new WaitForSecondsRealtime(duration); 
+        
+        // Return to normal speed
+        Time.timeScale = 1f; 
     }
 
     #region Haptics

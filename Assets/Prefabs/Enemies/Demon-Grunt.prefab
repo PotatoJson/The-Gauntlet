@@ -772,9 +772,9 @@ MonoBehaviour:
   lightAttackDamage: 5
   heavyAttackDamage: 15
   chargeAttackDamage: 10
-  lightAttackPoiseDamage: 10
-  heavyAttackPoiseDamage: 25
-  chargeAttackPoiseDamage: 20
+  lightAttackPoiseDamage: 20
+  heavyAttackPoiseDamage: 30
+  chargeAttackPoiseDamage: 25
   playerLayerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -799,6 +799,8 @@ MonoBehaviour:
   hitRecoveryTime: 0.5
   player: {fileID: 0}
   animator: {fileID: 0}
+  weight: 1
+  hitVfxPrefab: {fileID: 982966250709117466, guid: a6411fcc75c2ae04298bd2d791ac6824, type: 3}
   attackDistance: 2.5
   chargeDistance: 8
   heavyAttackChance: 0.299

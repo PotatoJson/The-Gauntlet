@@ -77,7 +77,7 @@ public class GauntletChoiceUI : MonoBehaviour
         _spawnedPrefabA = SetupChoice(ButtonA, NameTextA, SlotsTextA, GauntletAnchorA, interactable.GauntletPrefabA, interactable.RarityA);
         _spawnedPrefabB = SetupChoice(ButtonB, NameTextB, SlotsTextB, GauntletAnchorB, interactable.GauntletPrefabB, interactable.RarityB);
         
-        Navigation navA = new Navigation { mode = Navigation.Mode.Explicit };
+        /*Navigation navA = new Navigation { mode = Navigation.Mode.Explicit };
         navA.selectOnLeft = ButtonB;
         navA.selectOnRight = ButtonB;
         ButtonA.navigation = navA;
@@ -85,7 +85,7 @@ public class GauntletChoiceUI : MonoBehaviour
         Navigation navB = new Navigation { mode = Navigation.Mode.Explicit };
         navB.selectOnLeft = ButtonA;
         navB.selectOnRight = ButtonA;
-        ButtonB.navigation = navB;
+        ButtonB.navigation = navB;*/
 
         if (Gamepad.current != null && EventSystem.current != null)
         {
