@@ -17,13 +17,11 @@ public class TrapDetection : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // If the player enters the detection area, tell the parent to animate
-        if (other.CompareTag("Player"))
+        if (parentTrap == null) return;
+
+        if (other.CompareTag("Player") || other.GetComponentInParent<BaseEnemy>() != null || other.CompareTag("Enemy"))
         {
-            if (parentTrap != null)
-            {
-                parentTrap.ActivateTrap();
-            }
+            parentTrap.ActivateTrap();
         }
     }
 }
