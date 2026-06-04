@@ -64,9 +64,12 @@ public Transform primaryGauntlet;
 
     [Header("Replace Gauntlet UI")]
     [SerializeField] private GameObject replaceGauntletPanel;
-    [SerializeField] private Button replacePrimaryBtn;
-    [SerializeField] private Button replaceSecondaryBtn;
+    [SerializeField] private Button replaceGauntletBtn;
     [SerializeField] private Button replaceDiscardBtn;
+
+    [Header("Localization Keys")]
+    [SerializeField] private LocalizedString primaryKey;
+    [SerializeField] private LocalizedString secondaryKey;
 
 
     private GameObject _pendingGauntletPrefab;
@@ -330,8 +333,11 @@ public Transform primaryGauntlet;
 
         _isDisplayingPrimary = true;
         _isTransitioning = false;
+        
         if (gauntletTitleText != null) 
             gauntletTitleText.text = gauntletPrimaryString.GetLocalizedString();
+
+        UpdateReplaceButtonText();
     }
 
     public void ToggleEquippedGauntletDisplay()
@@ -339,13 +345,18 @@ public Transform primaryGauntlet;
         if (_isTransitioning) return;
         _isTransitioning = true;
 
+        // Flip state immediately so UI logic (like the replace button) updates instantly
+        _isDisplayingPrimary = !_isDisplayingPrimary;
+
         if (gauntletTitleText != null)
-            gauntletTitleText.text = _isDisplayingPrimary ? gauntletSecondaryString.GetLocalizedString() : gauntletPrimaryString.GetLocalizedString();
+            gauntletTitleText.text = _isDisplayingPrimary ? gauntletPrimaryString.GetLocalizedString() : gauntletSecondaryString.GetLocalizedString();
+
+        UpdateReplaceButtonText();
 
         RectTransform primaryRect = primaryGauntlet.GetComponent<RectTransform>();
         RectTransform secondaryRect = secondaryGauntlet.GetComponent<RectTransform>();
 
-        if (_isDisplayingPrimary)
+        if (!_isDisplayingPrimary) // Switched to Secondary
         {
             primaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => primaryGauntlet.gameObject.SetActive(false));
@@ -354,13 +365,12 @@ public Transform primaryGauntlet;
             secondaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
             secondaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => { 
-                    _isDisplayingPrimary = false; 
                     _isTransitioning = false; 
                     SetupNavigation();
                     FocusTitle(); 
                 });
         }
-        else
+        else // Switched to Primary
         {
             secondaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => secondaryGauntlet.gameObject.SetActive(false));
@@ -369,7 +379,6 @@ public Transform primaryGauntlet;
             primaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
             primaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
                 .OnComplete(() => { 
-                    _isDisplayingPrimary = true; 
                     _isTransitioning = false; 
                     SetupNavigation();
                     FocusTitle(); 
@@ -435,7 +444,7 @@ public Transform primaryGauntlet;
         warningCancelBtn.onClick.RemoveAllListeners();
         warningCancelBtn.onClick.AddListener(CancelClose);
 
-        if (Gamepad.current != null && EventSystem.current != null)
+        if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
             EventSystem.current.SetSelectedGameObject(warningCancelBtn.gameObject);
@@ -447,7 +456,7 @@ public Transform primaryGauntlet;
         _isWarningActive = false;
         warningPanel.SetActive(false);
 
-        if (Gamepad.current != null && EventSystem.current != null)
+        if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
             if (_lastSelectedGem != null) EventSystem.current.SetSelectedGameObject(_lastSelectedGem.gameObject);
@@ -480,6 +489,7 @@ public Transform primaryGauntlet;
     public void FocusTitle()
     {
         if (Gamepad.current == null || EventSystem.current == null) return;
+        if (!InputHelper.IsGamepadLastUsed()) return;
 
         if (headerTitleButton != null)
         {
@@ -491,6 +501,7 @@ public Transform primaryGauntlet;
     public void FocusFirstAvailableGem()
     {
         if (Gamepad.current == null || EventSystem.current == null) return;
+        if (!InputHelper.IsGamepadLastUsed()) return;
 
         DraggableGem[] allGems = GetComponentsInChildren<DraggableGem>();
         if (allGems.Length > 0)
@@ -502,6 +513,8 @@ public Transform primaryGauntlet;
 
     public void FocusFirstGemOrSlot()
     {
+        if (!InputHelper.IsGamepadLastUsed()) return;
+
         GauntletManager activeManager = GetActiveGauntletManager();
         if (activeManager == null) return;
         
@@ -684,11 +697,12 @@ public Transform primaryGauntlet;
 
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(true);
 
-        replacePrimaryBtn.onClick.RemoveAllListeners();
-        replacePrimaryBtn.onClick.AddListener(() => ConfirmReplace(true));
-
-        replaceSecondaryBtn.onClick.RemoveAllListeners();
-        replaceSecondaryBtn.onClick.AddListener(() => ConfirmReplace(false));
+        if (replaceGauntletBtn != null)
+        {
+            replaceGauntletBtn.onClick.RemoveAllListeners();
+            replaceGauntletBtn.onClick.AddListener(() => ConfirmReplace(_isDisplayingPrimary));
+            UpdateReplaceButtonText();
+        }
 
         if (replaceDiscardBtn != null)
         {
@@ -697,10 +711,22 @@ public Transform primaryGauntlet;
         }
 
         // Lock controller focus to the popup!
-        if (Gamepad.current != null && EventSystem.current != null)
+        if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(replacePrimaryBtn.gameObject);
+            EventSystem.current.SetSelectedGameObject(replaceGauntletBtn.gameObject);
+        }
+    }
+
+    private void UpdateReplaceButtonText()
+    {
+        if (replaceGauntletBtn == null) return;
+        
+        var localizeEvent = replaceGauntletBtn.GetComponentInChildren<UnityEngine.Localization.Components.LocalizeStringEvent>();
+        if (localizeEvent != null)
+        {
+            localizeEvent.StringReference = _isDisplayingPrimary ? primaryKey : secondaryKey;
+            localizeEvent.RefreshString();
         }
     }
 
