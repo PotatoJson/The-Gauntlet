@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 487318470554644545}
   - component: {fileID: 5550100827547998537}
   - component: {fileID: 1813529729078128562}
-  m_Layer: 0
+  - component: {fileID: 8302263277392123579}
+  m_Layer: 7
   m_Name: Detection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66,6 +67,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8af9bb60dfa2f22488c0cdc60a2f836e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrapDetection
+--- !u!54 &8302263277392123579
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5662504859730771722}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &8751118721812575658
 GameObject:
   m_ObjectHideFlags: 0
@@ -77,7 +105,7 @@ GameObject:
   - component: {fileID: 9084208613652153749}
   - component: {fileID: 8222935312484864533}
   - component: {fileID: 8463081999844634731}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GrabHitbox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -192,9 +220,37 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
+    - target: {fileID: -7761683890530631782, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -4949261341629731995, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
       propertyPath: m_Name
       value: Grabber-anims
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 1055307452454868182, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6606494168103106637, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7699643247528754439, guid: 274850f4c90c3c64eb420d249772d967, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
