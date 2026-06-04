@@ -17,7 +17,9 @@ public class DebugPotionAdder : MonoBehaviour
         {
             if (playerHealth != null)
             {
-                playerHealth.AddPotion();
+                //playerHealth.AddPotion();
+                TutorialNotificationManager.Instance.ShowTutorial(true, "Skill Gem");
+
             }
             else
             {

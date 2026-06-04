@@ -1,9 +1,11 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Localization;
 
 public class DemonBoss : BaseEnemy
 {
     [Header("Boss Settings")]
+    public LocalizedString bossNameString;
     [SerializeField, Tooltip("Health threshold (0 to 1) to trigger Phase 2")]
     private float phaseTwoThreshold = 0.5f;
     [SerializeField, Tooltip("Chance to dodge when player is in melee range (0.0 to 1.0)")]
@@ -115,7 +117,7 @@ public class DemonBoss : BaseEnemy
             // NEW: Show health bar if hit from afar before aggroing!
             if (BossHealthBar.Instance != null)
             {
-                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth);
+                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
             }
 
         }
@@ -158,7 +160,7 @@ public class DemonBoss : BaseEnemy
             // NEW: Show the boss health bar the moment the boss aggros!
             if (!isEngaged && BossHealthBar.Instance != null)
             {
-                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth);
+                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
             }
 
             isEngaged = true;
