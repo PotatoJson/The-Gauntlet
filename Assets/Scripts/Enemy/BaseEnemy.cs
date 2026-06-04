@@ -541,7 +541,12 @@ public abstract class BaseEnemy : MonoBehaviour
         GetComponentInChildren<EnemyHealthBar>()?.ShowHealthBar();
 
         if (currentHealth <= 0) { Die(); return; }
-        if (isHitImmune || isCharging) return;
+
+        if(damage >= 20)
+        {
+            StartCoroutine(EnemyHitstopRoutine(0.1f));
+        }
+        if (isHitImmune || isCharging && damage < 20f) return;
 
         isAttacking = false;
         isCharging = false;
@@ -549,6 +554,13 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.velocity = Vector3.zero;
 
         EnterHitStun();
+    }
+
+    private IEnumerator EnemyHitstopRoutine(float duration)
+    {
+        FreezeForHitstop();
+        yield return new WaitForSeconds(duration);
+        UnfreezeFromHitstop();
     }
 
     public void SpawnHitVFX(Vector3 hitPosition, Vector3 hitDirection)
@@ -731,6 +743,8 @@ public abstract class BaseEnemy : MonoBehaviour
             hitStunTimer = 0f;
             isHitImmune = true;
             hitImmuneTimer = hitImmunityDuration;
+
+            animator?.SetTrigger(AnimHitReaction);
         }
         timeSinceLastHit = 0f;
     }

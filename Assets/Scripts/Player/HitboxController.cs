@@ -14,6 +14,7 @@ public class HitboxController : MonoBehaviour
     private int _currentDamage;
     private int _currentPoiseDamage;
     private CombatInput _currentAttackType;
+    [SerializeField] private Animator _playerAnimator;
 
     private HashSet<GameObject> _alreadyHit = new HashSet<GameObject>();
 
@@ -100,10 +101,12 @@ public class HitboxController : MonoBehaviour
                 if (_currentAttackType == CombatInput.Heavy)
                 {
                     FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Heavy", other.transform.position);
+                    StartCoroutine(HitstopRoutine(0.1f));
                 }
                 else if (_currentAttackType == CombatInput.Light)
                 {
                     FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", other.transform.position);
+                    StartCoroutine(HitstopRoutine(0.05f));
                 }
 
                 if (MetricsTracker.Instance != null)
@@ -114,6 +117,23 @@ public class HitboxController : MonoBehaviour
                 Debug.Log($"<color=orange>Successfully Damaged {enemyRoot.name} for {_currentDamage}</color>");
             }
         }
+    }
+
+    private System.Collections.IEnumerator HitstopRoutine(float duration)
+    {
+        FreezeForHitstop();
+        yield return new WaitForSeconds(duration);
+        UnfreezeFromHitstop();
+    }
+
+    private void FreezeForHitstop()
+    {
+        if(_playerAnimator != null) _playerAnimator.speed = 0f;
+    }
+
+    private void UnfreezeFromHitstop()
+    {
+        if(_playerAnimator != null) _playerAnimator.speed = 1f;
     }
 
     private void SetTrailColor(ElementType element)
@@ -138,16 +158,5 @@ public class HitboxController : MonoBehaviour
         PunchTrail.colorGradient = gradient;
     }
 
-    /*private void SpawnBlood(Collider target)
-    {
-        Vector3 spawnPosition = target.ClosestPoint(transform.position);
-        
-        Vector3 punchDirection = (target.transform.position - transform.position).normalized;
-        punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));
-        Quaternion rotation = Quaternion.LookRotation(punchDirection);
-
-        GameObject bloodEffect = Instantiate(bloodEffectPrefab, spawnPosition, rotation);
-
-        Destroy(bloodEffect, 3f);
-    }*/
+    
 }
