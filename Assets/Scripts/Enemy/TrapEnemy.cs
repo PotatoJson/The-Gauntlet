@@ -35,7 +35,7 @@ public class TrapEnemy : MonoBehaviour
     public void ActivateTrap()
     {
         if (hasTriggered && oneShotTrap) return;
-
+        Debug.Log($"{gameObject.name} trap activated! for {trapDuration} seconds with {damageAmount} damage.");
         hasTriggered = true;
         animator?.SetTrigger(grabTriggerName);
     }

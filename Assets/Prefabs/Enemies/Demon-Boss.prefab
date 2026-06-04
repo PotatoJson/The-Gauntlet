@@ -244,6 +244,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 11fb92184b8b6b241b7a826df3430491, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 1507344709149072407, guid: 11fb92184b8b6b241b7a826df3430491, type: 3}
       propertyPath: m_Layer
       value: 7
@@ -561,6 +565,11 @@ MonoBehaviour:
   heavyAttackHitboxSize: {x: 2.5, y: 2, z: 3}
   chargeAttackHitboxOffset: {x: 0, y: 1, z: 1.5}
   chargeAttackHitboxSize: {x: 3, y: 2, z: 3}
+  trapEnemiesOnHit: 1
+  enemyTrapDuration: 2
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   stunDuration: 2
   attackCooldown: 3
   maxHitStunDuration: 5

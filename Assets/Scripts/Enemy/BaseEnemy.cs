@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public abstract class BaseEnemy : MonoBehaviour
@@ -54,6 +55,11 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected Vector3 heavyAttackHitboxSize = new Vector3(2.5f, 2f, 3f);
     [SerializeField] protected Vector3 chargeAttackHitboxOffset = new Vector3(0, 1f, 1.5f);
     [SerializeField] protected Vector3 chargeAttackHitboxSize = new Vector3(3f, 2f, 3f);
+
+    [Header("Enemy Trap")]
+    [SerializeField] private bool trapEnemiesOnHit = true;
+    [SerializeField] private float enemyTrapDuration = 2f;
+    [SerializeField] private LayerMask enemyLayerMask = ~0;
 
     [Header("Timing")]
     [SerializeField] protected float stunDuration = 2f;
@@ -583,24 +589,44 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected bool TryDamagePlayerHitbox(float damage, int poiseDamage, Vector3 localOffset, Vector3 boxSize)
     {
-        if (player == null) return false;
-
         Vector3 center = transform.TransformPoint(localOffset);
-        Collider[] hits = Physics.OverlapBox(center, boxSize / 2f, transform.rotation, playerLayerMask);
+        int combinedMask = playerLayerMask | enemyLayerMask;
+        Collider[] hits = Physics.OverlapBox(center, boxSize / 2f, transform.rotation, combinedMask);
+
+        bool hitPlayer = false;
+        HashSet<BaseEnemy> trappedEnemies = new HashSet<BaseEnemy>();
 
         foreach (Collider hit in hits)
         {
             if (hit.CompareTag("Player"))
             {
+                if (playerHealth == null)
+                {
+                    playerHealth = hit.GetComponentInParent<PlayerHealth>();
+                }
+
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damage, poiseDamage, gameObject);
                     playerManager?.SetInCombat();
-                    return true;
+                    hitPlayer = true;
                 }
+
+                continue;
+            }
+
+            if (!trapEnemiesOnHit || enemyTrapDuration <= 0f) continue;
+
+            BaseEnemy enemy = hit.GetComponentInParent<BaseEnemy>();
+            if (enemy == null || enemy == this || enemy.IsDead()) continue;
+
+            if (trappedEnemies.Add(enemy))
+            {
+                enemy.ApplyStun(enemyTrapDuration);
             }
         }
-        return false;
+
+        return hitPlayer;
     }
 
     public virtual void OnAttackEnd()
