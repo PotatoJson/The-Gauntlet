@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class GauntletInteractable : MonoBehaviour
 {
@@ -28,6 +29,7 @@ public class GauntletInteractable : MonoBehaviour
     private bool _isPlayerInRange = false;
     private Transform _playerTransform;
     private Transform _promptTransform;
+    private TMP_Text _promptText;
 
     private void Awake()
     {
@@ -41,8 +43,16 @@ public class GauntletInteractable : MonoBehaviour
         {
             _promptTransform = InteractionPrompt.transform;
             _promptTransform.SetParent(null);
-            _promptTransform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
+            //_promptTransform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
             InteractionPrompt.SetActive(false);
+        }
+
+        _promptText = InteractionPrompt.GetComponentInChildren<TMP_Text>();
+        if (_promptText != null)
+        {
+            // Fetch the dynamic binding string (e.g., "F" or "Button South")
+            string binding = _interactAction.GetBindingDisplayString();
+            _promptText.text = $"Press {binding} to Interact";
         }
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -121,6 +131,7 @@ public class GauntletInteractable : MonoBehaviour
         if (InteractionPrompt != null && _isPlayerInRange)
         {
             InteractionPrompt.transform.position = transform.position + Vector3.up * PromptVerticalOffset;
+            UpdatePromptText();
         }
 
         if (_isPlayerInRange && _interactAction != null && _interactAction.WasPressedThisFrame())
@@ -157,5 +168,41 @@ public class GauntletInteractable : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, InteractionRadius);
+    }
+
+    private void UpdatePromptText()
+    {
+        if (InteractionPrompt == null || _interactAction == null) return;
+
+        TMP_Text promptText = InteractionPrompt.GetComponentInChildren<TMP_Text>();
+        if (promptText == null) return;
+
+        // 1. Detect which device the player is currently using based on recent activity
+        bool isGamepad = Gamepad.current != null && 
+                        (Keyboard.current == null || Gamepad.current.lastUpdateTime > Keyboard.current.lastUpdateTime);
+
+        string displayString = "Interact"; // Fallback text
+
+        // 2. Loop through all bindings for this action to find the right one
+        for (int i = 0; i < _interactAction.bindings.Count; i++)
+        {
+            var binding = _interactAction.bindings[i];
+            
+            // Skip composites (like WASD folders), we only want the actual buttons
+            if (binding.isComposite) continue;
+
+            bool isGamepadBinding = binding.effectivePath.Contains("<Gamepad>");
+            bool isKeyboardBinding = binding.effectivePath.Contains("<Keyboard>") || binding.effectivePath.Contains("<Mouse>");
+
+            // 3. If the binding matches the device they are holding, grab the text!
+            if ((isGamepad && isGamepadBinding) || (!isGamepad && isKeyboardBinding))
+            {
+                // DisplayStringOptions.DontIncludeInteractions is the magic command that deletes the word "Hold"!
+                displayString = _interactAction.GetBindingDisplayString(i, InputBinding.DisplayStringOptions.DontIncludeInteractions);
+                break;
+            }
+        }
+
+        promptText.text = $"Press {displayString} to Interact";
     }
 }

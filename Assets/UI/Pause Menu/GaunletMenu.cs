@@ -164,6 +164,13 @@ public class GauntletMenu : MonoBehaviour
 
     private void OnPausePerformed(InputAction.CallbackContext context)
     {
+        // --- ADD THIS GATEKEEPER ---
+        // If the Gauntlet Choice UI is open, completely ignore the Escape key here!
+        if (GauntletChoiceUI.Instance != null && GauntletChoiceUI.Instance.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
         if (characterScreenRoot != null && characterScreenRoot.activeSelf)
         {
             return;
