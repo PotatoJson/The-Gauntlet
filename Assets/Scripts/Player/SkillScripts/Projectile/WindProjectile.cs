@@ -48,7 +48,9 @@ public class WindProjectile : BaseSkillProjectile
             {
                 Vector3 directionToCenter = (transform.position - enemy.transform.position).normalized;
                 directionToCenter.y = 0; 
-                enemy.transform.position += directionToCenter * PullSpeed * Time.deltaTime;
+
+                float actualPullSpeed = PullSpeed / Mathf.Max(0.1f, enemy.weight);
+                enemy.transform.position += directionToCenter * actualPullSpeed * Time.deltaTime;
 
                 if (shouldTickDamage)
                 {

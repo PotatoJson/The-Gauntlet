@@ -88,6 +88,11 @@ public abstract class BaseEnemy : MonoBehaviour
     protected float _currentSpeedMultiplier = 1f;
     private float _storedNavSpeed;
 
+    [Header("Hit Effects & Physics")]
+    [Tooltip("1.0 is normal. 0.5 is light, 2.0 is heavy.")]
+    public float weight = 1f; 
+    public GameObject hitVfxPrefab;
+
     // Components
     protected NavMeshAgent navAgent;
 
@@ -538,6 +543,16 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.velocity = Vector3.zero;
 
         EnterHitStun();
+    }
+
+    public void SpawnHitVFX(Vector3 hitPosition, Vector3 hitDirection)
+    {
+        if (hitVfxPrefab != null)
+        {
+            Quaternion rotation = Quaternion.LookRotation(hitDirection);
+            GameObject vfx = Instantiate(hitVfxPrefab, hitPosition, rotation);
+            Destroy(vfx, 3f);
+        }
     }
 
     protected virtual void Die()

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 public class HitboxController : MonoBehaviour
 {
-    public GameObject bloodEffectPrefab;
     private Collider _collider;
 
 
@@ -77,7 +76,12 @@ public class HitboxController : MonoBehaviour
             if(_alreadyHit.Add(enemyRoot))
             {
                 enemyScript.TakeDamage(_currentDamage);
-                SpawnBlood(other);
+                
+                Vector3 spawnPosition = other.ClosestPoint(transform.position);
+                Vector3 punchDirection = (other.transform.position - transform.position).normalized;
+                punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));
+                
+                enemyScript.SpawnHitVFX(spawnPosition, punchDirection);
 
                 if (_currentAttackType == CombatInput.Heavy)
                 {

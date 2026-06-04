@@ -93,6 +93,8 @@ public class FireballProjectile : BaseSkillProjectile
 
     protected override void OnTriggerEnter(Collider other)
     {
+        if (_growthTimer < GrowthDuration) return;
+
         Debug.Log($"<color=orange>[PROJECTILE DEBUG]</color> {gameObject.name} collided with: <b>{other.gameObject.name}</b> | Tag: {other.tag} | Layer: {LayerMask.LayerToName(other.gameObject.layer)}");
         if (other.CompareTag("Player")) return;
 
