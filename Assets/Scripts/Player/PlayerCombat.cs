@@ -57,6 +57,7 @@ public class PlayerCombat : MonoBehaviour
     [Header("Skill Setings")]
     [SerializeField] private Transform _leftSkillSpawnPoint;
     [SerializeField] private Transform _rightSkillSpawnPoint;
+    private AnimatorOverrideController _overrideController;
 
     private float _leftSkillCooldownTimer = 0f;
     private float _rightSkillCooldownTimer = 0f;
@@ -88,6 +89,8 @@ public class PlayerCombat : MonoBehaviour
     void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+        _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
+        _animator.runtimeAnimatorController = _overrideController;
         _stateManager = GetComponent<PlayerManager>();
         _statsManager = GetComponent<PlayerStatsManager>();
         _staminaScript = GetComponent<PlayerStamina>();
@@ -204,12 +207,45 @@ public class PlayerCombat : MonoBehaviour
 
         ConsumeBuffer();
         _stateManager.SetPlayerState(PlayerState.Attacking); 
+
+        SkillVariation? variant = slottedSkill.GetVariationForElement(targetGauntlet.BaseGauntlet.Element);
         
-        if (isLeftGauntlet) _animator.SetTrigger("CastLeftSkill");
-        else _animator.SetTrigger("CastRightSkill");
+        if (variant.HasValue)
+        {
+            if (isLeftGauntlet && variant.Value.LeftGauntletAnim != null)
+            {
+                // Swap the empty dummy state with the actual left-handed animation
+                _overrideController["CastLeft_Dummy"] = variant.Value.LeftGauntletAnim;
+                _animator.SetTrigger("CastLeftSkill");
+                _leftSkillCooldownTimer = slottedSkill.Cooldown;
+            }
+            else if (!isLeftGauntlet && variant.Value.RightGauntletAnim != null)
+            {
+                // Swap the empty dummy state with the actual right-handed animation
+                _overrideController["CastRight_Dummy"] = variant.Value.RightGauntletAnim;
+                _animator.SetTrigger("CastRightSkill");
+                _rightSkillCooldownTimer = slottedSkill.Cooldown;
+            }
+            else
+            {
+                Debug.LogWarning($"Missing animation clip on {slottedSkill.Name} for the active gauntlet!");
+            }
+        }
+    }
+
+    public void ExecuteSkillWindUpVFX()
+    {
+        if (_currentlyCastingGauntlet == null || _currentlyCastingGauntlet.ActiveSkillGem == null) return;
+
+        SkillVariation? variant = _currentlyCastingGauntlet.ActiveSkillGem.GetVariationForElement(_currentlyCastingGauntlet.BaseGauntlet.Element);
         
-        if (isLeftGauntlet) _leftSkillCooldownTimer = slottedSkill.Cooldown;
-        else _rightSkillCooldownTimer = slottedSkill.Cooldown;
+        if (variant.HasValue && variant.Value.WindUpVFXPrefab != null && _currentSpawnPoint != null)
+        {
+            // Instantiate the VFX and set the hand (_currentSpawnPoint) as its parent
+            GameObject vfx = Instantiate(variant.Value.WindUpVFXPrefab, _currentSpawnPoint.position, _currentSpawnPoint.rotation, _currentSpawnPoint);
+            //Destroy if Particle System doesnt stop on its own
+            Destroy(vfx, 2f); 
+        }
     }
 
     public void ExecuteSkillSpawn()
@@ -232,7 +268,19 @@ public class PlayerCombat : MonoBehaviour
             BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
             if (projectileScript != null)
             {
-                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise); 
+                Transform currentTarget = null;
+                //handle the chance the player is locked on to an enemy
+                if (_stateManager.IsLockedOn && PlayerCamera.Instance != null)
+                {
+                    currentTarget = PlayerCamera.Instance.currentLockOnTarget;
+                }
+
+                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise, currentTarget);
+
+                if (projectileScript is FireballProjectile fireball)
+                {
+                    fireball.AttachFeedingVFX(_currentSpawnPoint);
+                }
             }
         }
 

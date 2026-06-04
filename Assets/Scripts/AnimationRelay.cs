@@ -101,6 +101,11 @@ public class AnimationEventRelay : MonoBehaviour
         }
     }
 
+    public void ExecuteSkillWindUp()
+    {
+        _playerCombat.ExecuteSkillWindUpVFX();
+    }
+
     public void ExecuteSkill()
     {
         if(_playerCombat != null)

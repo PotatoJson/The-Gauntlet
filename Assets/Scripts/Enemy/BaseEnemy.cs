@@ -84,6 +84,10 @@ public abstract class BaseEnemy : MonoBehaviour
     [SerializeField] protected Transform player;
     [SerializeField] protected Animator animator;
 
+    [Header("Status Effects Things")]
+    protected float _currentSpeedMultiplier = 1f;
+    private float _storedNavSpeed;
+
     // Components
     protected NavMeshAgent navAgent;
 
@@ -729,4 +733,49 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         return isAttacking;
     }
+
+    #region StatusEffects
+    public void SetSpeedMultiplier(float newMultiplier)
+    {
+        _currentSpeedMultiplier = newMultiplier;
+        if (navAgent.isOnNavMesh && !isCharging) 
+            navAgent.speed = chaseSpeed * _currentSpeedMultiplier;
+            
+        if (animator != null) 
+            animator.speed = _currentSpeedMultiplier;
+    }
+
+    public void ResetSpeedMultiplier()
+    {
+        SetSpeedMultiplier(1f);
+    }
+
+    public void FreezeForHitstop()
+    {
+        // 1. Freeze the animation mid-frame
+        if (animator != null) animator.speed = 0f;
+        
+        // 2. Safely halt the pathfinding without breaking their AI state
+        if (navAgent.isOnNavMesh)
+        {
+            _storedNavSpeed = navAgent.speed;
+            navAgent.speed = 0f;
+            navAgent.velocity = Vector3.zero; // Stops any sliding!
+        }
+    }
+
+    public void UnfreezeFromHitstop()
+    {
+        // 1. Unpause the animation
+        if (animator != null) animator.speed = 1f;
+        
+        // 2. Give them their speed back so they continue exactly what they were doing
+        if (navAgent.isOnNavMesh)
+        {
+            navAgent.speed = _storedNavSpeed;
+        }
+    }
+
+    #endregion
+
 }
