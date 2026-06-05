@@ -104,17 +104,6 @@ public class PlayerCombat : MonoBehaviour
         
         _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
         _rightSkillAction = _playerMap.FindAction("RightSkill");
-        _rightSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: false);
-
-        _lightAttackAction.started += ctx => OnLightAttackInput();
-        _heavyAttackAction.started += ctx => 
-        {
-            _isHoldingHeavy = true;
-            OnHeavyAttackInput();
-        };
-        _heavyAttackAction.canceled += ctx => OnHeavyAttackReleased();
-        _healAction.started += ctx => UsePotion();
-        _debugTeleportAction.started += ctx => _stateManager.DebugTeleport();
     }
 
     private void OnEnable() 
@@ -134,7 +123,6 @@ public class PlayerCombat : MonoBehaviour
     {
         _playerMap.Disable();
 
-        // THIS CURES THE COMBAT CRASH! 
         _leftSkillAction.started -= OnLeftSkillInput;
         _rightSkillAction.started -= OnRightSkillInput;
         _lightAttackAction.started -= OnLightAttackInputWrapper;
@@ -143,6 +131,20 @@ public class PlayerCombat : MonoBehaviour
         _healAction.started -= OnHealInput;
         _debugTeleportAction.started -= OnDebugTeleportInput;
     }
+
+    // --- NEW: Input Action Wrappers ---
+    private void OnLeftSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(true);
+    private void OnRightSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(false);
+    private void OnLightAttackInputWrapper(InputAction.CallbackContext ctx) => OnLightAttackInput();
+    private void OnHeavyAttackStart(InputAction.CallbackContext ctx) 
+    {
+        _isHoldingHeavy = true;
+        OnHeavyAttackInput();
+    }
+    private void OnHeavyAttackCancel(InputAction.CallbackContext ctx) => OnHeavyAttackReleased();
+    private void OnHealInput(InputAction.CallbackContext ctx) => UsePotion();
+    private void OnDebugTeleportInput(InputAction.CallbackContext ctx) => _stateManager.DebugTeleport();
+    #endregion
 
     // Update is called once per frame
     void Update()
@@ -166,7 +168,7 @@ public class PlayerCombat : MonoBehaviour
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
-    #endregion
+
     #region InputBuffer
     private void OnLightAttackInput()
     {

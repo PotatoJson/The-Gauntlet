@@ -72,7 +72,7 @@ public Transform primaryGauntlet;
     [SerializeField] private LocalizedString primaryKey;
     [SerializeField] private LocalizedString secondaryKey;
 
-
+    private bool _isInitialized = false;
     private GameObject _pendingGauntletPrefab;
     private GauntletRarity _pendingGauntletRarity;
     private bool _isReplaceUIPending = false;
@@ -117,6 +117,30 @@ public Transform primaryGauntlet;
         }
 
         // NEW: Force a stats sync immediately so the player gets their bonuses without needing to open the menu
+        PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+        if (stats != null)
+        {
+            stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+        }
+        ForceLoadOnSpawn();
+    }
+
+    public void ForceLoadOnSpawn()
+    {
+        // Prevent double-loading if the player immediately opens the menu
+        if (_isInitialized) return;
+        _isInitialized = true;
+
+        if (PersistentEquipment.Instance != null && PersistentEquipment.Instance.hasSavedData)
+        {
+            LoadEquipmentFromBackpack();
+        }
+        else
+        {
+            InitializeDefaultEquipment();
+        }
+
+        // Force a stats sync immediately so the player gets their bonuses
         PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
         if (stats != null)
         {
