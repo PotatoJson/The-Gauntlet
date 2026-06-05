@@ -103,8 +103,6 @@ public class PlayerCombat : MonoBehaviour
         _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
         
         _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
-        _leftSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: true);
-
         _rightSkillAction = _playerMap.FindAction("RightSkill");
         _rightSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: false);
 
