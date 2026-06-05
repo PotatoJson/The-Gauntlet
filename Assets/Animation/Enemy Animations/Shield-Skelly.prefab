@@ -882,6 +882,8 @@ MonoBehaviour:
   hitRecoveryTime: 0.5
   player: {fileID: 0}
   animator: {fileID: 0}
+  weight: 1
+  hitVfxPrefab: {fileID: 0}
   shieldBashDamage: 20
   shieldBashInterval: 5
   shieldBashIntervalVariance: 1
@@ -1072,6 +1074,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShieldHealth
   maxHealth: 50
   ownerEnemy: {fileID: 7514803047309585106}
+  shieldHitVfxPrefab: {fileID: 0}
 --- !u!4 &7630750117032212623 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: bdb0b41cdcb939c4c9b8764fb5e79afa, type: 3}

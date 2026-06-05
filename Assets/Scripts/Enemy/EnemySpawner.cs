@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,6 +21,12 @@ public class ChamberData
     public Transform peeperSpawnPoints;
     [Tooltip("Parent GameObject containing all Caster spawn points. Leave empty if none.")]
     public Transform casterSpawnPoints;
+    [Tooltip("Parent GameObject containing all Shield spawn points. Leave empty if none.")]
+    public Transform shieldSpawnPoints;
+    [Tooltip("Parent GameObject containing all Spinning spawn points. Leave empty if none.")]
+    public Transform spinningSpawnPoints;
+    [Tooltip("Parent GameObject containing all Biter spawn points. Leave empty if none.")]
+    public Transform biterSpawnPoints;
 
     [Header("Boss Spawn (Single Point)")]
     [Tooltip("A single Transform for the Boss spawn point. Not a container. Leave empty if no boss in this chamber.")]
@@ -49,6 +54,9 @@ public class EnemySpawner : MonoBehaviour
     public GameObject elitePrefab;
     public GameObject peeperPrefab;
     public GameObject casterPrefab;
+    public GameObject shieldPrefab;
+    public GameObject spinningPrefab;
+    public GameObject biterPrefab;
     public GameObject bossPrefab;
 
     [Header("Chambers Configuration")]
@@ -79,25 +87,29 @@ public class EnemySpawner : MonoBehaviour
 
                         // Attach a helper component directly to the trigger object so it can detect player collision
                         ChamberTriggerListener listener = trigger.gameObject.AddComponent<ChamberTriggerListener>();
-                        listener.Setup(this, i);
+                        listener.spawner = this;
+                        listener.chamberToSpawn = chamber;
                     }
                 }
-            }
-            else
-            {
-                Debug.LogWarning($"Chamber '{chamber.chamberName}' is missing a Trigger Collider and is not set to Spawn On Start!");
             }
         }
     }
 
-    // Called by the ChamberTriggerListener when a player enters a chamber's trigger
-    public void TriggerChamber(int chamberIndex, Collider other)
+    private void FixedUpdate()
     {
-        if (!other.CompareTag("Player")) return;
+        // Continuously check active encounters to see if they're cleared
+        foreach (ChamberData chamber in chambers)
+        {
+            if (chamber.hasSpawned && !chamber.isCleared)
+            {
+                CheckChamberStatus(chamber);
+            }
+        }
+    }
 
-        ChamberData chamber = chambers[chamberIndex];
-
-        // Ensure we only spawn once per chamber
+    public void OnChamberTriggerEntered(ChamberData chamber)
+    {
+        // The listener will call this when the player steps into the trigger
         if (chamber.hasSpawned || chamber.isCleared) return;
 
         SpawnChamberEnemies(chamber);
@@ -123,6 +135,9 @@ public class EnemySpawner : MonoBehaviour
         SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(peeperPrefab, chamber.peeperSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(casterPrefab, chamber.casterSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(shieldPrefab, chamber.shieldSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(spinningPrefab, chamber.spinningSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(biterPrefab, chamber.biterSpawnPoints, chamber.activeEnemies);
 
         // Spawn Boss explicitly at its single spawn point
         if (bossPrefab != null && chamber.bossSpawnPoint != null)
@@ -154,113 +169,72 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void CheckChamberStatus(ChamberData chamber)
     {
-        // Every frame, check active chambers to see if their enemies are defeated
-        foreach (var chamber in chambers)
-        {
-            if (chamber.hasSpawned && !chamber.isCleared)
-            {
-                // Remove destroyed enemies (Unity treats destroyed GameObjects as null internally)
-                chamber.activeEnemies.RemoveAll(enemy => enemy == null);
+        // Clean out any destroyed enemies from the list (since they get Destroy()'d on death)
+        chamber.activeEnemies.RemoveAll(enemy => enemy == null);
 
-                // If zero enemies left, clear the chamber and open the door
-                if (chamber.activeEnemies.Count == 0)
-                {
-                    ClearChamber(chamber, false);
-                }
-            }
+        // If there are no active enemies left, the chamber is complete
+        if (chamber.activeEnemies.Count == 0)
+        {
+            chamber.isCleared = true;
+            OnChamberCleared(chamber);
         }
     }
 
-    private void ClearChamber(ChamberData chamber, bool isInstantClear)
+    private void OnChamberCleared(ChamberData chamber)
     {
-        Debug.Log("Chamber cleared beginning test");
-        chamber.isCleared = true;
+        Debug.Log($"<color=green>Chamber Cleared: {chamber.chamberName}</color>");
 
         if (MetricsTracker.Instance != null)
         {
-            // Updated to Unity 6 syntax: FindFirstObjectByType
             PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
-            
-            // Now we just directly read CurrentHealth
-            int endingHealth = playerHealth != null ? Mathf.RoundToInt(playerHealth.CurrentHealth) : 0;
-            
-            // Pass ending health, 'false' (because they survived), and "None" for the killer
+            int endingHealth = playerHealth != null ? Mathf.RoundToInt(playerHealth.CurrentHealth) : 100;
+
+            // Pass required 'died' and optional 'enemyName' arguments
             MetricsTracker.Instance.EndChamber(endingHealth, false, "None");
         }
 
-        //Made changes for multiple gates to open.
-        if (chamber.chamberDoorAnimators.Count > 0)
+        // Open the associated doors
+        foreach (Animator doorAnim in chamber.chamberDoorAnimators)
         {
-            foreach (Animator doorAnim in chamber.chamberDoorAnimators)
+            if (doorAnim != null)
             {
-                if (doorAnim != null)
-                {
-                    doorAnim.SetTrigger(chamber.doorOpenTrigger);
-                }
+                doorAnim.SetTrigger(chamber.doorOpenTrigger);
             }
         }
-        else
-        {
-            Debug.LogWarning($"Chamber '{chamber.chamberName}' cleared, but no Door Animator is assigned!");
-        }
 
+        // Enable the reward object
         if (chamber.chamberRewardObject != null)
         {
             chamber.chamberRewardObject.SetActive(true);
-            Debug.Log($"[EnemySpawner] Revealed reward for {chamber.chamberName}!");
         }
-
-        /*if (isInstantClear)
-        {
-            Debug.Log("Chamber cleared instantly");
-            GrantChamberRewards();
-        }
-        else
-        {
-            Debug.Log("Chamber cleared starting...");
-            StartCoroutine(ChamberRewardSequence());
-        }*/
     }
-
-    /*private IEnumerator ChamberRewardSequence()
-    {
-        yield return new WaitForSecondsRealtime(2f);
-        GrantChamberRewards();
-    }
-
-    private void GrantChamberRewards()
-    {
-        PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
-        if(playerHealth != null)
-        {
-            if(playerHealth.CurrentPotions < playerHealth.MaxPotions)
-            {
-                playerHealth.CurrentPotions++;
-                Debug.Log($"Chamber Cleared! Potion refilled. Total: {playerHealth.CurrentPotions}");
-            }
-        }
-
-        if(RewardMenuManager.Instance != null)
-        {
-            RewardMenuManager.Instance.OpenRewardMenu();
-        }
-        else Debug.Log("RewardManager not found");
-    }*/
-
+    // Add this method to the EnemySpawner class
     public void ForceClearChamber(int chamberIndex)
     {
-        // Safety check to make sure the index actually exists
-        if (chamberIndex < 0 || chamberIndex >= chambers.Count) return;
+        if (chamberIndex < 0 || chamberIndex >= chambers.Count)
+        {
+            Debug.LogError($"ForceClearChamber: Invalid chamber index {chamberIndex}.");
+            return;
+        }
 
         ChamberData chamber = chambers[chamberIndex];
-
-        // Only clear it if it hasn't been cleared already
-        if (!chamber.isCleared)
+        // Clear all enemies in the chamber
+        foreach (GameObject enemy in chamber.activeEnemies)
         {
-            ClearChamber(chamber, true);
+            if (enemy != null)
+            {
+                Destroy(enemy);
+            }
         }
+        chamber.activeEnemies.Clear();
+
+        // Mark the chamber as cleared
+        chamber.isCleared = true;
+
+        // Open doors or perform any additional logic for a cleared chamber
+        OnChamberCleared(chamber);
     }
 }
 
@@ -271,22 +245,15 @@ public class EnemySpawner : MonoBehaviour
 // -----------------------------------------------------------------------------------------
 public class ChamberTriggerListener : MonoBehaviour
 {
-    private EnemySpawner manager;
-    private int chamberIndex;
-
-    public void Setup(EnemySpawner manager, int chamberIndex)
-    {
-        this.manager = manager;
-        this.chamberIndex = chamberIndex;
-    }
+    public EnemySpawner spawner;
+    public ChamberData chamberToSpawn;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (manager != null)
+        if (other.CompareTag("Player") && spawner != null && chamberToSpawn != null)
         {
-            manager.TriggerChamber(chamberIndex, other);
+            spawner.OnChamberTriggerEntered(chamberToSpawn);
         }
     }
-
-    
 }
+
