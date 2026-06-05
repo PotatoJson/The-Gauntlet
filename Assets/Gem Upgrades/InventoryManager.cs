@@ -115,6 +115,13 @@ public Transform primaryGauntlet;
         {
             InitializeDefaultEquipment();
         }
+
+        // NEW: Force a stats sync immediately so the player gets their bonuses without needing to open the menu
+        PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+        if (stats != null)
+        {
+            stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+        }
     }
 
     private void LoadEquipmentFromBackpack()
@@ -124,6 +131,9 @@ public Transform primaryGauntlet;
         // 1. Restore Primary Gauntlet
         if (pack.primaryGauntletPrefab != null && primaryGauntlet != null)
         {
+            // Clear existing primary gauntlet clones
+            foreach (Transform child in primaryGauntlet) Destroy(child.gameObject);
+
             activePrimaryPrefab = pack.primaryGauntletPrefab;
             GameObject newPrimary = Instantiate(pack.primaryGauntletPrefab, primaryGauntlet);
             newPrimary.transform.localPosition = Vector3.zero;
@@ -153,6 +163,9 @@ public Transform primaryGauntlet;
         // 2. Restore Secondary Gauntlet
         if (pack.secondaryGauntletPrefab != null && secondaryGauntlet != null)
         {
+            // Clear existing secondary gauntlet clones
+            foreach (Transform child in secondaryGauntlet) Destroy(child.gameObject);
+
             activeSecondaryPrefab = pack.secondaryGauntletPrefab;
             GameObject newSecondary = Instantiate(pack.secondaryGauntletPrefab, secondaryGauntlet);
             newSecondary.transform.localPosition = Vector3.zero;
@@ -185,7 +198,8 @@ public Transform primaryGauntlet;
         // Loop through the saved gem list and put them back exactly where they were
         for (int i = 0; i < gm.fingerSlots.Count && i < savedGems.Count; i++)
         {
-            if (savedGems[i] != null && gm.fingerSlots[i].activeInHierarchy)
+            // Use currentActiveSlots instead of activeInHierarchy (which is false if UI is hidden)
+            if (savedGems[i] != null && i < gm.currentActiveSlots)
             {
                 GameObject spawnedGem = Instantiate(savedGems[i], gm.fingerSlots[i].transform);
                 spawnedGem.transform.localPosition = Vector3.zero;

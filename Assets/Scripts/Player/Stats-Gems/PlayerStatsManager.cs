@@ -70,7 +70,10 @@ public class PlayerStatsManager : MonoBehaviour
 
     private RunTimeGauntlet BuildGauntletFromUI(Transform uiParent, EquipSlot slotContext)
     {
-        GauntletManager gManager = uiParent.GetComponentInChildren<GauntletManager>();
+        if (uiParent == null) return null;
+        
+        // Use true to find the GauntletManager even if the UI is hidden!
+        GauntletManager gManager = uiParent.GetComponentInChildren<GauntletManager>(true);
         if(gManager == null || gManager.LinkedGauntletData == null) return null;
 
         //create the actual gauntlet from data
@@ -79,20 +82,29 @@ public class PlayerStatsManager : MonoBehaviour
         if (gManager.SkillSlot != null)
         {
             SkillSlotManager skillSlot = gManager.SkillSlot.GetComponent<SkillSlotManager>();
-            if (skillSlot != null && skillSlot.CurrentSkillGem != null)
+            if (skillSlot != null)
             {
-                newGauntlet.ActiveSkillGem = skillSlot.CurrentSkillGem.LinkedGemData as SkillGemData;
-            }
-            else
-            {
-                newGauntlet.ActiveSkillGem = null;
+                // Find the gem even if the slot is inactive or the gem itself is disabled
+                DraggableGem skillGem = gManager.SkillSlot.GetComponentInChildren<DraggableGem>(true);
+                if (skillGem != null)
+                {
+                    newGauntlet.ActiveSkillGem = skillGem.LinkedGemData as SkillGemData;
+                }
+                else
+                {
+                    newGauntlet.ActiveSkillGem = null;
+                }
             }
         }
 
         for (int i = 0; i < gManager.currentActiveSlots; i++)
         {
+            if (i >= gManager.fingerSlots.Count) break;
+
             Transform slot = gManager.fingerSlots[i].transform;
-            DraggableGem gemUI = slot.GetComponentInChildren<DraggableGem>();
+            // Again, use true to find gems in hidden UI
+            DraggableGem gemUI = slot.GetComponentInChildren<DraggableGem>(true);
+            
             //check for valid gem
             if(gemUI != null && gemUI.LinkedGemData is StatGemData statGem)
             {

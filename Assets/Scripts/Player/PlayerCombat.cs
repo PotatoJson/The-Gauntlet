@@ -103,25 +103,55 @@ public class PlayerCombat : MonoBehaviour
         _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
         
         _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
-        _leftSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: true);
-
         _rightSkillAction = _playerMap.FindAction("RightSkill");
-        _rightSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: false);
-
-        _lightAttackAction.started += ctx => OnLightAttackInput();
-        _heavyAttackAction.started += ctx => 
-        {
-            _isHoldingHeavy = true;
-            OnHeavyAttackInput();
-        };
-        _heavyAttackAction.canceled += ctx => OnHeavyAttackReleased();
-        _healAction.started += ctx => UsePotion();
-        _debugTeleportAction.started += ctx => _stateManager.DebugTeleport();
     }
 
-    private void OnEnable() => _playerMap.Enable();
+    private void OnEnable()
+    {
+        _playerMap.Enable();
+
+        // Subscribe to events using named methods to allow proper unsubscription
+        if (_lightAttackAction != null) _lightAttackAction.started += OnLightAttackInput;
+        if (_heavyAttackAction != null)
+        {
+            _heavyAttackAction.started += OnHeavyAttackStarted;
+            _heavyAttackAction.canceled += OnHeavyAttackCanceled;
+        }
+        if (_healAction != null) _healAction.started += OnHealInput;
+        if (_debugTeleportAction != null) _debugTeleportAction.started += OnDebugTeleportInput;
+        if (_leftSkillAction != null) _leftSkillAction.started += OnLeftSkillInput;
+        if (_rightSkillAction != null) _rightSkillAction.started += OnRightSkillInput;
+    }
     
-    private void OnDisable() => _playerMap.Disable();
+    private void OnDisable()
+    {
+        _playerMap.Disable();
+
+        // Unsubscribe to prevent memory leaks and MissingReferenceExceptions
+        if (_lightAttackAction != null) _lightAttackAction.started -= OnLightAttackInput;
+        if (_heavyAttackAction != null)
+        {
+            _heavyAttackAction.started -= OnHeavyAttackStarted;
+            _heavyAttackAction.canceled -= OnHeavyAttackCanceled;
+        }
+        if (_healAction != null) _healAction.started -= OnHealInput;
+        if (_debugTeleportAction != null) _debugTeleportAction.started -= OnDebugTeleportInput;
+        if (_leftSkillAction != null) _leftSkillAction.started -= OnLeftSkillInput;
+        if (_rightSkillAction != null) _rightSkillAction.started -= OnRightSkillInput;
+    }
+
+    // Named methods for Input System callbacks
+    private void OnLightAttackInput(InputAction.CallbackContext ctx) => OnLightAttackInput();
+    private void OnHeavyAttackStarted(InputAction.CallbackContext ctx) 
+    {
+        _isHoldingHeavy = true;
+        OnHeavyAttackInput();
+    }
+    private void OnHeavyAttackCanceled(InputAction.CallbackContext ctx) => OnHeavyAttackReleased();
+    private void OnHealInput(InputAction.CallbackContext ctx) => UsePotion();
+    private void OnDebugTeleportInput(InputAction.CallbackContext ctx) => _stateManager.DebugTeleport();
+    private void OnLeftSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(true);
+    private void OnRightSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(false);
 
     // Update is called once per frame
     void Update()
