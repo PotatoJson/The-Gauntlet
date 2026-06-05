@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 public class PersistentEquipment : MonoBehaviour
 {
@@ -15,14 +16,14 @@ public class PersistentEquipment : MonoBehaviour
     public GameObject primaryGauntletPrefab;
     public GauntletRarity primaryRarity;
     public List<GameObject> primaryGems = new List<GameObject>();
+    [FormerlySerializedAs("ultimateGemPrefab")]
+    public GameObject primarySkillGemPrefab;
 
     [Header("Saved Secondary")]
     public GameObject secondaryGauntletPrefab;
     public GauntletRarity secondaryRarity;
     public List<GameObject> secondaryGems = new List<GameObject>();
-
-    [Header("Saved Ultimate")]
-    public GameObject ultimateGemPrefab;
+    public GameObject secondarySkillGemPrefab;
 
     private void Awake()
     {
@@ -57,26 +58,31 @@ public class PersistentEquipment : MonoBehaviour
         ExtractGems(inv.primaryGauntlet, primaryGems);
         ExtractGems(inv.secondaryGauntlet, secondaryGems);
 
-        ultimateGemPrefab = null; // Reset it just in case it's empty now
+        // 2. Save Skill Gems
+        primarySkillGemPrefab = ExtractSkillGem(pManager);
+        secondarySkillGemPrefab = ExtractSkillGem(sManager);
 
-        if (pManager != null && pManager.SkillSlot != null)
+        Debug.Log("Equipment successfully saved to the Backpack!");
+    }
+
+    private GameObject ExtractSkillGem(GauntletManager gm)
+    {
+        if (gm == null || gm.SkillSlot == null) return null;
+
+        SkillSlotManager skillSlot = gm.SkillSlot.GetComponent<SkillSlotManager>();
+        if (skillSlot != null && skillSlot.CurrentSkillGem != null)
         {
-            SkillSlotManager skillSlot = pManager.SkillSlot.GetComponent<SkillSlotManager>();
-            if (skillSlot != null && skillSlot.CurrentSkillGem != null)
+            // Match the equipped skill gem to our Master Database
+            foreach (GameObject projectPrefab in masterGemDatabase)
             {
-                // Match the equipped skill gem to our Master Database
-                foreach (GameObject projectPrefab in masterGemDatabase)
+                DraggableGem prefabGem = projectPrefab.GetComponent<DraggableGem>();
+                if (prefabGem != null && prefabGem.LinkedGemData == skillSlot.CurrentSkillGem.LinkedGemData)
                 {
-                    if (projectPrefab.GetComponent<DraggableGem>().LinkedGemData == skillSlot.CurrentSkillGem.LinkedGemData)
-                    {
-                        ultimateGemPrefab = projectPrefab;
-                        break;
-                    }
+                    return projectPrefab;
                 }
             }
         }
-
-        Debug.Log("Equipment successfully saved to the Backpack!");
+        return null;
     }
 
     private void ExtractGems(Transform gauntletParent, List<GameObject> gemList)

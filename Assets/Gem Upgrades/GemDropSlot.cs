@@ -5,7 +5,8 @@ using UnityEngine.UI;
 public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
 {
     private Image _slotImage;
-    private Color _defaultColor; // To remember what color the slot was originally!
+    private Color _defaultColor; 
+    [SerializeField] private Sprite _defaultSprite; // Set this in the inspector or let Awake capture it
     private GauntletManager _manager;
     private bool _isDisabled = false;
 
@@ -28,6 +29,8 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             if (_slotImage != null)
             {
                 _defaultColor = _slotImage.color;
+                // ONLY capture if we haven't manually assigned one in the inspector
+                if (_defaultSprite == null) _defaultSprite = _slotImage.sprite;
             }
         }
     }
@@ -53,6 +56,23 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         if (btn != null)
         {
             btn.interactable = false;
+        }
+    }
+
+    public void SetSlotEnabled(Sprite defaultSlotSprite)
+    {
+        _isDisabled = false;
+        EnsureSlotImage();
+        if (_slotImage != null)
+        {
+            _slotImage.sprite = defaultSlotSprite;
+            _slotImage.color = _defaultColor;
+        }
+
+        Button btn = GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.interactable = true;
         }
     }
 
