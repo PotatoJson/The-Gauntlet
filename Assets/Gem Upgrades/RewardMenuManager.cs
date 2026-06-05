@@ -341,6 +341,31 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
+    private void TrapWarningFocus()
+    {
+        if (warningPanel == null) return;
+        Button[] buttons = warningPanel.GetComponentsInChildren<Button>();
+        if (buttons.Length < 2) return;
+
+        // Assuming standard layout: 0 = Confirm, 1 = Cancel
+        Button confirmBtn = buttons[0];
+        Button cancelBtn = buttons[1];
+
+        Navigation confirmNav = new Navigation { mode = Navigation.Mode.Explicit };
+        confirmNav.selectOnLeft = cancelBtn;
+        confirmNav.selectOnRight = cancelBtn;
+        confirmNav.selectOnUp = null;
+        confirmNav.selectOnDown = null;
+        confirmBtn.navigation = confirmNav;
+
+        Navigation cancelNav = new Navigation { mode = Navigation.Mode.Explicit };
+        cancelNav.selectOnLeft = confirmBtn;
+        cancelNav.selectOnRight = confirmBtn;
+        cancelNav.selectOnUp = null;
+        cancelNav.selectOnDown = null;
+        cancelBtn.navigation = cancelNav;
+    }
+
     private System.Collections.IEnumerator SetFocusDelayed(GameObject target)
     {
         yield return null;
@@ -359,6 +384,11 @@ public class RewardMenuManager : MonoBehaviour
 
         if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
 
+        // NEW: If we are in the middle of a Gauntlet Swap, let the InventoryManager handle the ESC/Cancel logic
+        if (InventoryManager.Instance != null && InventoryManager.Instance.IsReplaceUIPending) return;
+
+        HandleControllerSwitch();
+
         if (!_isWarningActive && EventSystem.current != null)
         {
             GameObject currentSel = EventSystem.current.currentSelectedGameObject;
@@ -376,6 +406,48 @@ public class RewardMenuManager : MonoBehaviour
         {
             if (_isWarningActive) CancelClose();
             else ShowWarning();
+        }
+    }
+
+    private void HandleControllerSwitch()
+    {
+        if (Gamepad.current == null || EventSystem.current == null) return;
+
+        bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.2f || 
+                         Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.2f;
+        bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
+        
+        bool buttonPressed = false;
+        foreach (var control in Gamepad.current.allControls)
+        {
+            if (control is UnityEngine.InputSystem.Controls.ButtonControl button && button.wasPressedThisFrame)
+            {
+                buttonPressed = true;
+                break;
+            }
+        }
+
+        if (stickMoved || dpadPressed || buttonPressed)
+        {
+            GameObject current = EventSystem.current.currentSelectedGameObject;
+
+            if (_isWarningActive)
+            {
+                // Force focus to warning buttons if it escaped
+                Button[] buttons = warningPanel.GetComponentsInChildren<Button>();
+                bool isFocusedOnWarning = false;
+                foreach(var b in buttons) if (current == b.gameObject) isFocusedOnWarning = true;
+
+                if (!isFocusedOnWarning)
+                {
+                    EventSystem.current.SetSelectedGameObject(warningCancelButton);
+                    TrapWarningFocus();
+                }
+            }
+            else if (current == null)
+            {
+                if (_lastSelectedReward != null) EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
+            }
         }
     }
 
@@ -410,6 +482,8 @@ public class RewardMenuManager : MonoBehaviour
                 warningBodyText.text = warningLeaveNoRewardString.GetLocalizedString();
         }
 
+        TrapWarningFocus();
+
         if (Gamepad.current != null && warningCancelButton != null && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -422,11 +496,38 @@ public class RewardMenuManager : MonoBehaviour
         _isWarningActive = false;
         warningPanel.SetActive(false);
 
-        if (Gamepad.current != null && EventSystem.current != null)
+        if (EventSystem.current != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
-            if (_currentlySlottedGem != null) EventSystem.current.SetSelectedGameObject(_currentlySlottedGem.gameObject);
-            else if (_lastSelectedReward != null) EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
+            StartCoroutine(RestoreRewardFocusDelayed());
+        }
+    }
+
+    private System.Collections.IEnumerator RestoreRewardFocusDelayed()
+    {
+        yield return null;
+        if (EventSystem.current == null) yield break;
+
+        EventSystem.current.SetSelectedGameObject(null);
+        
+        if (_currentlySlottedGem != null && _currentlySlottedGem.gameObject.activeInHierarchy) 
+        {
+            EventSystem.current.SetSelectedGameObject(_currentlySlottedGem.gameObject);
+        }
+        else if (_lastSelectedReward != null && _lastSelectedReward.activeInHierarchy) 
+        {
+            EventSystem.current.SetSelectedGameObject(_lastSelectedReward);
+        }
+        else if (_activeRewardGems.Count > 0)
+        {
+            // Fallback to the first available reward gem
+            foreach(var gem in _activeRewardGems)
+            {
+                if (gem != null && gem.gameObject.activeInHierarchy)
+                {
+                    EventSystem.current.SetSelectedGameObject(gem.gameObject);
+                    break;
+                }
+            }
         }
     }
 

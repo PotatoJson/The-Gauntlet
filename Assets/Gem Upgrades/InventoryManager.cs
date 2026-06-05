@@ -14,6 +14,7 @@ public class InventoryManager : MonoBehaviour
     public LocalizedString gauntletSecondaryString;
     public LocalizedString warningUnequippedGemsString;
     public LocalizedString warningLeaveInventoryString;
+    public LocalizedString warningDiscardGauntletString;
     
     [Header("Starting Equipment")]
     [SerializeField] private GameObject defaultGauntletPrefab;
@@ -75,6 +76,8 @@ public Transform primaryGauntlet;
     private GameObject _pendingGauntletPrefab;
     private GauntletRarity _pendingGauntletRarity;
     private bool _isReplaceUIPending = false;
+
+    public bool IsReplaceUIPending => _isReplaceUIPending;
 
     private DraggableGem _lastSelectedGem;
     private bool _isWarningActive = false;
@@ -241,6 +244,15 @@ public Transform primaryGauntlet;
     private void Update()
     {
         if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+
+        // NEW: Prioritize Replace UI inputs even in Reward Mode to prevent overlapping cancel handling
+        if (_isReplaceUIPending)
+        {
+            HandleCancelInput();
+            HandleControllerSwitch();
+            return;
+        }
+
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
 
         HandleCancelInput();
@@ -251,30 +263,65 @@ public Transform primaryGauntlet;
     {
         if (Gamepad.current == null || EventSystem.current == null) return;
 
-        // If nothing is selected, and we detect significant gamepad activity, snap focus to the title
-        if (EventSystem.current.currentSelectedGameObject == null)
+        bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.2f || 
+                         Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.2f;
+        bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
+        
+        bool buttonPressed = false;
+        foreach (var control in Gamepad.current.allControls)
         {
-            bool stickMoved = Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.2f || 
-                             Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.2f;
-            bool dpadPressed = Gamepad.current.dpad.ReadValue().sqrMagnitude > 0.1f;
-            
-            // Check for any button press without enumerating everything
-            bool buttonPressed = false;
-            foreach (var control in Gamepad.current.allControls)
+            if (control is UnityEngine.InputSystem.Controls.ButtonControl button && button.wasPressedThisFrame)
             {
-                if (control is UnityEngine.InputSystem.Controls.ButtonControl button && button.wasPressedThisFrame)
-                {
-                    buttonPressed = true;
-                    break;
-                }
-            }
-
-            if (stickMoved || dpadPressed || buttonPressed)
-            {
-                SetupNavigation();
-                FocusTitle();
+                buttonPressed = true;
+                break;
             }
         }
+
+        if (stickMoved || dpadPressed || buttonPressed)
+        {
+            GameObject current = EventSystem.current.currentSelectedGameObject;
+
+            if (_isWarningActive)
+            {
+                // Force focus to warning buttons if it escaped to background or header
+                if (current == null || (current != warningConfirmBtn.gameObject && current != warningCancelBtn.gameObject))
+                {
+                    EventSystem.current.SetSelectedGameObject(warningCancelBtn.gameObject);
+                    TrapWarningFocus();
+                }
+            }
+            else if (current == null)
+            {
+                if (_isReplaceUIPending)
+                {
+                    EventSystem.current.SetSelectedGameObject(replaceGauntletBtn.gameObject);
+                }
+                else
+                {
+                    SetupNavigation();
+                    FocusTitle();
+                }
+            }
+        }
+    }
+
+    private void TrapWarningFocus()
+    {
+        if (warningConfirmBtn == null || warningCancelBtn == null) return;
+
+        Navigation confirmNav = new Navigation { mode = Navigation.Mode.Explicit };
+        confirmNav.selectOnLeft = warningCancelBtn;
+        confirmNav.selectOnRight = warningCancelBtn;
+        confirmNav.selectOnUp = null;
+        confirmNav.selectOnDown = null;
+        warningConfirmBtn.navigation = confirmNav;
+
+        Navigation cancelNav = new Navigation { mode = Navigation.Mode.Explicit };
+        cancelNav.selectOnLeft = warningConfirmBtn;
+        cancelNav.selectOnRight = warningConfirmBtn;
+        cancelNav.selectOnUp = null;
+        cancelNav.selectOnDown = null;
+        warningCancelBtn.navigation = cancelNav;
     }
 
     private void HandleCancelInput()
@@ -284,13 +331,14 @@ public Transform primaryGauntlet;
 
         if (cancelPressed)
         {
-            if (_isReplaceUIPending)
+            if (_isWarningActive)
             {
-                DiscardPendingGauntlet();
+                if (_isReplaceUIPending) CancelDiscardWarning();
+                else CancelClose();
             }
-            else if (_isWarningActive)
+            else if (_isReplaceUIPending)
             {
-                CancelClose();
+                ShowDiscardGauntletWarning();
             }
             else
             {
@@ -334,6 +382,11 @@ public Transform primaryGauntlet;
         _isDisplayingPrimary = true;
         _isTransitioning = false;
         
+        // NEW: Clear any stale swap state when the inventory resets/opens normally
+        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
+        _isReplaceUIPending = false;
+        _pendingGauntletPrefab = null;
+
         if (gauntletTitleText != null) 
             gauntletTitleText.text = gauntletPrimaryString.GetLocalizedString();
 
@@ -418,6 +471,14 @@ public Transform primaryGauntlet;
     // --- CLOSING & WARNINGS ---
     public void TryCloseCharacterScreen()
     {
+        // NEW: If a swap is pending, you can't just 'exit'. You must deal with the gauntlet.
+        // Redirecting to the Discard Warning ensures the player knows they are giving up the item.
+        if (_isReplaceUIPending)
+        {
+            ShowDiscardGauntletWarning();
+            return;
+        }
+
         _isWarningActive = true;
         warningPanel.SetActive(true);
 
@@ -443,6 +504,8 @@ public Transform primaryGauntlet;
         warningConfirmBtn.onClick.AddListener(ConfirmClose);
         warningCancelBtn.onClick.RemoveAllListeners();
         warningCancelBtn.onClick.AddListener(CancelClose);
+
+        TrapWarningFocus();
 
         if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
         {
@@ -504,10 +567,26 @@ public Transform primaryGauntlet;
         if (!InputHelper.IsGamepadLastUsed()) return;
 
         DraggableGem[] allGems = GetComponentsInChildren<DraggableGem>();
-        if (allGems.Length > 0)
+        GameObject target = null;
+
+        foreach (var gem in allGems)
+        {
+            if (gem != null && gem.gameObject.activeInHierarchy)
+            {
+                target = gem.gameObject;
+                break;
+            }
+        }
+
+        if (target != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(allGems[0].gameObject);
+            EventSystem.current.SetSelectedGameObject(target);
+        }
+        else
+        {
+            // If no gems are found, focus a slot or the title so focus isn't lost!
+            FocusFirstGemOrSlot();
         }
     }
 
@@ -619,7 +698,7 @@ public Transform primaryGauntlet;
             Navigation switchNav = switchGauntletButton.navigation;
             switchNav.mode = Navigation.Mode.Explicit;
             switchNav.selectOnUp = null;
-            switchNav.selectOnDown = null;
+            switchNav.selectOnDown = _isReplaceUIPending ? replaceGauntletBtn : null;
 
             titleNav.selectOnRight = switchGauntletButton;
             switchNav.selectOnLeft = headerTitleButton;
@@ -697,6 +776,32 @@ public Transform primaryGauntlet;
 
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(true);
 
+        // --- THE FIX: Trap Controller Navigation to the Popup! ---
+        if (replaceGauntletBtn != null && replaceDiscardBtn != null)
+        {
+            // NEW: Link header to the popup
+            if (switchGauntletButton != null)
+            {
+                Navigation headerNav = switchGauntletButton.navigation;
+                headerNav.selectOnDown = replaceGauntletBtn;
+                switchGauntletButton.navigation = headerNav;
+            }
+
+            Navigation replaceNav = new Navigation { mode = Navigation.Mode.Explicit };
+            replaceNav.selectOnDown = replaceDiscardBtn;
+            replaceNav.selectOnUp = switchGauntletButton; // Link back to header
+            replaceNav.selectOnLeft = null;
+            replaceNav.selectOnRight = null;
+            replaceGauntletBtn.navigation = replaceNav;
+
+            Navigation discardNav = new Navigation { mode = Navigation.Mode.Explicit };
+            discardNav.selectOnDown = null;
+            discardNav.selectOnUp = replaceGauntletBtn;
+            discardNav.selectOnLeft = null;
+            discardNav.selectOnRight = null;
+            replaceDiscardBtn.navigation = discardNav;
+        }
+
         if (replaceGauntletBtn != null)
         {
             replaceGauntletBtn.onClick.RemoveAllListeners();
@@ -707,10 +812,55 @@ public Transform primaryGauntlet;
         if (replaceDiscardBtn != null)
         {
             replaceDiscardBtn.onClick.RemoveAllListeners();
-            replaceDiscardBtn.onClick.AddListener(DiscardPendingGauntlet);
+            replaceDiscardBtn.onClick.AddListener(ShowDiscardGauntletWarning);
         }
 
         // Lock controller focus to the popup!
+        if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(replaceGauntletBtn.gameObject);
+        }
+    }
+
+    private void ShowDiscardGauntletWarning()
+    {
+        _isWarningActive = true;
+        warningPanel.SetActive(true);
+
+        if (warningBodyText != null)
+        {
+            warningBodyText.text = (warningDiscardGauntletString != null) 
+                ? warningDiscardGauntletString.GetLocalizedString() 
+                : "Are you sure you want to discard this gauntlet? It will be lost forever.";
+        }
+
+        warningConfirmBtn.onClick.RemoveAllListeners();
+        warningConfirmBtn.onClick.AddListener(ConfirmDiscardPending);
+        
+        warningCancelBtn.onClick.RemoveAllListeners();
+        warningCancelBtn.onClick.AddListener(CancelDiscardWarning);
+
+        TrapWarningFocus();
+
+        if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(warningCancelBtn.gameObject);
+        }
+    }
+
+    private void ConfirmDiscardPending()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
+        DiscardPendingGauntlet();
+    }
+
+    private void CancelDiscardWarning()
+    {
+        _isWarningActive = false;
+        warningPanel.SetActive(false);
         if (InputHelper.IsGamepadLastUsed() && EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -737,14 +887,20 @@ public Transform primaryGauntlet;
 
         ForceReplaceGauntlet(isPrimary, _pendingGauntletPrefab, _pendingGauntletRarity);
         _pendingGauntletPrefab = null;
+
+        SetupNavigation(); // Restore header navigation
     }
 
     private void DiscardPendingGauntlet()
     {
+        _isWarningActive = false;
+        if (warningPanel != null) warningPanel.SetActive(false);
+        
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
         _isReplaceUIPending = false;
         _pendingGauntletPrefab = null;
 
+        SetupNavigation(); // Restore header navigation
         FocusFirstAvailableGem();
     }
 
@@ -878,8 +1034,15 @@ public Transform primaryGauntlet;
 
     public void SetFocusedGem(DraggableGem gem, bool isFocused)
     {
-        if (isFocused) _focusedGem = gem;
-        else if (_focusedGem == gem) _focusedGem = null;
+        if (isFocused) 
+        {
+            _focusedGem = gem;
+            _lastSelectedGem = gem;
+        }
+        else if (_focusedGem == gem) 
+        {
+            _focusedGem = null;
+        }
         RefreshDescriptionPanel();
     }
 
