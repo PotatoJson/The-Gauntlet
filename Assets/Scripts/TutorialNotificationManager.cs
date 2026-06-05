@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 using System.Collections;
+using UnityEngine.Localization;
 
 public class TutorialNotificationManager : MonoBehaviour
 {
@@ -12,6 +13,13 @@ public class TutorialNotificationManager : MonoBehaviour
     public RectTransform notificationPanel; 
     [Tooltip("The text component inside the panel.")]
     public TMP_Text notificationText;
+
+// --- 2. ADD LOCALIZED STRINGS ---
+    [Header("Localized Strings")]
+    public LocalizedString primaryString;
+    public LocalizedString secondaryString;
+    [Tooltip("Requires 3 Smart Arguments: {0} = Hand, {1} = Item Name, {2} = Keybind")]
+    public LocalizedString notificationFormatString;
 
     private Animator _animator;
 
@@ -42,9 +50,13 @@ public class TutorialNotificationManager : MonoBehaviour
     private IEnumerator TutorialSequence(bool isPrimary, string itemName)
     {
         string keybind = isPrimary ? "[E]" : "[Q]";
-        string hand = isPrimary ? "Primary" : "Secondary";
         
-        notificationText.text = $"New {hand} {itemName} Acquired!\nPress <color=red>{keybind}</color> to cast.";
+        // --- 3. FETCH THE TRANSLATED HAND WORD ---
+        string hand = isPrimary ? primaryString.GetLocalizedString() : secondaryString.GetLocalizedString();
+        
+        // --- 4. FETCH THE SMART STRING WITH VARIABLES ---
+        notificationText.text = notificationFormatString.GetLocalizedString(hand, itemName, keybind);
+        
         notificationText.alpha = 0f;
         notificationText.DOFade(1f, 0.5f);
 
@@ -63,8 +75,7 @@ public class TutorialNotificationManager : MonoBehaviour
             _animator.SetFloat("Speed", 1f);
             _animator.Play("Notification", 0, 0f);
 
-            // Wait for the animation to complete before disabling the GameObject
-            yield return null; // Wait one frame for the animator to transition
+            yield return null; 
             yield return new WaitForSeconds(_animator.GetCurrentAnimatorStateInfo(0).length);
         }
         
