@@ -31,7 +31,7 @@ public class PlayerMovement : MonoBehaviour
     public float rollCooldown = 0.2f;          
     
     [Header("Roll I-Frames")]
-    public float iFrameStartTime = 0.1f; 
+    public float iFrameStartTime = 0f; 
     public float iFrameDuration = 0.35f; 
     
     [Header("Rotation Settings")]

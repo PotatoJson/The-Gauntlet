@@ -119,9 +119,32 @@ public class PlayerCombat : MonoBehaviour
         _debugTeleportAction.started += ctx => _stateManager.DebugTeleport();
     }
 
-    private void OnEnable() => _playerMap.Enable();
+    private void OnEnable() 
+    {
+        _playerMap.Enable();
+
+        _leftSkillAction.started += OnLeftSkillInput;
+        _rightSkillAction.started += OnRightSkillInput;
+        _lightAttackAction.started += OnLightAttackInputWrapper;
+        _heavyAttackAction.started += OnHeavyAttackStart;
+        _heavyAttackAction.canceled += OnHeavyAttackCancel;
+        _healAction.started += OnHealInput;
+        _debugTeleportAction.started += OnDebugTeleportInput;
+    }
     
-    private void OnDisable() => _playerMap.Disable();
+    private void OnDisable() 
+    {
+        _playerMap.Disable();
+
+        // THIS CURES THE COMBAT CRASH! 
+        _leftSkillAction.started -= OnLeftSkillInput;
+        _rightSkillAction.started -= OnRightSkillInput;
+        _lightAttackAction.started -= OnLightAttackInputWrapper;
+        _heavyAttackAction.started -= OnHeavyAttackStart;
+        _heavyAttackAction.canceled -= OnHeavyAttackCancel;
+        _healAction.started -= OnHealInput;
+        _debugTeleportAction.started -= OnDebugTeleportInput;
+    }
 
     // Update is called once per frame
     void Update()
