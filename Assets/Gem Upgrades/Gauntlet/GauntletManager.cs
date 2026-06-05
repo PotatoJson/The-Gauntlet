@@ -18,6 +18,7 @@ public class GauntletManager : MonoBehaviour
     public GameObject SkillSlot;
 
     [Header("UI References")]
+    public Sprite defaultSlotSprite;
     public Sprite crossSprite;
     public GameObject selectionBracket;
     public float selectionBracketScale = 1.4f;
@@ -65,11 +66,10 @@ public class GauntletManager : MonoBehaviour
             {
                 slot.Setup(this);
                 
-                Button btn = fingerSlots[i].GetComponent<Button>();
                 if (i < currentActiveSlots)
                 {
                     fingerSlots[i].SetActive(true);
-                    if (btn != null) btn.interactable = true;
+                    slot.SetSlotEnabled(defaultSlotSprite);
                 }
                 else
                 {

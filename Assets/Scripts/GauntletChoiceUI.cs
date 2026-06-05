@@ -175,7 +175,9 @@ public class GauntletChoiceUI : MonoBehaviour
             visualGauntlet.transform.localScale = new Vector3(GauntletVisualScale, GauntletVisualScale, 1f);
         }
 
-        if (gmInfo != null) gmInfo.InitializeGauntlet(true, rarity); 
+        GauntletManager gmInstance = visualGauntlet.GetComponent<GauntletManager>();
+        if (gmInstance != null) gmInstance.InitializeGauntlet(true, rarity); 
+        
         CanvasGroup cg = visualGauntlet.GetComponent<CanvasGroup>();
         if (cg == null) cg = visualGauntlet.AddComponent<CanvasGroup>();
         cg.blocksRaycasts = false; 
@@ -188,13 +190,26 @@ public class GauntletChoiceUI : MonoBehaviour
     private void OnGauntletChosen(GameObject chosenPrefab, GauntletRarity chosenRarity)
     {
         gameObject.SetActive(false);
-        Time.timeScale = 1f;
+        // Time.timeScale = 1f; // REMOVED: Keep paused because InventoryManager Swap menu opens next!
 
         // Note: Cursor remains visible because InventoryManager Swap menu opens next!
         if (InventoryManager.Instance != null && chosenPrefab != null)
         {
             InventoryManager.Instance.TryEquipNewGauntlet(chosenPrefab, chosenRarity);
             if (_activeInteractable != null) _activeInteractable.CompleteInteraction();
+        }
+    }
+
+    private Color GetRarityColor(GauntletRarity rarity)
+    {
+        switch (rarity)
+        {
+            case GauntletRarity.Rare:
+                return new Color(0.2f, 0.6f, 1f); // Sky Blue
+            case GauntletRarity.UltraRare:
+                return new Color(1f, 0.2f, 1f); // Magenta/Purple
+            default:
+                return Color.white;
         }
     }
 }

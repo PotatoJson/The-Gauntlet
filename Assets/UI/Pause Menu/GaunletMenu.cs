@@ -85,17 +85,15 @@ public class GauntletMenu : MonoBehaviour
     {
         if (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame())
         {
+            // Block inventory toggle if we are choosing a gauntlet reward
+            if (GauntletChoiceUI.Instance != null && GauntletChoiceUI.Instance.gameObject.activeInHierarchy) return;
+
+            // ONLY allow opening the menu if it's currently closed. 
+            // The user requested that this action NEVER closes the menu.
             if (!_isPaused && characterScreenRoot != null && !characterScreenRoot.activeSelf)
             {
                 PauseGame();
                 OpenUpgradeMenu();
-            }
-            else if (characterScreenRoot != null && characterScreenRoot.activeSelf)
-            {
-                // Do not allow closing the inventory via toggle if we are in the middle of a reward phase!
-                if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
-
-                ResumeGame();
             }
         }
 
