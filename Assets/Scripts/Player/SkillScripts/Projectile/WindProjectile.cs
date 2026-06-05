@@ -10,12 +10,16 @@ public class WindProjectile : BaseSkillProjectile
     public float DamageTickRate;
     public float DamagePerTickMultiplier;
 
+    [Tooltip("How far down to shift the projectile so it skims the floor.")]
+    public float groundSpawnOffset = 1.2f;
+
     private float _tickTimer;
 
     public override void Initialize(float playerDamage, float playerPoise, Transform target = null)
     {
         base.Initialize(playerDamage, playerPoise, target);
 
+        transform.position -= new Vector3(0, groundSpawnOffset, 0);
         Vector3 flatForward = transform.forward;
         flatForward.y = 0; 
 

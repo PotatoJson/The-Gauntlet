@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public enum RewardDropType{
     RandomChance,
@@ -135,6 +136,10 @@ public class ChamberRewardTrigger : MonoBehaviour
         else
         {
             Debug.LogWarning($"[Reward] Both Gauntlets already have Skill Gems!");
+            if (RewardMenuManager.Instance != null)
+            {
+                RewardMenuManager.Instance.OpenOverflowMenu(new List<GameObject> { SkillGemUIPrefab });
+            }
         }
     }
 }

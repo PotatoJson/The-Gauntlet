@@ -10,7 +10,8 @@ public enum PlayerState
     Dodging,
     Staggered,
     Airborne,
-    Healing
+    Healing,
+    Trapped
 }
 
 public class PlayerManager : MonoBehaviour

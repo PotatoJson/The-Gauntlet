@@ -315,7 +315,7 @@ public class PlayerCombat : MonoBehaviour
         if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
-        if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
+        if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered || currentState == PlayerState.Trapped) return;
 
         if(currentState == PlayerState.Airborne)
         {
@@ -510,7 +510,11 @@ public class PlayerCombat : MonoBehaviour
         _canCombo = false;
         _comboQueued = false;
         _stateManager.CanCancelAttack = false;
-        _stateManager.SetPlayerState(PlayerState.Idle);
+        
+        if (_stateManager.GetCurrentState() == PlayerState.Attacking)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+        }
     }
 
     public void AttemptHeavyChargePause()
