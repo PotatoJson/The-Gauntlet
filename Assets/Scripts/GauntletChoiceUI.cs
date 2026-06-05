@@ -77,7 +77,7 @@ public class GauntletChoiceUI : MonoBehaviour
         _spawnedPrefabA = SetupChoice(ButtonA, NameTextA, SlotsTextA, GauntletAnchorA, interactable.GauntletPrefabA, interactable.RarityA);
         _spawnedPrefabB = SetupChoice(ButtonB, NameTextB, SlotsTextB, GauntletAnchorB, interactable.GauntletPrefabB, interactable.RarityB);
         
-        /*Navigation navA = new Navigation { mode = Navigation.Mode.Explicit };
+        Navigation navA = new Navigation { mode = Navigation.Mode.Explicit };
         navA.selectOnLeft = ButtonB;
         navA.selectOnRight = ButtonB;
         ButtonA.navigation = navA;
@@ -85,7 +85,7 @@ public class GauntletChoiceUI : MonoBehaviour
         Navigation navB = new Navigation { mode = Navigation.Mode.Explicit };
         navB.selectOnLeft = ButtonA;
         navB.selectOnRight = ButtonA;
-        ButtonB.navigation = navB;*/
+        ButtonB.navigation = navB;
 
         if (Gamepad.current != null && EventSystem.current != null)
         {
@@ -149,6 +149,23 @@ public class GauntletChoiceUI : MonoBehaviour
         if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
     }
 
+    private void OnDisable()
+    {
+        if (ButtonA != null)
+        {
+            Navigation nav = ButtonA.navigation;
+            nav.mode = Navigation.Mode.Automatic;
+            ButtonA.navigation = nav;
+        }
+
+        if (ButtonB != null)
+        {
+            Navigation nav = ButtonB.navigation;
+            nav.mode = Navigation.Mode.Automatic;
+            ButtonB.navigation = nav;
+        }
+    }
+
     private GameObject SetupChoice(Button btn, TMP_Text nameTxt, TMP_Text slotsTxt, Transform anchor, GameObject prefab, GauntletRarity rarity)
     {
         if (prefab == null) return null;
@@ -189,6 +206,11 @@ public class GauntletChoiceUI : MonoBehaviour
     {
         gameObject.SetActive(false);
         Time.timeScale = 1f;
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
 
         // Note: Cursor remains visible because InventoryManager Swap menu opens next!
         if (InventoryManager.Instance != null && chosenPrefab != null)

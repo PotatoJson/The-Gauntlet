@@ -644,15 +644,56 @@ public Transform primaryGauntlet;
             Navigation nav = selectables[i].navigation;
             nav.mode = Navigation.Mode.Explicit;
             
-            // Loop left/right
+            // Horizontal loops around the gems (e.g., jumping from slot 3 to slot 1)
             nav.selectOnLeft = selectables[(i == 0) ? count - 1 : i - 1];
             nav.selectOnRight = selectables[(i == count - 1) ? 0 : i + 1];
             
-            // Loop up/down (so d-pad vertical also stays in the loop)
-            nav.selectOnUp = selectables[(i == 0) ? count - 1 : i - 1];
-            nav.selectOnDown = selectables[(i == count - 1) ? 0 : i + 1];
+            // Vertical Breaks out of the loop
+            // If we are at the top slot (0) and press UP, go to the Header
+            if (i == 0) 
+            {
+                nav.selectOnUp = headerTitleButton;
+            }
+            else 
+            {
+                nav.selectOnUp = selectables[i - 1];
+            }
+
+            // If we are at the bottom slot (count - 1) and press DOWN, go to the Swap button
+            if (i == count - 1)
+            {
+                // Assuming you want them to be able to reach the Switch Gauntlet button
+                nav.selectOnDown = switchGauntletButton; 
+            }
+            else
+            {
+                nav.selectOnDown = selectables[i + 1];
+            }
 
             selectables[i].navigation = nav;
+        }
+
+        // 3. Connect the Header Buttons so they can jump DOWN to the first slot
+        titleNav = headerTitleButton.navigation;
+        if (selectables.Count > 0)
+        {
+            titleNav.selectOnDown = selectables[0];
+            headerTitleButton.navigation = titleNav;
+
+            if (returnButton != null)
+            {
+                Navigation returnNav = returnButton.navigation;
+                returnNav.selectOnDown = selectables[0];
+                returnButton.navigation = returnNav;
+            }
+
+            if (switchGauntletButton != null)
+            {
+                // Make sure the bottom button can also go back UP into the slot loop
+                Navigation switchNav = switchGauntletButton.navigation;
+                switchNav.selectOnUp = selectables[count - 1]; 
+                switchGauntletButton.navigation = switchNav;
+            }
         }
     }
 

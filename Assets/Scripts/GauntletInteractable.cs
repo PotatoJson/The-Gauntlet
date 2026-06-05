@@ -42,8 +42,6 @@ public class GauntletInteractable : MonoBehaviour
         if (InteractionPrompt != null)
         {
             _promptTransform = InteractionPrompt.transform;
-            _promptTransform.SetParent(null);
-            //_promptTransform.localScale = new Vector3(0.005f, 0.005f, 0.005f);
             InteractionPrompt.SetActive(false);
         }
 
