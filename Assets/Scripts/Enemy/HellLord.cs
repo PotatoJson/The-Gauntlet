@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Localization;
 
 public class HellLord : BaseEnemy
 {
@@ -36,6 +37,7 @@ public class HellLord : BaseEnemy
     [SerializeField] private float warningSurfaceOffset = 0.02f;
 
     [Header("Hell Lord - AI")]
+    public LocalizedString bossNameString;
     [SerializeField] private float aiDecisionInterval = 0.4f;
     [SerializeField, Range(0f, 1f)] private float beamAttackChance = 0.10f;
 
@@ -144,6 +146,11 @@ public class HellLord : BaseEnemy
 
         if (distance <= engagementRange)
         {
+            if (!isEngaged && BossHealthBar.Instance != null)
+            {
+                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
+            }
+            
             if (enableDebugLogs && !isEngaged)
             {
                 Debug.Log($"[HellLord DEBUG] {gameObject.name} engaged at distance {distance:F2}.");
@@ -580,7 +587,13 @@ public class HellLord : BaseEnemy
             EndBeamAttack();
         }
 
+        if (!isAware && BossHealthBar.Instance != null)
+            BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
+        
         base.TakeDamage(damage);
+
+        if (BossHealthBar.Instance != null)
+            BossHealthBar.Instance.UpdateHealth(currentHealth, maxHealth);
     }
 
     public override void ApplyStun(float duration)

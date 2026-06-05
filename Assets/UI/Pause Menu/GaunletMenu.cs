@@ -217,7 +217,7 @@ public class GauntletMenu : MonoBehaviour
         _uiMap.Enable();
         _pauseAction.Enable();
 
-        if (Gamepad.current != null && firstSelectedButton != null)
+        if (InputHelper.IsGamepadLastUsed() && firstSelectedButton != null)
         {
             EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
         }
@@ -325,7 +325,7 @@ public class GauntletMenu : MonoBehaviour
                 menuCanvas.SetActive(true);
                 StartBreathing();
 
-                if (Gamepad.current != null && firstSelectedButton != null)
+                if (InputHelper.IsGamepadLastUsed() && firstSelectedButton != null)
                 {
                     EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
                 }
@@ -354,7 +354,7 @@ public class GauntletMenu : MonoBehaviour
             mainButtonsGroup.blocksRaycasts = true;
         }
 
-        if (Gamepad.current != null && firstSelectedButton != null)
+        if (InputHelper.IsGamepadLastUsed() && firstSelectedButton != null)
         {
             EventSystem.current.SetSelectedGameObject(firstSelectedButton.gameObject);
         }

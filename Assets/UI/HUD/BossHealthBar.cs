@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening; // Required for DOTween
-
+using TMPro;
 // This automatically adds a CanvasGroup to your object if you forget!
 [RequireComponent(typeof(CanvasGroup))]
 public class BossHealthBar : MonoBehaviour
@@ -11,7 +11,7 @@ public class BossHealthBar : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private GameObject healthBarContainer;
     [SerializeField] private Image fillImage;
-
+    [SerializeField] private TMP_Text bossNameText;
     [Header("Animation Settings")]
     [SerializeField] private float fadeDuration = 0.5f;
     [SerializeField] private float introFillDuration = 1.0f; // How fast it shoots left-to-right
@@ -31,7 +31,7 @@ public class BossHealthBar : MonoBehaviour
         }
     }
 
-    public void ShowBossHealthBar(float currentHealth, float maxHealth)
+    public void ShowBossHealthBar(float currentHealth, float maxHealth, string bossName)
     {
         if (healthBarContainer == null) return;
 
@@ -39,6 +39,7 @@ public class BossHealthBar : MonoBehaviour
         healthBarContainer.SetActive(true);
         _canvasGroup.alpha = 0f;
         fillImage.fillAmount = 0f;
+        bossNameText.text = bossName;
 
         // 2. Fade the whole UI in
         _canvasGroup.DOFade(1f, fadeDuration).SetUpdate(true);

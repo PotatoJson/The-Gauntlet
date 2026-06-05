@@ -127,11 +127,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a724ef03c954ee469028b2a3844cf0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GauntletInteractable
-  gauntletPrefab: {fileID: 7388036990841931944, guid: b6512368fdf0f134598719adab56ecd6, type: 3}
-  rarity: 1
-  interactionPrompt: {fileID: 2520444994504205790}
-  interactionRadius: 2.5
-  promptVerticalOffset: 1.5
+  PossibleGauntlets: []
+  PedestalLevel: 1
+  InteractionPrompt: {fileID: 0}
+  InteractionRadius: 2.5
+  PromptVerticalOffset: 1.5
+  GauntletPrefabA: {fileID: 0}
+  RarityA: 0
+  GauntletPrefabB: {fileID: 0}
+  RarityB: 0
 --- !u!1001 &6666808581474252954
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -174,7 +178,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 250
+      value: 1673.632
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_SizeDelta.y
@@ -190,7 +194,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0.0035
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_LocalRotation.w
@@ -210,11 +214,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.21
+      value: -0.144
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.58
+      value: 0.5807
       objectReference: {fileID: 0}
     - target: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -241,8 +245,20 @@ PrefabInstance:
       value: '[F] Equip Gauntlet'
       objectReference: {fileID: 0}
     - target: {fileID: 8929336748869879109, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
+      propertyPath: m_fontSize
+      value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 8929336748869879109, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8929336748869879109, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 8929336748869879109, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
+      propertyPath: m_HorizontalAlignment
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 9115048475440569668, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
       propertyPath: m_Name
@@ -265,11 +281,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
---- !u!1 &2520444994504205790 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9115048475440569668, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
-  m_PrefabInstance: {fileID: 6666808581474252954}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &7160602045495690134 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4601221459861879564, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}

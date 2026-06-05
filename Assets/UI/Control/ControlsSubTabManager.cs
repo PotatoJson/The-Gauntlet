@@ -36,8 +36,8 @@ public class ControlsSubTabManager : MonoBehaviour
 
             titleText.text = keyboardTitleString.GetLocalizedString();
 
-            leftArrowGroup.SetActive(false); // Can't go left from Keyboard
-            rightArrowGroup.SetActive(true); // Can go right to Gamepad
+            SetGroupInteractable(leftArrowGroup, false); // Can't go left from Keyboard
+            SetGroupInteractable(rightArrowGroup, true); // Can go right to Gamepad
         }
         else // Gamepad
         {
@@ -46,9 +46,24 @@ public class ControlsSubTabManager : MonoBehaviour
 
             titleText.text = gamepadTitleString.GetLocalizedString();
 
-            leftArrowGroup.SetActive(true);  // Can go left to Keyboard
-            rightArrowGroup.SetActive(false); // Can't go right from Gamepad
+            SetGroupInteractable(leftArrowGroup, true);  // Can go left to Keyboard
+            SetGroupInteractable(rightArrowGroup, false); // Can't go right from Gamepad
         }
+    }
+
+    private void SetGroupInteractable(GameObject group, bool interactable)
+    {
+        if (group == null) return;
+
+        // Ensure the group itself is active
+        group.SetActive(true);
+
+        CanvasGroup cg = group.GetComponent<CanvasGroup>();
+        if (cg == null) cg = group.AddComponent<CanvasGroup>();
+
+        cg.interactable = interactable;
+        cg.blocksRaycasts = interactable;
+        cg.alpha = interactable ? 1f : 0.5f; // Set a lower alpha when non-interactable
     }
 
     // Returns TRUE if the input was consumed by this sub-menu.

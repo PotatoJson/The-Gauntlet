@@ -580,14 +580,24 @@ MonoBehaviour:
   hitRecoveryTime: 0.5
   player: {fileID: 0}
   animator: {fileID: 0}
-  weight: 0.1
-  hitVfxPrefab: {fileID: 982966250709117466, guid: a6411fcc75c2ae04298bd2d791ac6824, type: 3}
+  bossNameString:
+    m_TableReference:
+      m_TableCollectionName: GUID:5d7ca3a28bbfe9a43a4352222ee2bb3b
+    m_TableEntryReference:
+      m_KeyId: 8303665152
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   phaseTwoThreshold: 0.5
   dodgeChance: 0.1
   intermissionDuration: 3
   leftSword: {fileID: 9215330027294256854}
   rightSword: {fileID: 8217351877992085478}
   facePlayerTurnSpeed: 4
+  references:
+    version: 2
+    RefIds: []
 --- !u!136 &8419004785391445894
 CapsuleCollider:
   m_ObjectHideFlags: 0

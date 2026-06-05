@@ -518,6 +518,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4dcbd721ca24a040aedb4334936e376, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
+--- !u!114 &45563035 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8379124841691409511, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
+  m_PrefabInstance: {fileID: 45563032}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 189ca7b8a0010d74ba0e08e693eb65b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
 --- !u!1001 &54908116
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1124,6 +1135,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 161215444}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &168285808 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6367072273927764753, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 595452098167335230}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &202075520
 GameObject:
   m_ObjectHideFlags: 0
@@ -1340,6 +1362,11 @@ Transform:
   - {fileID: 1803783545}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!224 &203530989 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8696209272807119196, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+  m_PrefabInstance: {fileID: 595452098167335230}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &218998366
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2107,6 +2134,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6067958229399854696, guid: 9308adcd2d73fe24c9771795d1c1703b, type: 3}
   m_PrefabInstance: {fileID: 347845578}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &380465888
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 380465890}
+  - component: {fileID: 380465889}
+  m_Layer: 0
+  m_Name: testing
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &380465889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 380465888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa4ad4c0e592a2041a3074bdc733cc1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialNotificationManager
+  notificationPanel: {fileID: 203530989}
+  notificationText: {fileID: 168285808}
+--- !u!4 &380465890
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 380465888}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 908.5288, y: 293.374, z: 16.85706}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &384997940
 GameObject:
   m_ObjectHideFlags: 0
@@ -5469,6 +5542,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 1851968086086326631, guid: 2a2b8c202531544479753d4a9f380b8c, type: 3}
   m_PrefabInstance: {fileID: 888729094}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &896057471 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2520444994504205790, guid: bc430161aa5ac06418fa9a6754d49abd, type: 3}
+  m_PrefabInstance: {fileID: 8080550476050298833}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &922524696
 PrefabInstance:
@@ -11508,6 +11586,10 @@ PrefabInstance:
       propertyPath: playerCombat
       value: 
       objectReference: {fileID: 45563034}
+    - target: {fileID: 123482298768817384, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: statsManager
+      value: 
+      objectReference: {fileID: 45563033}
     - target: {fileID: 809021339637959330, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerManager
       value: 
@@ -11608,6 +11690,14 @@ PrefabInstance:
       propertyPath: playerHealth
       value: 
       objectReference: {fileID: 1028990007}
+    - target: {fileID: 5099979435488470892, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_FillAmount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5362876746796350185, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: playerMovement
+      value: 
+      objectReference: {fileID: 45563035}
     - target: {fileID: 6753638547299446044, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: playerHealth
       value: 
@@ -11616,6 +11706,10 @@ PrefabInstance:
       propertyPath: statsManager
       value: 
       objectReference: {fileID: 45563033}
+    - target: {fileID: 8363533923174083315, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8420259944261759690, guid: c5248c313d8d8d44b8a787b9a4ea87e7, type: 3}
       propertyPath: m_Name
       value: Canvas
@@ -11648,6 +11742,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 3d_gauntlet_object
       objectReference: {fileID: 0}
+    - target: {fileID: 6749071309241091574, guid: bc430161aa5ac06418fa9a6754d49abd, type: 3}
+      propertyPath: InteractionPrompt
+      value: 
+      objectReference: {fileID: 896057471}
     - target: {fileID: 8462551982942047921, guid: bc430161aa5ac06418fa9a6754d49abd, type: 3}
       propertyPath: m_LocalPosition.x
       value: 18.2858
@@ -11704,3 +11802,4 @@ SceneRoots:
   - {fileID: 202075522}
   - {fileID: 1515705628}
   - {fileID: 595452098167335230}
+  - {fileID: 380465890}

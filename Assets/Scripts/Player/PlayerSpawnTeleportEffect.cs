@@ -178,10 +178,15 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
             for (int i = 0; i < r.sharedMaterials.Length; i++)
             {
                 Material m = new Material(revealShader);
-                if (r.sharedMaterials[i] != null)
+                Material source = r.sharedMaterials[i];
+                if (source != null)
                 {
-                    m.SetTexture("_BaseMap", r.sharedMaterials[i].GetTexture("_BaseMap") ?? r.sharedMaterials[i].GetTexture("_MainTex"));
-                    m.SetColor("_BaseColor", r.sharedMaterials[i].HasProperty("_BaseColor") ? r.sharedMaterials[i].GetColor("_BaseColor") : Color.white);
+                    Texture tex = null;
+                    if (source.HasProperty("_BaseMap")) tex = source.GetTexture("_BaseMap");
+                    else if (source.HasProperty("_MainTex")) tex = source.GetTexture("_MainTex");
+                    
+                    m.SetTexture("_BaseMap", tex);
+                    m.SetColor("_BaseColor", source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") : Color.white);
                 }
                 data.revealMaterials[i] = m;
             }
