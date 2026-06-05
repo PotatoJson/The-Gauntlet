@@ -135,9 +135,9 @@ public Transform primaryGauntlet;
                 pm.InitializeGauntlet(true, pack.primaryRarity);
                 RestoreGemsToGauntlet(pm, pack.primaryGems);
 
-                if (pack.ultimateGemPrefab != null && pm.SkillSlot != null)
+                if (pack.primarySkillGemPrefab != null && pm.SkillSlot != null)
                 {
-                    GameObject spawnedSkillGem = Instantiate(pack.ultimateGemPrefab, pm.SkillSlot.transform);
+                    GameObject spawnedSkillGem = Instantiate(pack.primarySkillGemPrefab, pm.SkillSlot.transform);
                     DraggableGem skillGemScript = spawnedSkillGem.GetComponent<DraggableGem>();
                     SkillSlotManager skillSlotManager = pm.SkillSlot.GetComponent<SkillSlotManager>();
 
@@ -163,6 +163,19 @@ public Transform primaryGauntlet;
             {
                 sm.InitializeGauntlet(false, pack.secondaryRarity);
                 RestoreGemsToGauntlet(sm, pack.secondaryGems); // Put gems back in slots!
+
+                if (pack.secondarySkillGemPrefab != null && sm.SkillSlot != null)
+                {
+                    GameObject spawnedSkillGem = Instantiate(pack.secondarySkillGemPrefab, sm.SkillSlot.transform);
+                    DraggableGem skillGemScript = spawnedSkillGem.GetComponent<DraggableGem>();
+                    SkillSlotManager skillSlotManager = sm.SkillSlot.GetComponent<SkillSlotManager>();
+
+                    if (skillGemScript != null && skillSlotManager != null)
+                    {
+                        skillGemScript.parentAfterDrag = sm.SkillSlot.transform;
+                        skillSlotManager.SlotSkillGem(skillGemScript);
+                    }
+                }
             }
         }
     }
