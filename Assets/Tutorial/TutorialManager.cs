@@ -84,11 +84,15 @@ public class TutorialManager : MonoBehaviour
 
         _currentStep = TutorialStep.Intro;
 
+        string moveKey = InputHelper.GetBindingString("Move");
+        string rollKey = InputHelper.GetBindingString("Roll");
+        string jumpKey = InputHelper.GetBindingString("Jump");
+
         string[] introLines = new string[]
         {
             "Welcome to the dungeon! Let's begin with the basics.",
-            "Use W, A, S, D to move.\nShift to roll, Hold Shift to sprint.",
-            "And the important part: Space to Jump!",
+            $"Use {moveKey} to move.\n{rollKey} to roll, Hold {rollKey} to sprint.",
+            $"And the important part: {jumpKey} to Jump!",
             "Those controls are all remappable in the settings menu."
         };
 
@@ -116,12 +120,15 @@ public class TutorialManager : MonoBehaviour
             }
         }
 
+        string lightKey = InputHelper.GetBindingString("LightAttack");
+        string heavyKey = InputHelper.GetBindingString("HeavyAttack");
+
         string[] punchingLines = new string[]
         {
             "Nice job!",
             "Now let's practice combat. I have spawned an enemy.",
-            "Use Left Click for Light Attack combos!",
-            "Use Right Click for Heavy Attack combos!"
+            $"Use {lightKey} for Light Attack combos!",
+            $"Use {heavyKey} for Heavy Attack combos!"
         };
 
         StartDialogueSequence(punchingLines);
@@ -147,11 +154,13 @@ public class TutorialManager : MonoBehaviour
             }
         }
 
+        string healKey = InputHelper.GetBindingString("Heal");
+
         string[] potionLines = new string[]
         {
             "Great work defeating that enemy!",
             "It looks like you took some damage in that fight, though.",
-            "Press R to drink a Health Potion and recover your HP!"
+            $"Press {healKey} to drink a Health Potion and recover your HP!"
         };
 
         StartDialogueSequence(potionLines);
@@ -176,13 +185,15 @@ public class TutorialManager : MonoBehaviour
         _isTransitioning = false;
         _rewardMenuWasOpened = false;
 
+        string rewardKey = InputHelper.GetBindingString("RewardsMenu");
+
         string[] rewardLines = new string[]
         {
             "Excellent! You have fully recovered your health.",
             "Notice your Experience Bar just filled up? You leveled up!",
             "For every level up, you will earn one Gem to upgrade your Gauntlets.",
             "Click the Level Up button to pick your first reward!",
-            "Future reference: You can press Tab or Select on Controller to open reward menu. \n\n or Hold alt to show cursor and level up button"
+            $"Future reference: You can press {rewardKey} to open reward menu. \n\n or Hold alt to show cursor and level up button"
         };
 
         StartDialogueSequence(rewardLines);
@@ -308,7 +319,8 @@ public class TutorialManager : MonoBehaviour
         else if (_currentStep == TutorialStep.PotionIntro)
         {
             _currentStep = TutorialStep.Potions;
-            ShowObjective("Quest: Press R to drink a Health Potion.");
+            string healKey = InputHelper.GetBindingString("Heal");
+            ShowObjective($"Quest: Press {healKey} to drink a Health Potion.");
         }
         else if (_currentStep == TutorialStep.RewardIntro)
         {

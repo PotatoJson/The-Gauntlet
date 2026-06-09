@@ -3,6 +3,7 @@ using TMPro;
 using DG.Tweening;
 using System.Collections;
 using UnityEngine.Localization;
+using UnityEngine.InputSystem;
 
 public class TutorialNotificationManager : MonoBehaviour
 {
@@ -49,7 +50,8 @@ public class TutorialNotificationManager : MonoBehaviour
 
     private IEnumerator TutorialSequence(bool isPrimary, string itemName)
     {
-        string keybind = isPrimary ? "[E]" : "[Q]";
+        string actionName = isPrimary ? "RightSkill" : "LeftSkill";
+        string keybind = "[" + InputHelper.GetBindingString(actionName) + "]";
         
         // --- 3. FETCH THE TRANSLATED HAND WORD ---
         string hand = isPrimary ? primaryString.GetLocalizedString() : secondaryString.GetLocalizedString();

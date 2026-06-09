@@ -9,6 +9,10 @@ public class VideoSettingsManager : MonoBehaviour
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private TMP_Dropdown fpsDropdown;
     [SerializeField] private Toggle fullscreenToggle;
+    [SerializeField] private Toggle showFpsToggle;
+
+    [Header("FPS Display")]
+    [SerializeField] private GameObject fpsDisplay;
 
     private Resolution[] _resolutions;
 
@@ -19,10 +23,30 @@ public class VideoSettingsManager : MonoBehaviour
         fullscreenToggle.isOn = isFullscreen;
         Screen.fullScreen = isFullscreen;
 
+        // Load saved Show FPS preference (Default to false/0)
+        bool showFps = PlayerPrefs.GetInt("ShowFPS", 0) == 1;
+        if (showFpsToggle != null)
+        {
+            showFpsToggle.isOn = showFps;
+            showFpsToggle.onValueChanged.AddListener(SetShowFPS);
+        }
+        SetShowFPS(showFps);
+
         SetupResolution();
         SetupFPS();
 
         fullscreenToggle.onValueChanged.AddListener(SetFullscreen);
+    }
+
+    public void SetShowFPS(bool value)
+    {
+        if (fpsDisplay != null)
+        {
+            fpsDisplay.SetActive(value);
+        }
+        
+        PlayerPrefs.SetInt("ShowFPS", value ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     private void SetupResolution()
