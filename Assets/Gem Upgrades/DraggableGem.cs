@@ -111,6 +111,11 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _canvasGroup.alpha = 1f;
 
         AnimateToNewHome();
+
+        if (InventoryManager.Instance != null && gameObject.activeInHierarchy)
+        {
+            InventoryManager.Instance.SetupNavigation();
+        }
     }
 
     public void ReturnToInventory()

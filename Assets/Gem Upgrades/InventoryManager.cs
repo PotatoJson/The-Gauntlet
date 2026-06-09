@@ -375,7 +375,7 @@ public Transform primaryGauntlet;
         warningCancelBtn.navigation = cancelNav;
     }
 
-    private void HandleCancelInput()
+private void HandleCancelInput()
     {
         bool cancelPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                              (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
@@ -387,34 +387,41 @@ public Transform primaryGauntlet;
                 if (_isReplaceUIPending) CancelDiscardWarning();
                 else CancelClose();
             }
-            else if (_isReplaceUIPending)
-            {
-                ShowDiscardGauntletWarning();
-            }
             else
             {
+                // 1. Figure out exactly what the player is currently focused on
                 GameObject currentSel = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
 
-                // If highlighting a Gem or a Slot in the gauntlet, jump back to the Title
-                if (IsFocusedOnGauntletSlot(currentSel))
+                // 2. HIGHEST PRIORITY: If we are in the gem grid, escape to the title loop first!
+                if (IsFocusedOnGemOrSlot(currentSel))
                 {
                     FocusTitle();
                 }
+                // 3. We are already safely in the title navigation loop
                 else
                 {
-                    // Already on the header buttons (like Title) or outside the gauntlet -> Open the exit warning
-                    TryCloseCharacterScreen();
+                    // Now we check what kind of warning to show!
+                    if (_isReplaceUIPending)
+                    {
+                        ShowDiscardGauntletWarning();
+                    }
+                    else
+                    {
+                        TryCloseCharacterScreen();
+                    }
                 }
             }
         }
     }
 
-    private bool IsFocusedOnGauntletSlot(GameObject obj)
+private bool IsFocusedOnGemOrSlot(GameObject obj)
     {
         if (obj == null) return false;
 
-        // Verify it belongs to one of the gauntlet containers
-        // This covers DraggableGems inside slots and the slots themselves
+        // Check if the highlighted object is a gem (covers loose gems on the board)
+        if (obj.GetComponent<DraggableGem>() != null) return true;
+
+        // Check if it belongs to one of the gauntlet containers (covers empty slots)
         return obj.transform.IsChildOf(primaryGauntlet) || obj.transform.IsChildOf(secondaryGauntlet);
     }
 
@@ -649,21 +656,32 @@ public Transform primaryGauntlet;
         if (activeManager == null) return;
         
         Selectable first = null;
-        foreach(var slot in activeManager.fingerSlots)
+
+        // Strictly check slots in index order (Index 0 = Slot 1)
+        for (int i = 0; i < activeManager.fingerSlots.Count; i++)
         {
-            if (slot == null || !slot.activeInHierarchy) continue;
-            first = GetSelectableFromSlot(slot);
-            if (first != null && first.interactable) break;
+            GameObject slotObj = activeManager.fingerSlots[i];
+            if (slotObj == null || !slotObj.activeInHierarchy) continue;
+
+            Selectable sel = GetSelectableFromSlot(slotObj);
+            // Check interactability on the actual target (Gem or Slot)
+            if (sel != null && sel.interactable)
+            {
+                first = sel;
+                break;
+            }
         }
         
         // If no finger slots found, try skill slot
         if (first == null && activeManager.SkillSlot != null && activeManager.SkillSlot.activeInHierarchy)
         {
-            first = GetSelectableFromSlot(activeManager.SkillSlot);
+            Selectable sel = GetSelectableFromSlot(activeManager.SkillSlot);
+            if (sel != null && sel.interactable) first = sel;
         }
         
         if (first != null && EventSystem.current != null)
         {
+            Debug.Log($"[InventoryManager] South Button Confirm -> Focusing: {first.gameObject.name} (Parent: {first.transform.parent.name})");
             EventSystem.current.SetSelectedGameObject(null);
             EventSystem.current.SetSelectedGameObject(first.gameObject);
         }
@@ -673,7 +691,7 @@ public Transform primaryGauntlet;
     {
         Transform target = _isDisplayingPrimary ? primaryGauntlet : secondaryGauntlet;
         if (target == null) return null;
-        return target.GetComponentInChildren<GauntletManager>();
+        return target.GetComponentInChildren<GauntletManager>(true); // Include inactive to be safe
     }
 
     private Selectable GetSelectableFromSlot(GameObject slotObj)
@@ -681,11 +699,14 @@ public Transform primaryGauntlet;
         if (slotObj == null) return null;
         
         // Check for gem first
-        DraggableGem gem = slotObj.GetComponentInChildren<DraggableGem>();
+        DraggableGem gem = slotObj.GetComponentInChildren<DraggableGem>(true);
         if (gem != null)
         {
             Selectable gemSel = gem.GetComponent<Selectable>();
-            if (gemSel != null) return gemSel;
+            if (gemSel != null) 
+            {
+                return gemSel;
+            }
         }
         
         // Fallback to slot itself
@@ -697,31 +718,70 @@ public Transform primaryGauntlet;
         GauntletManager activeManager = GetActiveGauntletManager();
         if (activeManager == null || headerTitleButton == null) return;
 
-        List<Selectable> selectables = new List<Selectable>();
-        
-        // Add finger slots (or their gems)
-        foreach (GameObject slotObj in activeManager.fingerSlots)
+        // 1. HARD RESET: Clear navigation for EVERYTHING in the gauntlet hierarchy
+        Selectable[] allHierarchySelectables = activeManager.GetComponentsInChildren<Selectable>(true);
+        foreach(var s in allHierarchySelectables)
         {
-            if (slotObj == null || !slotObj.activeInHierarchy) continue;
-            Selectable sel = GetSelectableFromSlot(slotObj);
-            // Check if it is a real slot (not disabled)
-            if (sel != null && sel.interactable) selectables.Add(sel);
+            Navigation n = s.navigation;
+            n.mode = Navigation.Mode.None;
+            s.navigation = n;
+        }
+
+        List<Selectable> selectables = new List<Selectable>();
+        List<Selectable> allPotentialSlots = new List<Selectable>();
+        
+        // 2. Collect the 'best' selectable for each finger slot in strict order
+        if (activeManager.fingerSlots != null)
+        {
+            foreach (GameObject slotObj in activeManager.fingerSlots)
+            {
+                if (slotObj == null) continue;
+                Selectable sel = GetSelectableFromSlot(slotObj);
+                if (sel != null) allPotentialSlots.Add(sel);
+            }
         }
         
-        // Add skill slot
-        if (activeManager.SkillSlot != null && activeManager.SkillSlot.activeInHierarchy)
+        if (activeManager.SkillSlot != null)
         {
             Selectable sel = GetSelectableFromSlot(activeManager.SkillSlot);
-            if (sel != null && sel.interactable) selectables.Add(sel);
+            if (sel != null) allPotentialSlots.Add(sel);
+        }
+
+        // 3. Filter for interactable selectables
+        foreach (Selectable sel in allPotentialSlots)
+        {
+            if (sel.gameObject.activeInHierarchy && sel.interactable)
+            {
+                selectables.Add(sel);
+            }
         }
         
-        if (selectables.Count == 0) return;
+        // Add reward gems to the loop if they exist
+        Transform rewardContainer = GameObject.Find("Reward_Gem_Container")?.transform;
+        if (rewardContainer != null)
+        {
+            foreach (Transform child in rewardContainer)
+            {
+                if (child.gameObject.activeInHierarchy)
+                {
+                    Selectable sel = child.GetComponent<Selectable>();
+                    if (sel != null && sel.interactable) selectables.Add(sel);
+                }
+            }
+        }
+
+        if (selectables.Count == 0)
+        {
+            Debug.LogWarning("[InventoryManager] No interactable selectables found for navigation!");
+            return;
+        }
         
-        // 1. HEADER NAVIGATION: Return <-> Title <-> SwitchGauntlet (Closed Horizontal Loop)
+        // 3. HEADER NAVIGATION: Return <-> Title <-> SwitchGauntlet (Closed Horizontal Loop)
+        // Vertical navigation into the gem grid is DISABLED per user request.
         Navigation titleNav = headerTitleButton.navigation;
         titleNav.mode = Navigation.Mode.Explicit;
         titleNav.selectOnUp = null;
-        titleNav.selectOnDown = null; // South button still jumps via code, but D-pad Down is disabled
+        titleNav.selectOnDown = null; 
 
         if (returnButton != null)
         {
@@ -749,6 +809,7 @@ public Transform primaryGauntlet;
             Navigation switchNav = switchGauntletButton.navigation;
             switchNav.mode = Navigation.Mode.Explicit;
             switchNav.selectOnUp = null;
+            // Only allow down if the Replace UI is active (popup interaction)
             switchNav.selectOnDown = _isReplaceUIPending ? replaceGauntletBtn : null;
 
             titleNav.selectOnRight = switchGauntletButton;
@@ -767,18 +828,15 @@ public Transform primaryGauntlet;
 
         headerTitleButton.navigation = titleNav;
         
-        // 2. SLOT LOOP: Linear navigation that wraps around
+        // 5. SLOT LOOP: Circular linear navigation
         int count = selectables.Count;
         for (int i = 0; i < count; i++)
         {
             Navigation nav = selectables[i].navigation;
             nav.mode = Navigation.Mode.Explicit;
             
-            // Loop left/right
             nav.selectOnLeft = selectables[(i == 0) ? count - 1 : i - 1];
             nav.selectOnRight = selectables[(i == count - 1) ? 0 : i + 1];
-            
-            // Loop up/down (so d-pad vertical also stays in the loop)
             nav.selectOnUp = selectables[(i == 0) ? count - 1 : i - 1];
             nav.selectOnDown = selectables[(i == count - 1) ? 0 : i + 1];
 

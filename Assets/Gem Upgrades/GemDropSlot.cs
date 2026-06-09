@@ -65,14 +65,24 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         EnsureSlotImage();
         if (_slotImage != null)
         {
-            _slotImage.sprite = defaultSlotSprite;
+            // Fallback to internal _defaultSprite if the manager provides null
+            _slotImage.sprite = (defaultSlotSprite != null) ? defaultSlotSprite : _defaultSprite;
             _slotImage.color = _defaultColor;
         }
+
+        UpdateButtonInteractability();
+    }
+
+    public void UpdateButtonInteractability()
+    {
+        if (_isDisabled) return;
 
         Button btn = GetComponent<Button>();
         if (btn != null)
         {
-            btn.interactable = true;
+            // If a gem is present, the slot's own button should NOT be interactable
+            // so that it doesn't intercept controller focus or navigation.
+            btn.interactable = transform.childCount == 0;
         }
     }
 
@@ -85,6 +95,9 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         {
             _slotImage.color = _defaultColor;
         }
+        
+        // Dynamic check for child gems to update interactability
+        UpdateButtonInteractability();
     }
 
     public void OnDrop(PointerEventData eventData)
