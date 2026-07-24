@@ -68,13 +68,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3683917b9182e664b85eab7708b40c44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChamberRewardTrigger
-  rewardType: 0
+  rewardType: 1
   skillGemChance: 0.15
-  skillGemReward: {fileID: 0}
+  SkillGemUIPrefab: {fileID: 0}
   skillGemVisualPrefab: {fileID: 0}
   gemSpawnLocation: {fileID: 0}
   glowingVisual: {fileID: 3744133877081091469, guid: a9e9616aa949c9c4daa827f26ea86cfc, type: 3}
   collectVFX: {fileID: 0}
+  linkedAlternativeReward: {fileID: 0}
 --- !u!1 &2925726290461351447
 GameObject:
   m_ObjectHideFlags: 0
@@ -114,6 +115,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5278830511514197303}
     m_Modifications:
+    - target: {fileID: 1089537346222119763, guid: a9e9616aa949c9c4daa827f26ea86cfc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3650638188812647480, guid: a9e9616aa949c9c4daa827f26ea86cfc, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.018000007

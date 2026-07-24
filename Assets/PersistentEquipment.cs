@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
 
 public class PersistentEquipment : MonoBehaviour
 {
@@ -35,6 +36,24 @@ public class PersistentEquipment : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.ForceLoadOnSpawn();
         }
     }
 

@@ -223,12 +223,12 @@ public class EliteEnemy : BaseEnemy
 
     public void EnableSwordSwingHitbox()
     {
-        swordHitbox?.EnableHitbox(swordSwingDamage);
+        swordHitbox?.EnableHitbox(swordSwingDamage, lightAttackPoiseDamage);
     }
 
     public void EnableSwordSlamHitbox()
     {
-        swordHitbox?.EnableHitbox(swordSlamDamage);
+        swordHitbox?.EnableHitbox(swordSlamDamage, heavyAttackPoiseDamage);
     }
 
     public void DisableSwordHitbox()

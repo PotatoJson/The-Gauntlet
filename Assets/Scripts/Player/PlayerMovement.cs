@@ -31,7 +31,7 @@ public class PlayerMovement : MonoBehaviour
     public float rollCooldown = 0.2f;          
     
     [Header("Roll I-Frames")]
-    public float iFrameStartTime = 0.1f; 
+    public float iFrameStartTime = 0f; 
     public float iFrameDuration = 0.35f; 
     
     [Header("Rotation Settings")]
@@ -52,6 +52,12 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("How long the player can still jump after falling off a ledge.")]
     public float coyoteTime = 0.15f; 
     private float _coyoteTimeCounter;
+
+    [Header("Trap Mechanic")]
+    [Tooltip("How many seconds get shaved off the trap timer every time they mash/wiggle WASD")]
+    public float mashReductionAmount = 0.4f; 
+    private float _currentTrapTimer;
+    private Vector2 _lastMashInput;
 
     // Internal Variables
     private CharacterController _controller;
@@ -195,6 +201,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (_stateManager.GetCurrentState() == PlayerState.Trapped)
+        {
+            HandleTrappedState();
+            return;
+        }
+
         if (!_controller.enabled) return;
 
         _stateManager.IsLockedOn = isTargetLocked;
@@ -271,6 +283,45 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 finalVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
         _controller.Move(finalVelocity * Time.deltaTime);
+    }
+
+    public void ApplyTrap(float duration)
+    {
+        _stateManager.SetPlayerState(PlayerState.Trapped);
+        _currentTrapTimer = duration;
+        _velocity = Vector3.zero; // Stop all momentum instantly
+        _lastMashInput = Vector2.zero; // Reset mash tracking
+
+        _isRolling = false; 
+        
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null) 
+        {
+            anim.SetTrigger("HitReaction"); 
+        }
+        
+        // Optional: Trigger a struggle animation here!
+        // _animator.SetTrigger("Grabbed");
+    }
+
+    private void HandleTrappedState()
+    {
+        _currentTrapTimer -= Time.deltaTime;
+        Vector2 currentInput = _moveAction.ReadValue<Vector2>();
+        
+        if (Vector2.Distance(currentInput, _lastMashInput) > 0.8f)
+        {
+            _currentTrapTimer -= mashReductionAmount;
+            _lastMashInput = currentInput;            
+        }
+
+        if (_currentTrapTimer <= 0)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+            
+            // Optional: Trigger a break-free animation
+            // _animator.SetTrigger("EscapeGrab");
+        }
     }
 
     private void LateUpdate()
@@ -405,7 +456,10 @@ public class PlayerMovement : MonoBehaviour
         bool overrideRoll = _stateManager.CanRoll;
         bool isNormalRoll = (currentState == PlayerState.Idle || currentState == PlayerState.Walking || currentState == PlayerState.Running);
         bool isCombatCancel = (currentState == PlayerState.Attacking && _stateManager.CanCancelAttack);
-        
+        bool rollStop = (currentState == PlayerState.Trapped);
+
+        if (rollStop) return;
+
         if(!isNormalRoll && !isCombatCancel && !overrideRoll) {
             return;
         }
@@ -568,6 +622,9 @@ public class PlayerMovement : MonoBehaviour
     private void OnJumpInput(InputAction.CallbackContext ctx)
     {
         PlayerState currentState = _stateManager.GetCurrentState();
+
+        //check if can jump
+        if(currentState == PlayerState.Trapped) return;
 
         // Allow jumping from standard ground states, OR if airborne but still within the coyote window
         bool canJump = (currentState == PlayerState.Idle || 

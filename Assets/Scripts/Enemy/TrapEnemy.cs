@@ -66,7 +66,7 @@ public class TrapEnemy : MonoBehaviour
                 }
             }
 
-            //playerMovement.ApplyTrap(trapDuration);
+            playerMovement.ApplyTrap(trapDuration);
             return;
         }
 

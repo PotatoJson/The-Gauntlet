@@ -39,21 +39,18 @@ public class GauntletManager : MonoBehaviour
         // Apply your exact scaling rules!
         if (isPrimary)
         {
-            currentActiveSlots = 3 + rarityBonus; // Scales: 3, 4, 5
+            currentActiveSlots = Mathf.Clamp(3 + rarityBonus, 0, fingerSlots.Count); // Scales: 3, 4, 5
         }
         else
         {
-            currentActiveSlots = 1 + rarityBonus; // Scales: 1, 2, 3
+            currentActiveSlots = Mathf.Clamp(1 + rarityBonus, 0, 3); // Scales: 1, 2, 3 (Hard clamp for secondary)
         }
+
+        Debug.Log($"[GauntletManager] Initializing {gameObject.name} (Primary: {isPrimary}, Rarity: {rarity}, ActiveSlots: {currentActiveSlots})");
 
         if (selectionBracket != null)
         {
             selectionBracket.SetActive(false);
-            // Disable animator if it's causing flickering (common with 'Image' animator controllers)
-            //Animator anim = selectionBracket.GetComponent<Animator>();
-            //if (anim != null) anim.enabled = false;
-            
-            // Ensure raycast target is off for all parts of the bracket
             UnityEngine.UI.Image[] images = selectionBracket.GetComponentsInChildren<UnityEngine.UI.Image>(true);
             foreach(var img in images) img.raycastTarget = false;
         }
@@ -61,6 +58,8 @@ public class GauntletManager : MonoBehaviour
         // Physically turn the slots on or off (seal them)
         for (int i = 0; i < fingerSlots.Count; i++)
         {
+            if (fingerSlots[i] == null) continue;
+
             GemDropSlot slot = fingerSlots[i].GetComponent<GemDropSlot>();
             if (slot != null)
             {
@@ -69,6 +68,7 @@ public class GauntletManager : MonoBehaviour
                 if (i < currentActiveSlots)
                 {
                     fingerSlots[i].SetActive(true);
+                    // Use a circular fallback for CircularCircular
                     slot.SetSlotEnabled(defaultSlotSprite);
                 }
                 else

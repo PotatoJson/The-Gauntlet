@@ -10,6 +10,11 @@ public class SwordHitbox : MonoBehaviour
     private Collider hitboxCollider;
     private BaseEnemy ownerEnemy;
     private float pendingDamage;
+    private int pendingPoiseDamage;
+
+    [Header("Unique Hit Visuals")]
+    [Tooltip("Drop a massive spark or dark magic slash here for the Elite's attacks!")]
+    public GameObject customHitVfxPrefab;
 
     private void Awake()
     {
@@ -28,9 +33,10 @@ public class SwordHitbox : MonoBehaviour
     /// <summary>
     /// Call from animation event to activate the hitbox with a specific damage value.
     /// </summary>
-    public void EnableHitbox(float damage)
+    public void EnableHitbox(float damage, int poiseDamage)
     {
         pendingDamage = damage;
+        pendingPoiseDamage = poiseDamage;
         hitboxCollider.enabled = true;
     }
 
@@ -52,7 +58,7 @@ public class SwordHitbox : MonoBehaviour
         // METRICS FIX: Pass the owner's GameObject
         // We pass 0 for poise damage, and the ownerEnemy's gameObject so the Metrics Tracker knows who swung the sword!
         GameObject attackerRoot = ownerEnemy != null ? ownerEnemy.gameObject : transform.root.gameObject;
-        playerHealth.TakeDamage(pendingDamage, 0, attackerRoot);
+        playerHealth.TakeDamage(pendingDamage, pendingPoiseDamage, attackerRoot);
 
         Debug.Log($"{ownerEnemy?.gameObject.name}: Sword collider hit player for {pendingDamage} damage!");
 

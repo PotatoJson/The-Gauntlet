@@ -103,25 +103,48 @@ public class PlayerCombat : MonoBehaviour
         _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
         
         _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
-        _leftSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: true);
-
         _rightSkillAction = _playerMap.FindAction("RightSkill");
-        _rightSkillAction.started += ctx => AttemptSkillCast(isLeftGauntlet: false);
-
-        _lightAttackAction.started += ctx => OnLightAttackInput();
-        _heavyAttackAction.started += ctx => 
-        {
-            _isHoldingHeavy = true;
-            OnHeavyAttackInput();
-        };
-        _heavyAttackAction.canceled += ctx => OnHeavyAttackReleased();
-        _healAction.started += ctx => UsePotion();
-        _debugTeleportAction.started += ctx => _stateManager.DebugTeleport();
     }
 
-    private void OnEnable() => _playerMap.Enable();
+    private void OnEnable() 
+    {
+        _playerMap.Enable();
+
+        _leftSkillAction.started += OnLeftSkillInput;
+        _rightSkillAction.started += OnRightSkillInput;
+        _lightAttackAction.started += OnLightAttackInputWrapper;
+        _heavyAttackAction.started += OnHeavyAttackStart;
+        _heavyAttackAction.canceled += OnHeavyAttackCancel;
+        _healAction.started += OnHealInput;
+        _debugTeleportAction.started += OnDebugTeleportInput;
+    }
     
-    private void OnDisable() => _playerMap.Disable();
+    private void OnDisable() 
+    {
+        _playerMap.Disable();
+
+        _leftSkillAction.started -= OnLeftSkillInput;
+        _rightSkillAction.started -= OnRightSkillInput;
+        _lightAttackAction.started -= OnLightAttackInputWrapper;
+        _heavyAttackAction.started -= OnHeavyAttackStart;
+        _heavyAttackAction.canceled -= OnHeavyAttackCancel;
+        _healAction.started -= OnHealInput;
+        _debugTeleportAction.started -= OnDebugTeleportInput;
+    }
+
+    // --- NEW: Input Action Wrappers ---
+    private void OnLeftSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(true);
+    private void OnRightSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(false);
+    private void OnLightAttackInputWrapper(InputAction.CallbackContext ctx) => OnLightAttackInput();
+    private void OnHeavyAttackStart(InputAction.CallbackContext ctx) 
+    {
+        _isHoldingHeavy = true;
+        OnHeavyAttackInput();
+    }
+    private void OnHeavyAttackCancel(InputAction.CallbackContext ctx) => OnHeavyAttackReleased();
+    private void OnHealInput(InputAction.CallbackContext ctx) => UsePotion();
+    private void OnDebugTeleportInput(InputAction.CallbackContext ctx) => _stateManager.DebugTeleport();
+    #endregion
 
     // Update is called once per frame
     void Update()
@@ -145,7 +168,7 @@ public class PlayerCombat : MonoBehaviour
         ProcessAttackRotation();
         ProcessCombatLogic();
     }
-    #endregion
+
     #region InputBuffer
     private void OnLightAttackInput()
     {
@@ -315,7 +338,7 @@ public class PlayerCombat : MonoBehaviour
         if(_currentBuffer == CombatInput.None) return;
         PlayerState currentState = _stateManager.GetCurrentState();
 
-        if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered) return;
+        if(currentState == PlayerState.Dodging || currentState == PlayerState.Staggered || currentState == PlayerState.Trapped) return;
 
         if(currentState == PlayerState.Airborne)
         {
@@ -510,7 +533,11 @@ public class PlayerCombat : MonoBehaviour
         _canCombo = false;
         _comboQueued = false;
         _stateManager.CanCancelAttack = false;
-        _stateManager.SetPlayerState(PlayerState.Idle);
+        
+        if (_stateManager.GetCurrentState() == PlayerState.Attacking)
+        {
+            _stateManager.SetPlayerState(PlayerState.Idle);
+        }
     }
 
     public void AttemptHeavyChargePause()

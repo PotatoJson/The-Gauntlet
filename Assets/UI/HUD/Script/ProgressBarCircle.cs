@@ -86,7 +86,7 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
             newExp -= expToNextLevel;
             levelsGained++;
 
-            expToNextLevel = Mathf.Round(expToNextLevel * 1.5f);
+            expToNextLevel = Mathf.Round(expToNextLevel * 1.15f);
         }
 
         currentExp = newExp;

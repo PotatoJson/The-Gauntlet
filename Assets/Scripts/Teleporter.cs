@@ -3,21 +3,34 @@ using UnityEngine;
 public class Teleporter : MonoBehaviour
 {
     [Header("Teleport Settings")]
-    [Tooltip("Drag your Destination Empty GameObject here in the Inspector")]
     public Transform destinationPoint;
 
-    // This function runs automatically when another collider enters this object's trigger
     private void OnTriggerEnter(Collider other)
     {
-        print ("Trigger entered by: " + other.name); // Debug line to check which object is entering the trigger
-        // 1. Check if the object entering the trigger is the Player
+        // This will print BOTH the name and the tag so you can see exactly what Unity sees
+        print("Entered by Name: " + other.name + " | Tag: " + other.tag);
+
         if (other.CompareTag("Player"))
         {
-            // 2. Instantly change the player's position to the destination's position
-            other.transform.position = destinationPoint.position;
+            print("Tag check passed! Attempting teleport...");
 
-            // Optional: Match the player's rotation to the destination's rotation
-            // other.transform.rotation = destinationPoint.rotation;
+            // Look for a Character Controller on the object that entered
+            CharacterController cc = other.GetComponent<CharacterController>();
+
+            if (cc != null)
+            {
+                // Bypass the Character Controller override
+                cc.enabled = false;
+                other.transform.position = destinationPoint.position;
+                cc.enabled = true;
+                print("Teleported Character Controller successfully.");
+            }
+            else
+            {
+                // Fallback for standard Rigidbody objects
+                other.transform.position = destinationPoint.position;
+                print("Teleported standard Rigidbody successfully.");
+            }
         }
     }
 }

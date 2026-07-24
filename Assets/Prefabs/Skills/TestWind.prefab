@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 585578956822896198}
   - component: {fileID: 407443406598294759}
   - component: {fileID: 6689263903686714779}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: TestWind
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,6 +103,7 @@ MonoBehaviour:
   PullSpeed: 8
   DamageTickRate: 2
   DamagePerTickMultiplier: 0.5
+  groundSpawnOffset: 2
 --- !u!1001 &5669558228809892480
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -111,6 +112,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5162039265320390232}
     m_Modifications:
+    - target: {fileID: 217051654859507642, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 217051655049593478, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 217051655466100112, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 217051656145255238, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -154,6 +167,34 @@ PrefabInstance:
     - target: {fileID: 217051656145255241, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
       propertyPath: m_Name
       value: WindProjMaybe
+      objectReference: {fileID: 0}
+    - target: {fileID: 217051656145255241, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 217051656396366720, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 654907388857271263, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 1323303350815502982, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 2953221571097995014, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5292341020214973196, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 6351809155201052540, guid: db33c3e913f055c408e1823aafa24c2d, type: 3}
+      propertyPath: m_Layer
+      value: 12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

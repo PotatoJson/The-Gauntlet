@@ -179,10 +179,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Demon-Grunt
       objectReference: {fileID: 0}
-    - target: {fileID: 8709935683431744970, guid: 3a263926772f426428d99aef77e3d1dc, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -207,10 +203,6 @@ PrefabInstance:
     - target: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
       propertyPath: m_Name
       value: Demon-Elite
-      objectReference: {fileID: 0}
-    - target: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 8782513243554924336, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
       propertyPath: m_LocalPosition.x
@@ -623,10 +615,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Beyblade-anims
       objectReference: {fileID: 0}
-    - target: {fileID: 6331228746505627770, guid: f5f586a538a840d41960cda883c488fb, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     - target: {fileID: 6671761432755172032, guid: f5f586a538a840d41960cda883c488fb, type: 3}
       propertyPath: m_LocalPosition.x
       value: -45.709362
@@ -692,10 +680,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Demon-Boss
       objectReference: {fileID: 0}
-    - target: {fileID: 4805591952013779706, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     - target: {fileID: 5330912616614312000, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.6830109
@@ -741,38 +725,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
---- !u!1 &1468221622 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5662504859730771722, guid: 7c122847c5163884c8739249b3aef4a3, type: 3}
-  m_PrefabInstance: {fileID: 1779287915}
-  m_PrefabAsset: {fileID: 0}
---- !u!54 &1468221626
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1468221622}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &1494982309
 GameObject:
   m_ObjectHideFlags: 0
@@ -918,7 +870,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 77.46
+      value: -44.67
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -926,7 +878,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 97.5
+      value: 132.74
       objectReference: {fileID: 0}
     - target: {fileID: 5079184313186398392, guid: ff086263b6b37544196032c4f1b4203f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -973,10 +925,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Grabber-anims
       objectReference: {fileID: 0}
-    - target: {fileID: 4764275008484724756, guid: 7c122847c5163884c8739249b3aef4a3, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     - target: {fileID: 5284352167160875694, guid: 7c122847c5163884c8739249b3aef4a3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 81.7
@@ -1020,10 +968,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5662504859730771722, guid: 7c122847c5163884c8739249b3aef4a3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1468221626}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c122847c5163884c8739249b3aef4a3, type: 3}
 --- !u!1001 &3757897076597922748
 PrefabInstance:
@@ -1036,10 +981,6 @@ PrefabInstance:
     - target: {fileID: 6136681485556007351, guid: fe34c8a81bff6e440a01bfa75d92c6a1, type: 3}
       propertyPath: m_Name
       value: Biter-anims
-      objectReference: {fileID: 0}
-    - target: {fileID: 6136681485556007351, guid: fe34c8a81bff6e440a01bfa75d92c6a1, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 6801015845066119949, guid: fe34c8a81bff6e440a01bfa75d92c6a1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1105,10 +1046,6 @@ PrefabInstance:
     - target: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
       propertyPath: m_Name
       value: HellLord-anims
-      objectReference: {fileID: 0}
-    - target: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 5400734478889838167, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1207,10 +1144,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Eyeball-anims
       objectReference: {fileID: 0}
-    - target: {fileID: 6769150171900720745, guid: e176cd6a272654048a5d48f73746e972, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
     - target: {fileID: 6910069944782409966, guid: e176cd6a272654048a5d48f73746e972, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1235,10 +1168,6 @@ PrefabInstance:
     - target: {fileID: 67843487380934763, guid: 1ba3937600111e74d82bf9a7cd63544f, type: 3}
       propertyPath: m_Name
       value: Shield-Skelly
-      objectReference: {fileID: 0}
-    - target: {fileID: 67843487380934763, guid: 1ba3937600111e74d82bf9a7cd63544f, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 845225264254962385, guid: 1ba3937600111e74d82bf9a7cd63544f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1301,14 +1230,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 397801792583941812, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 397801792583941812, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6087550845240455869, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1360,10 +1281,6 @@ PrefabInstance:
     - target: {fileID: 8018765667397676023, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
       propertyPath: m_Name
       value: Caster-anims
-      objectReference: {fileID: 0}
-    - target: {fileID: 8018765667397676023, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -631,7 +631,7 @@ public class HellLord : BaseEnemy
     #region Animation Events - Sword Hitbox
     public void EnableSwordSwingHitbox()
     {
-        swordHitbox?.EnableHitbox(swordSwingDamage);
+        swordHitbox?.EnableHitbox(swordSwingDamage, heavyAttackPoiseDamage);
     }
 
     public void DisableSwordHitbox()
