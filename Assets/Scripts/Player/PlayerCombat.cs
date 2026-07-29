@@ -64,6 +64,12 @@ public class PlayerCombat : MonoBehaviour
     public float BufferDuration;
     private CombatInput _currentBuffer = CombatInput.None;
     private float BufferTimer = 0f;    
+
+    // Public getters for save/load
+    public int GetCurrentStamina() { return CurrentStamina; }
+    public string LeftGauntletName => (LeftGauntletData != null) ? LeftGauntletData.name : string.Empty;
+    public string RightGauntletName => (RightGauntletData != null) ? RightGauntletData.name : string.Empty;
+
     #endregion
 
     #region Setup
@@ -97,6 +103,48 @@ public class PlayerCombat : MonoBehaviour
         CurrentStamina = MaxStamina;
         _internalStamina = MaxStamina;
         UpdateStaminaUI();
+
+        // Apply saved data if present for this scene: restore stamina and map gauntlets by name using GauntletLibrary
+        var save = Save.SaveSystem.Load();
+        if (save != null && save.sceneName == UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+        {
+            // Reapply stamina if saved
+            if (save.playerStamina > 0)
+            {
+                _internalStamina = Mathf.Clamp(save.playerStamina, 0, MaxStamina);
+                CurrentStamina = Mathf.RoundToInt(_internalStamina);
+                UpdateStaminaUI();
+            }
+
+            // Map gauntlet names back to GauntletData via GauntletLibrary (scene author must provide it)
+            var lib = GauntletLibrary.Instance;
+            if (lib != null)
+            {
+                if (!string.IsNullOrEmpty(save.leftGauntlet))
+                {
+                    var left = lib.FindByName(save.leftGauntlet);
+                    if (left != null)
+                    {
+                        LeftGauntletData = left;
+                        _leftGauntlet = new RunTimeGauntlet(LeftGauntletData);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(save.rightGauntlet))
+                {
+                    var right = lib.FindByName(save.rightGauntlet);
+                    if (right != null)
+                    {
+                        RightGauntletData = right;
+                        _rightGauntlet = new RunTimeGauntlet(RightGauntletData);
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning("PlayerCombat: No GauntletLibrary found in scene — gauntlet mapping skipped. Add a GauntletLibrary GameObject and assign gauntlet ScriptableObjects.");
+            }
+        }
     }
 
     // Update is called once per frame

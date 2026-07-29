@@ -80,6 +80,29 @@ public class EnemySpawner : MonoBehaviour
                 Debug.LogWarning($"Chamber '{chamber.chamberName}' is missing a Trigger Collider and is not set to Spawn On Start!");
             }
         }
+
+        // Apply saved chamber state if present
+        var save = Save.SaveSystem.Load();
+        if (save != null && save.chambersCleared != null)
+        {
+            int length = Mathf.Min(chambers.Count, save.chambersCleared.Length);
+            for (int i = 0; i < length; i++)
+            {
+                if (save.chambersCleared[i])
+                {
+                    chambers[i].isCleared = true;
+                    // Open doors if assigned for cleared chambers
+                    if (chambers[i].chamberDoorAnimators.Count > 0)
+                    {
+                        foreach (Animator doorAnim in chambers[i].chamberDoorAnimators)
+                        {
+                            if (doorAnim != null)
+                                doorAnim.SetTrigger(chambers[i].doorOpenTrigger);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Called by the ChamberTriggerListener when a player enters a chamber's trigger
@@ -171,6 +194,13 @@ public class EnemySpawner : MonoBehaviour
         else
         {
             Debug.LogWarning($"Chamber '{chamber.chamberName}' cleared, but no Door Animator is assigned!");
+        }
+
+        // Auto-save when a chamber is cleared so progress persists across sessions
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            Save.SaveSystem.AutoSave(player, this);
         }
     }
 }

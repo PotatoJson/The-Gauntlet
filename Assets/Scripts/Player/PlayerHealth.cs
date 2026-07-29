@@ -40,6 +40,17 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => currentHealth <= 0;
     public float HealthPercentage => currentHealth / maxHealth;
 
+    // Public accessor for save/load
+    public float CurrentHealth
+    {
+        get => currentHealth;
+        set
+        {
+            currentHealth = Mathf.Clamp(value, 0f, maxHealth);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+    }
+
     public GameObject LastCheckPoint;
     public GameObject PlayerSpawn;
 
@@ -51,8 +62,26 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
-        currentHealth = maxHealth;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        // Try to load a save and restore relevant player state if it exists and is for this scene
+        var save = Save.SaveSystem.Load();
+        if (save != null && save.sceneName == UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+        {
+            currentHealth = Mathf.Clamp(save.playerHealth, 0f, maxHealth);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+            if (save.hasPlayerPosition)
+            {
+                CharacterController cc = GetComponent<CharacterController>();
+                if (cc != null) cc.enabled = false;
+                transform.position = save.playerPosition;
+                if (cc != null) cc.enabled = true;
+            }
+        }
+        else
+        {
+            currentHealth = maxHealth;
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
     }
 
     private void Update()
