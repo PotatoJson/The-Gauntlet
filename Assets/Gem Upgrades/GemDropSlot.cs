@@ -134,11 +134,11 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
                 gemRect.sizeDelta = slotRect.rect.size;
             }
 
-            Image gemImage = incomingGem.GetComponent<Image>();
-            if (gemImage != null && _slotImage != null)
-            {
-                _slotImage.color = gemImage.color;
-            }
+            // Deliberately NOT tinting the slot with the gem's colour here. Most gems carry their
+            // colour in the sprite and leave Image.color white, so copying it turned the slot's
+            // backing sprite into a solid white square behind the gem. Leaving the slot at its
+            // default also matches how gems restored from a save file look, since those are
+            // parented directly without going through OnDrop.
 
             if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             {
@@ -152,9 +152,21 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
     public void OnSelect(BaseEventData eventData) => ShowBracket();
     public void OnDeselect(BaseEventData eventData) => HideBracket();
 
+    /// <summary>True when a gem is currently sitting in this slot (ignores one being dragged out).</summary>
+    private bool HasGem()
+    {
+        DraggableGem gem = GetComponentInChildren<DraggableGem>(true);
+        return gem != null && gem.transform.parent == transform;
+    }
+
     private void ShowBracket()
     {
         if (_isDisabled || _manager == null) return;
+
+        // A gem draws its own selection bracket, and Unity delivers pointer-enter to this parent
+        // slot as well as to the gem. Without this the two highlights stack on the same square.
+        if (HasGem()) return;
+
         _manager.UpdateBracket(transform);
     }
 
