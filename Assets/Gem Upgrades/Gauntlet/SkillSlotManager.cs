@@ -112,6 +112,11 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandle
     private void ShowBracket()
     {
         if (_manager == null) return;
+
+        // Same reason as GemDropSlot: an equipped skill gem already shows its own bracket, and
+        // pointer-enter reaches this slot too, so drawing both stacks two highlights.
+        if (GetEquippedSkillGem() != null) return;
+
         _manager.UpdateBracket(transform);
     }
 
