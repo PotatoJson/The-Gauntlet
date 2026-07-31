@@ -378,6 +378,10 @@ public class PlayerHealth : MonoBehaviour
 
     private void HandleDeath()
     {
+        // 0. The run is over, so the checkpoint save must go. Leaving it behind would let the
+        //    player relaunch and resume from before they died.
+        if (SaveManager.Instance != null) SaveManager.Instance.DeleteSave();
+
         // 1. Turn off the Character Controller so the player is frozen in place where they died
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
@@ -405,6 +409,38 @@ public class PlayerHealth : MonoBehaviour
         _currentHealth = Mathf.Min(_currentHealth, maxHealth);
 
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+    }
+
+    /// <summary>
+    /// Puts health, poise and potions back to a saved snapshot. Called by SaveManager AFTER
+    /// the gems have been re-equipped, so maxHealth already includes any gem bonuses.
+    /// </summary>
+    public void RestoreState(float health, float poise, int potions)
+    {
+        _currentHealth = Mathf.Clamp(health, 0f, maxHealth);
+        CurrentPoise = _maxPoise > 0f ? Mathf.Clamp(poise, 0f, _maxPoise) : 0f;
+        CurrentPotions = Mathf.Clamp(potions, 0, MaxPotions);
+
+        // Don't let the slow out-of-combat regen start the instant the player loads in.
+        healthRecoveryTimer = healthRecoveryDelay;
+
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        OnPoiseChanged?.Invoke(CurrentPoise, _maxPoise);
+        OnPotionCountChanged?.Invoke(CurrentPotions, MaxPotions);
+    }
+
+    /// <summary>Moves the player without the CharacterController fighting the teleport.</summary>
+    public void TeleportTo(Vector3 position, float yaw)
+    {
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+
+        transform.position = position;
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        if (cc != null) cc.enabled = true;
+
+        if (PlayerCamera.Instance != null) PlayerCamera.Instance.SnapToTarget();
     }
 
     public void PlayerRespawnSpikes()

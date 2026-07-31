@@ -17,6 +17,11 @@ public class PotionUI : MonoBehaviour
         if (playerHealth != null)
         {
             playerHealth.OnPotionCountChanged += UpdatePotionUI;
+
+            // Draw the count we have right now as well as listening for changes. The event only
+            // fires on a change, so a UI that enables after the count was last set - or after a
+            // save file restored it - would otherwise keep showing a stale number of bottles.
+            Refresh();
         }
     }
 
@@ -26,6 +31,14 @@ public class PotionUI : MonoBehaviour
         {
             playerHealth.OnPotionCountChanged -= UpdatePotionUI;
         }
+    }
+
+    /// <summary>Redraws the bottles from the player's current potion count.</summary>
+    public void Refresh()
+    {
+        if (playerHealth == null) return;
+
+        UpdatePotionUI(playerHealth.CurrentPotions, playerHealth.MaxPotions);
     }
 
     private void UpdatePotionUI(int currentCount, int maxCount)

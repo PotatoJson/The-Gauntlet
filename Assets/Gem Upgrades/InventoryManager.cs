@@ -148,6 +148,26 @@ public Transform primaryGauntlet;
         }
     }
 
+    /// <summary>
+    /// Forces the displayed gear to be rebuilt from PersistentEquipment even if this
+    /// InventoryManager already initialized itself. Used when loading a save file, where the
+    /// backpack contents change underneath a UI that has survived from the previous scene.
+    /// </summary>
+    public void ReloadFromBackpack()
+    {
+        if (PersistentEquipment.Instance == null || !PersistentEquipment.Instance.hasSavedData)
+        {
+            Debug.LogWarning("[InventoryManager] ReloadFromBackpack called but the backpack is empty.");
+            return;
+        }
+
+        _isInitialized = true;
+        LoadEquipmentFromBackpack();
+
+        PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+        if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+    }
+
     private void LoadEquipmentFromBackpack()
     {
         PersistentEquipment pack = PersistentEquipment.Instance;
@@ -156,7 +176,7 @@ public Transform primaryGauntlet;
         if (pack.primaryGauntletPrefab != null && primaryGauntlet != null)
         {
             // Clear existing primary gauntlet clones
-            foreach (Transform child in primaryGauntlet) Destroy(child.gameObject);
+            ClearGauntletContainer(primaryGauntlet);
 
             activePrimaryPrefab = pack.primaryGauntletPrefab;
             GameObject newPrimary = Instantiate(pack.primaryGauntletPrefab, primaryGauntlet);
@@ -188,7 +208,7 @@ public Transform primaryGauntlet;
         if (pack.secondaryGauntletPrefab != null && secondaryGauntlet != null)
         {
             // Clear existing secondary gauntlet clones
-            foreach (Transform child in secondaryGauntlet) Destroy(child.gameObject);
+            ClearGauntletContainer(secondaryGauntlet);
 
             activeSecondaryPrefab = pack.secondaryGauntletPrefab;
             GameObject newSecondary = Instantiate(pack.secondaryGauntletPrefab, secondaryGauntlet);
@@ -214,6 +234,29 @@ public Transform primaryGauntlet;
                     }
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Empties a gauntlet container, detaching each child before destroying it.
+    ///
+    /// Destroy is deferred to the end of the frame, so without the detach the old gauntlet is
+    /// still a child while the replacement is being built. Anything that looks the container up
+    /// this frame (PlayerStatsManager.SyncWithUI, for one) could then read the dying gauntlet
+    /// instead of the new one.
+    /// </summary>
+    private void ClearGauntletContainer(Transform container)
+    {
+        if (container == null) return;
+
+        // ToList-style copy: reparenting while iterating the live child list would skip entries.
+        List<Transform> children = new List<Transform>();
+        foreach (Transform child in container) children.Add(child);
+
+        foreach (Transform child in children)
+        {
+            child.SetParent(null, false);
+            Destroy(child.gameObject);
         }
     }
 
@@ -1097,7 +1140,9 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         if (primaryManager != null && primaryManager.SkillSlot != null)
         {
             SkillSlotManager skillSlot = primaryManager.SkillSlot.GetComponent<SkillSlotManager>();
-            if (skillSlot != null && skillSlot.CurrentSkillGem == null) 
+            // GetEquippedSkillGem checks the hierarchy, so a slot the player emptied is correctly
+            // seen as free. CurrentSkillGem alone would still report the removed gem.
+            if (skillSlot != null && skillSlot.GetEquippedSkillGem() == null)
             {
                 GameObject newGem = Instantiate(skillGemPrefab);
                 DraggableGem gemScript = newGem.GetComponent<DraggableGem>();
@@ -1115,7 +1160,9 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         if (secondaryManager != null && secondaryManager.SkillSlot != null)
         {
             SkillSlotManager skillSlot = secondaryManager.SkillSlot.GetComponent<SkillSlotManager>();
-            if (skillSlot != null && skillSlot.CurrentSkillGem == null) 
+            // GetEquippedSkillGem checks the hierarchy, so a slot the player emptied is correctly
+            // seen as free. CurrentSkillGem alone would still report the removed gem.
+            if (skillSlot != null && skillSlot.GetEquippedSkillGem() == null)
             {
                 GameObject newGem = Instantiate(skillGemPrefab);
                 DraggableGem gemScript = newGem.GetComponent<DraggableGem>();

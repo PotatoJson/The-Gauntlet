@@ -70,6 +70,18 @@ public class MetricsTracker : MonoBehaviour
         currentRunID = System.Guid.NewGuid().ToString();
         Debug.Log("New Run Started! ID: " + currentRunID);
     }
+
+    /// <summary>The ID of the run in progress, so a save file can resume it instead of splitting it in two.</summary>
+    public string CurrentRunID => currentRunID;
+
+    /// <summary>Re-adopts a run ID from a save file so telemetry stays stitched to one run across a quit.</summary>
+    public void ResumeRun(string runID)
+    {
+        if (string.IsNullOrEmpty(runID)) return;
+
+        currentRunID = runID;
+        Debug.Log("Resumed Run ID: " + currentRunID);
+    }
     // --- Tracking Methods ---
 
     public void RecordPotionUsed() => currentChamberTelemetry.potionsUsed++;

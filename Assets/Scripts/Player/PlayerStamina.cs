@@ -17,6 +17,9 @@ public class PlayerStamina : MonoBehaviour
 
     public event Action<float, float> OnStaminaChanged;
 
+    public float CurrentStamina => _currentStamina;
+    public float MaxStamina => _maxStamina;
+
     private void Awake()
     {
         _statsManager = GetComponent<PlayerStatsManager>();
@@ -66,6 +69,19 @@ public class PlayerStamina : MonoBehaviour
         
         // Force the UI bar to update instantly
         UpdateUI(); 
+    }
+
+    /// <summary>
+    /// Puts the stamina/mana bar back to a saved snapshot. Called by SaveManager after the
+    /// gems are re-equipped so the max is already correct.
+    /// </summary>
+    public void RestoreState(float stamina)
+    {
+        if (_statsManager != null) _maxStamina = _statsManager.CurrentStamina;
+
+        _currentStamina = Mathf.Clamp(stamina, 0f, _maxStamina);
+        _regenTimer = 0f;
+        UpdateUI();
     }
 
     private void HandleMaxStaminaChange()
