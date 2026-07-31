@@ -186,6 +186,12 @@ public class EnemySpawner : MonoBehaviour
     {
         Debug.Log($"<color=green>Chamber Cleared: {chamber.chamberName}</color>");
 
+        // Clearing a room IS the checkpoint. This is the only place the game saves.
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.RecordCheckpoint($"cleared '{chamber.chamberName}'");
+        }
+
         if (MetricsTracker.Instance != null)
         {
             PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
@@ -235,6 +241,71 @@ public class EnemySpawner : MonoBehaviour
 
         // Open doors or perform any additional logic for a cleared chamber
         OnChamberCleared(chamber);
+    }
+
+    /// <summary>
+    /// Re-applies a chamber's cleared state from a save file: despawns anything that already
+    /// spawned, seals the room so it never spawns again, and opens its doors. Deliberately
+    /// does NOT re-run OnChamberCleared, because that would fire duplicate telemetry.
+    /// </summary>
+    /// <param name="chamberName">The ChamberData name recorded in the save.</param>
+    /// <param name="rewardStillAvailable">
+    /// True if the reward was still on the floor when the player saved, so it should be put back.
+    /// </param>
+    public bool RestoreChamberState(string chamberName, bool rewardStillAvailable)
+    {
+        foreach (ChamberData chamber in chambers)
+        {
+            if (chamber.chamberName != chamberName) continue;
+
+            foreach (GameObject enemy in chamber.activeEnemies)
+            {
+                if (enemy != null) Destroy(enemy);
+            }
+            chamber.activeEnemies.Clear();
+
+            chamber.hasSpawned = true;
+            chamber.isCleared = true;
+
+            // Switch the entry triggers off so walking back through them does nothing.
+            foreach (Collider trigger in chamber.chamberTriggers)
+            {
+                if (trigger != null) trigger.enabled = false;
+            }
+
+            foreach (Animator doorAnim in chamber.chamberDoorAnimators)
+            {
+                if (doorAnim != null) doorAnim.SetTrigger(chamber.doorOpenTrigger);
+            }
+
+            if (chamber.chamberRewardObject != null)
+            {
+                chamber.chamberRewardObject.SetActive(rewardStillAvailable);
+            }
+
+            Debug.Log($"[EnemySpawner] Restored cleared chamber '{chamberName}' " +
+                      $"(reward available: {rewardStillAvailable}).");
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>Chamber names this spawner currently considers cleared, for the save file.</summary>
+    public void CollectClearedChambers(List<string> clearedNames, List<string> unclaimedRewardNames)
+    {
+        foreach (ChamberData chamber in chambers)
+        {
+            if (!chamber.isCleared || string.IsNullOrEmpty(chamber.chamberName)) continue;
+
+            if (!clearedNames.Contains(chamber.chamberName)) clearedNames.Add(chamber.chamberName);
+
+            bool rewardWaiting = chamber.chamberRewardObject != null && chamber.chamberRewardObject.activeSelf;
+            if (rewardWaiting && !unclaimedRewardNames.Contains(chamber.chamberName))
+            {
+                unclaimedRewardNames.Add(chamber.chamberName);
+            }
+        }
     }
 }
 

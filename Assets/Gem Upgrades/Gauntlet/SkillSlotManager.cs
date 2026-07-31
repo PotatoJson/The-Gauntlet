@@ -58,6 +58,29 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandle
         }
     }
 
+    /// <summary>
+    /// The skill gem actually sitting in this slot right now.
+    ///
+    /// Use this instead of reading CurrentSkillGem directly. SlotSkillGem assigns that field but
+    /// nothing clears it when the player drags a gem back out, so it can point at a gem that has
+    /// since moved elsewhere. The hierarchy is the real source of truth, and checking it here also
+    /// repairs the stale field as a side effect.
+    /// </summary>
+    public DraggableGem GetEquippedSkillGem()
+    {
+        DraggableGem gem = GetComponentInChildren<DraggableGem>(true);
+
+        // Only count a gem that is genuinely parented to this slot.
+        if (gem == null || gem.transform.parent != transform)
+        {
+            CurrentSkillGem = null;
+            return null;
+        }
+
+        CurrentSkillGem = gem;
+        return gem;
+    }
+
     public void SlotSkillGem(DraggableGem gem)
     {
         // Clear old gem if one exists

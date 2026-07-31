@@ -13,6 +13,11 @@ public class PersistentEquipment : MonoBehaviour
     [Tooltip("Drag EVERY gem prefab in your game here so the Backpack can always find them!")]
     public List<GameObject> masterGemDatabase = new List<GameObject>();
 
+    [Header("Master Gauntlet Database")]
+    [Tooltip("Drag EVERY gauntlet prefab in your game here so a save file can be turned back into real gauntlets. " +
+             "Right-click this component's header and pick 'Auto-Populate Prefab Databases' to fill both lists automatically.")]
+    public List<GameObject> masterGauntletDatabase = new List<GameObject>();
+
     [Header("Saved Primary")]
     public GameObject primaryGauntletPrefab;
     public GauntletRarity primaryRarity;
@@ -64,8 +69,10 @@ public class PersistentEquipment : MonoBehaviour
         primaryGauntletPrefab = inv.activePrimaryPrefab;
         secondaryGauntletPrefab = inv.activeSecondaryPrefab;
 
-        GauntletManager pManager = inv.primaryGauntlet.GetComponentInChildren<GauntletManager>();
-        GauntletManager sManager = inv.secondaryGauntlet.GetComponentInChildren<GauntletManager>();
+        // Pass 'true' everywhere below: the character screen is usually switched off when we
+        // save (level transitions, autosaves), and the default search skips inactive objects.
+        GauntletManager pManager = inv.primaryGauntlet.GetComponentInChildren<GauntletManager>(true);
+        GauntletManager sManager = inv.secondaryGauntlet.GetComponentInChildren<GauntletManager>(true);
 
         if (pManager != null) primaryRarity = pManager.currentRarity;
         if (sManager != null) secondaryRarity = sManager.currentRarity;
@@ -89,46 +96,70 @@ public class PersistentEquipment : MonoBehaviour
         if (gm == null || gm.SkillSlot == null) return null;
 
         SkillSlotManager skillSlot = gm.SkillSlot.GetComponent<SkillSlotManager>();
-        if (skillSlot != null && skillSlot.CurrentSkillGem != null)
+        if (skillSlot == null) return null;
+
+        // Ask the slot what it is really holding. Reading CurrentSkillGem directly would report a
+        // skill gem the player had already dragged back out, which then reappeared on load.
+        DraggableGem equipped = skillSlot.GetEquippedSkillGem();
+        if (equipped == null || equipped.LinkedGemData == null) return null;
+
+        GameObject prefab = FindPrefabForGemData(equipped.LinkedGemData);
+        if (prefab == null)
         {
-            // Match the equipped skill gem to our Master Database
-            foreach (GameObject projectPrefab in masterGemDatabase)
-            {
-                DraggableGem prefabGem = projectPrefab.GetComponent<DraggableGem>();
-                if (prefabGem != null && prefabGem.LinkedGemData == skillSlot.CurrentSkillGem.LinkedGemData)
-                {
-                    return projectPrefab;
-                }
-            }
+            Debug.LogError($"[PersistentEquipment] The equipped skill gem '{equipped.LinkedGemData.Name}' " +
+                           "is not in the Master Gem Database, so it cannot be saved or carried between " +
+                           "levels. Right-click this component and run 'Auto-Populate Prefab Databases'.");
         }
+
+        return prefab;
+    }
+
+    /// <summary>Finds the project prefab whose DraggableGem points at the same GemData asset.</summary>
+    private GameObject FindPrefabForGemData(GemData gemData)
+    {
+        if (gemData == null) return null;
+
+        foreach (GameObject projectPrefab in masterGemDatabase)
+        {
+            if (projectPrefab == null) continue;
+
+            DraggableGem prefabGem = projectPrefab.GetComponent<DraggableGem>();
+            if (prefabGem != null && prefabGem.LinkedGemData == gemData) return projectPrefab;
+        }
+
         return null;
     }
 
     private void ExtractGems(Transform gauntletParent, List<GameObject> gemList)
     {
-        GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>();
+        GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>(true);
         if (gm != null)
         {
             foreach (GameObject slot in gm.fingerSlots)
             {
-                DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
+                if (slot == null)
+                {
+                    gemList.Add(null);
+                    continue;
+                }
+
+                DraggableGem gem = slot.GetComponentInChildren<DraggableGem>(true);
 
                 if (gem != null && gem.LinkedGemData != null)
                 {
-                    bool foundPrefab = false;
-
                     // Match the equipped gem to our Master Database
-                    foreach (GameObject projectPrefab in masterGemDatabase)
+                    GameObject prefab = FindPrefabForGemData(gem.LinkedGemData);
+
+                    if (prefab == null)
                     {
-                        if (projectPrefab.GetComponent<DraggableGem>().LinkedGemData == gem.LinkedGemData)
-                        {
-                            gemList.Add(projectPrefab);
-                            foundPrefab = true;
-                            break;
-                        }
+                        Debug.LogError($"[PersistentEquipment] The equipped gem '{gem.LinkedGemData.Name}' " +
+                                       "is not in the Master Gem Database, so it cannot be saved or carried " +
+                                       "between levels. Right-click this component and run " +
+                                       "'Auto-Populate Prefab Databases'.");
                     }
 
-                    if (!foundPrefab) gemList.Add(null);
+                    // A null keeps this slot's index aligned even when the lookup failed.
+                    gemList.Add(prefab);
                 }
                 else
                 {
@@ -138,4 +169,139 @@ public class PersistentEquipment : MonoBehaviour
             }
         }
     }
+
+    #region Disk Save Support
+
+    /// <summary>Copies the backpack contents into a save payload as plain prefab names.</summary>
+    public void WriteTo(GameSaveData data)
+    {
+        if (data == null) return;
+
+        data.primaryGauntletName = PrefabName(primaryGauntletPrefab);
+        data.primaryRarity = (int)primaryRarity;
+        data.primaryGemNames = ToNames(primaryGems);
+        data.primarySkillGemName = PrefabName(primarySkillGemPrefab);
+
+        data.secondaryGauntletName = PrefabName(secondaryGauntletPrefab);
+        data.secondaryRarity = (int)secondaryRarity;
+        data.secondaryGemNames = ToNames(secondaryGems);
+        data.secondarySkillGemName = PrefabName(secondarySkillGemPrefab);
+    }
+
+    /// <summary>
+    /// Rebuilds the backpack from a save payload. InventoryManager then spawns the real
+    /// gauntlets and gems from these prefab references exactly as it does between levels.
+    /// </summary>
+    public void ReadFrom(GameSaveData data)
+    {
+        if (data == null) return;
+
+        hasSavedData = true;
+
+        // The single most likely setup mistake: without this list nothing can be rebuilt, and the
+        // player would load in with no gauntlets at all rather than an obvious error.
+        if (masterGauntletDatabase == null || masterGauntletDatabase.Count == 0)
+        {
+            Debug.LogError("[PersistentEquipment] The Master Gauntlet Database is empty, so saved gear " +
+                           "cannot be restored. Right-click this component and run " +
+                           "'Auto-Populate Prefab Databases'.");
+        }
+
+        primaryGauntletPrefab = FindGauntletPrefab(data.primaryGauntletName);
+        primaryRarity = ToRarity(data.primaryRarity);
+        primaryGems = ToPrefabs(data.primaryGemNames);
+        primarySkillGemPrefab = FindGemPrefab(data.primarySkillGemName);
+
+        secondaryGauntletPrefab = FindGauntletPrefab(data.secondaryGauntletName);
+        secondaryRarity = ToRarity(data.secondaryRarity);
+        secondaryGems = ToPrefabs(data.secondaryGemNames);
+        secondarySkillGemPrefab = FindGemPrefab(data.secondarySkillGemName);
+    }
+
+    public GameObject FindGemPrefab(string prefabName)
+    {
+        return FindInDatabase(masterGemDatabase, prefabName, "gem");
+    }
+
+    public GameObject FindGauntletPrefab(string prefabName)
+    {
+        return FindInDatabase(masterGauntletDatabase, prefabName, "gauntlet");
+    }
+
+    private static GameObject FindInDatabase(List<GameObject> database, string prefabName, string label)
+    {
+        if (string.IsNullOrEmpty(prefabName) || database == null) return null;
+
+        foreach (GameObject prefab in database)
+        {
+            if (prefab != null && prefab.name == prefabName) return prefab;
+        }
+
+        Debug.LogWarning($"[PersistentEquipment] Loaded a save that wants the {label} prefab '{prefabName}', " +
+                         $"but it is not in the master {label} database. That slot will come back empty.");
+        return null;
+    }
+
+    private static string PrefabName(GameObject prefab)
+    {
+        return prefab != null ? prefab.name : string.Empty;
+    }
+
+    private static List<string> ToNames(List<GameObject> prefabs)
+    {
+        List<string> names = new List<string>();
+        if (prefabs == null) return names;
+
+        // Empty slots are stored as empty strings so the slot indexes stay aligned.
+        foreach (GameObject prefab in prefabs) names.Add(PrefabName(prefab));
+        return names;
+    }
+
+    private List<GameObject> ToPrefabs(List<string> names)
+    {
+        List<GameObject> prefabs = new List<GameObject>();
+        if (names == null) return prefabs;
+
+        foreach (string name in names) prefabs.Add(FindGemPrefab(name));
+        return prefabs;
+    }
+
+    private static GauntletRarity ToRarity(int value)
+    {
+        return System.Enum.IsDefined(typeof(GauntletRarity), value)
+            ? (GauntletRarity)value
+            : GauntletRarity.Common;
+    }
+
+    #endregion
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Editor convenience: scans the project for every gem and gauntlet prefab so the two
+    /// master databases don't have to be filled in by hand (and can't silently fall behind
+    /// when someone adds a new gem).
+    /// </summary>
+    [ContextMenu("Auto-Populate Prefab Databases")]
+    private void AutoPopulatePrefabDatabases()
+    {
+        List<GameObject> gems = new List<GameObject>();
+        List<GameObject> gauntlets = new List<GameObject>();
+
+        foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:Prefab"))
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null) continue;
+
+            if (prefab.GetComponent<DraggableGem>() != null) gems.Add(prefab);
+            else if (prefab.GetComponent<GauntletManager>() != null) gauntlets.Add(prefab);
+        }
+
+        masterGemDatabase = gems;
+        masterGauntletDatabase = gauntlets;
+
+        UnityEditor.EditorUtility.SetDirty(this);
+        Debug.Log($"[PersistentEquipment] Auto-populated {gems.Count} gem prefab(s) and {gauntlets.Count} gauntlet prefab(s).");
+    }
+#endif
 }
