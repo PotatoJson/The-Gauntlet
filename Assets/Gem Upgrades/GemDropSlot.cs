@@ -96,6 +96,11 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             _slotImage.color = _defaultColor;
         }
         
+        // Safety net for every other way a gem can arrive in this slot: a controller placement, a
+        // gauntlet swap, or a save file being restored. ClearBracket only acts when this slot is
+        // the one currently holding the bracket, so it is a no-op the rest of the time.
+        if (_manager != null && HasGem()) _manager.ClearBracket(transform);
+
         // Dynamic check for child gems to update interactability
         UpdateButtonInteractability();
     }
@@ -140,6 +145,11 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             // default also matches how gems restored from a save file look, since those are
             // parented directly without going through OnDrop.
 
+            // The gem owns the highlight from here. The slot lit its own bracket while the gem was
+            // mid-drag (unparented, so the slot looked empty) and will never receive a pointer-exit
+            // to clear it, because the pointer is still inside the slot - just over the gem now.
+            HideBracket();
+
             if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             {
                 RewardMenuManager.Instance.OnGemSlotted(incomingGem);
@@ -147,9 +157,23 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         }
     }
 
-    public void OnPointerEnter(PointerEventData eventData) => ShowBracket();
-    public void OnPointerExit(PointerEventData eventData) => HideBracket();
-    public void OnSelect(BaseEventData eventData) => ShowBracket();
+    // Pointer events only count on mouse/keyboard, selection events only on a controller, so a
+    // stale selection can never sit on screen next to the thing the mouse is hovering.
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!InputHelper.IsGamepadLastUsed()) ShowBracket();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (!InputHelper.IsGamepadLastUsed()) HideBracket();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        if (InputHelper.IsGamepadLastUsed()) ShowBracket();
+    }
+
     public void OnDeselect(BaseEventData eventData) => HideBracket();
 
     /// <summary>True when a gem is currently sitting in this slot (ignores one being dragged out).</summary>

@@ -180,9 +180,22 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             .SetLink(gameObject);
     }
 
+    /// <summary>
+    /// Forces this gem's bracket off. Called when input switches to the controller, where the
+    /// pointer stops sending exit events and the hover highlight would otherwise stay lit.
+    /// </summary>
+    public void HideSelectionBracket()
+    {
+        if (selectionBracket != null) selectionBracket.SetActive(false);
+    }
+
+    // Only one input source is allowed to draw the bracket at a time. On a controller there is no
+    // hover, so EventSystem selection owns it; with a mouse the pointer owns it and selection is
+    // ignored, otherwise a left-over selection and the current hover light up two gems at once.
+
     public void OnSelect(BaseEventData eventData)
     {
-        if (selectionBracket != null) selectionBracket.SetActive(true);
+        if (selectionBracket != null && InputHelper.IsGamepadLastUsed()) selectionBracket.SetActive(true);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetFocusedGem(this, true);
     }
 
@@ -194,16 +207,15 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (selectionBracket != null) selectionBracket.SetActive(true);
+        if (selectionBracket != null && !InputHelper.IsGamepadLastUsed()) selectionBracket.SetActive(true);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != gameObject)
-        {
-            if (selectionBracket != null) selectionBracket.SetActive(false);
-        }
+        // Used to keep the bracket alive when this gem was also the selected object, which is
+        // precisely how a hover highlight and a selection highlight ended up on screen together.
+        if (selectionBracket != null && !InputHelper.IsGamepadLastUsed()) selectionBracket.SetActive(false);
         if (InventoryManager.Instance != null) InventoryManager.Instance.SetHoveredGem(this, false);
     }
 

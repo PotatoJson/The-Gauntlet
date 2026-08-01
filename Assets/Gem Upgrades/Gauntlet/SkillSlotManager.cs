@@ -102,11 +102,28 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandle
         {
             gemRect.sizeDelta = slotRect.rect.size;
         }
+
+        // The gem draws its own bracket now. Any bracket this slot raised while it was empty
+        // (during the drag, for instance) would otherwise stay up as a second indicator.
+        HideBracket();
     }
 
-    public void OnPointerEnter(PointerEventData eventData) => ShowBracket();
-    public void OnPointerExit(PointerEventData eventData) => HideBracket();
-    public void OnSelect(BaseEventData eventData) => ShowBracket();
+    // Same split as GemDropSlot: hover owns the bracket on mouse, selection owns it on a controller.
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!InputHelper.IsGamepadLastUsed()) ShowBracket();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (!InputHelper.IsGamepadLastUsed()) HideBracket();
+    }
+
+    public void OnSelect(BaseEventData eventData)
+    {
+        if (InputHelper.IsGamepadLastUsed()) ShowBracket();
+    }
+
     public void OnDeselect(BaseEventData eventData) => HideBracket();
 
     private void ShowBracket()

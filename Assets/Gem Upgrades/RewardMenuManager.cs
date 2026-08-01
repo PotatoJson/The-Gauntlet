@@ -151,6 +151,11 @@ public class RewardMenuManager : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
+        // This menu used to leave the Player map fully enabled and rely on timeScale alone, so
+        // clicks meant for the reward gems still reached PlayerCombat and were played out the
+        // moment time resumed.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend();
+
         if (lookAction != null) lookAction.action.Disable();
 
         characterScreenRoot.SetActive(true);
@@ -568,6 +573,9 @@ public class RewardMenuManager : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         if (lookAction != null) lookAction.action.Enable();
+
+        // Held until the closing click/button is released, so it cannot become an attack.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased();
 
         Time.timeScale = 1f;
     }

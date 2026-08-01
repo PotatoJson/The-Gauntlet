@@ -101,6 +101,16 @@ public class GauntletManager : MonoBehaviour
         if (!selectionBracket.activeSelf) selectionBracket.SetActive(true);
     }
 
+    /// <summary>
+    /// Hides the shared bracket whatever it is currently pointing at. Used when input switches
+    /// device, where the slot that showed it never receives a matching exit or deselect event.
+    /// </summary>
+    public void HideBracket()
+    {
+        _currentBracketTarget = null;
+        if (selectionBracket != null) selectionBracket.SetActive(false);
+    }
+
     public void ClearBracket(Transform target)
     {
         if (_currentBracketTarget == target)

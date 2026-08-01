@@ -85,6 +85,7 @@ public Transform primaryGauntlet;
     private bool _isTransitioning = false;
     private DraggableGem _hoveredGem;
     private DraggableGem _focusedGem;
+    private bool _gamepadHadControl;
 
     private void Awake()
     {
@@ -339,6 +340,9 @@ public Transform primaryGauntlet;
     {
         if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
 
+        // Runs before the reward-mode return below, because gems are hovered in reward mode too.
+        HandleInputModeChange();
+
         // NEW: Prioritize Replace UI inputs even in Reward Mode to prevent overlapping cancel handling
         if (_isReplaceUIPending)
         {
@@ -351,6 +355,57 @@ public Transform primaryGauntlet;
 
         HandleCancelInput();
         HandleControllerSwitch();
+    }
+
+    /// <summary>
+    /// Hands the highlight over when the player swaps between mouse and controller.
+    ///
+    /// Each device leaves its own highlight behind: a controller-selected gem stays selected
+    /// until something else is selected, and a hovered gem stays hovered until the pointer moves
+    /// off it. Whichever device is no longer driving therefore leaves a stale bracket sitting
+    /// next to the live one. Clearing the outgoing device's highlight on the switch is what keeps
+    /// exactly one indicator on screen.
+    ///
+    /// Deliberately fires only on the transition. Doing this every frame would erase the
+    /// controller's own bracket the moment it drew one.
+    /// </summary>
+    private void HandleInputModeChange()
+    {
+        bool gamepadNow = InputHelper.IsGamepadLastUsed();
+        if (gamepadNow == _gamepadHadControl) return;
+
+        _gamepadHadControl = gamepadNow;
+
+        // The popups drive focus deliberately, so leave their buttons alone.
+        if (_isWarningActive || _isReplaceUIPending) return;
+
+        if (gamepadNow) ClearHoverHighlight();
+        else ClearSelectionHighlight();
+    }
+
+    /// <summary>Mouse took over: drop the EventSystem selection so OnDeselect clears its bracket.</summary>
+    private void ClearSelectionHighlight()
+    {
+        if (EventSystem.current == null) return;
+
+        GameObject current = EventSystem.current.currentSelectedGameObject;
+        if (current == null) return;
+
+        // Only give up focus that belongs to the gem board, never the header buttons.
+        if (IsFocusedOnGemOrSlot(current)) EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    /// <summary>Controller took over: the pointer is not moving any more, so clear its highlight.</summary>
+    private void ClearHoverHighlight()
+    {
+        if (_hoveredGem != null)
+        {
+            _hoveredGem.HideSelectionBracket();
+            SetHoveredGem(_hoveredGem, false);
+        }
+
+        GauntletManager activeManager = GetActiveGauntletManager();
+        if (activeManager != null) activeManager.HideBracket();
     }
 
     private void HandleControllerSwitch()
@@ -645,6 +700,10 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         {
             if (gauntletMenu != null) gauntletMenu.CloseUpgradeMenu();
             gameObject.SetActive(false);
+
+            // Matches the Suspend in TryEquipNewGauntlet; ResumeGame covers the other branch.
+            if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased();
+
             Time.timeScale = 1f;
         }
     }
@@ -898,6 +957,10 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
             Time.timeScale = 0f;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
+
+            // This path opens the screen without going through GauntletMenu.PauseGame, so it has
+            // to suspend gameplay input itself or clicks in here reach PlayerCombat.
+            if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend();
             // Note: If you have a player input script to disable (like camera look), disable it here!
         }
 

@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -50,6 +51,9 @@ public class GauntletMenu : MonoBehaviour
         _playerMap = inputActions.FindActionMap("Player");
         _uiMap = inputActions.FindActionMap("UI");
         _pauseAction = _playerMap.FindAction("Pause");
+
+        // Hand the map to the gate so every menu suspends and restores the same one.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RegisterPlayerMap(_playerMap);
 
         _offscreenPosX = -Screen.width;
 
@@ -211,7 +215,9 @@ public class GauntletMenu : MonoBehaviour
             mainButtonsGroup.blocksRaycasts = true;
         }
 
-        _playerMap.Disable();
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend();
+        else _playerMap.Disable();
+
         _uiMap.Enable();
         _pauseAction.Enable();
 
@@ -237,7 +243,10 @@ public class GauntletMenu : MonoBehaviour
     {
         _isPaused = false;
         //_uiMap.Disable();
-        _playerMap.Enable();
+
+        // Waits for the closing press to be released before gameplay input comes back.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased();
+        else _playerMap.Enable();
 
         // Ensure sub-menus are closed and buttons re-enabled
         CloseUpgradeMenu();
