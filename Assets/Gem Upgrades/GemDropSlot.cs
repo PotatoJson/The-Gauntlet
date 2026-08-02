@@ -73,9 +73,22 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         UpdateButtonInteractability();
     }
 
+    /// <summary>
+    /// True while the player is carrying a gem around with the controller, looking for a slot.
+    /// </summary>
+    private static bool IsPlacingMode =>
+        GemPopupMenu.Instance != null && GemPopupMenu.Instance.IsPlacingMode;
+
     public void UpdateButtonInteractability()
     {
         if (_isDisabled) return;
+
+        // During controller placement EVERY lit slot has to stay reachable, occupied ones included,
+        // because that is how a gem gets replaced. GemPopupMenu.StartPlacementMode switches them on
+        // and EndPlacementMode puts them back to sleep, so backing off here is what lets that hold:
+        // otherwise this ran a frame later and switched the occupied slots straight back off, which
+        // left controller navigation with nowhere to go and the gem stranded mid-screen.
+        if (IsPlacingMode) return;
 
         Button btn = GetComponent<Button>();
         if (btn != null)
@@ -96,10 +109,11 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             _slotImage.color = _defaultColor;
         }
         
-        // Safety net for every other way a gem can arrive in this slot: a controller placement, a
-        // gauntlet swap, or a save file being restored. ClearBracket only acts when this slot is
-        // the one currently holding the bracket, so it is a no-op the rest of the time.
-        if (_manager != null && HasGem()) _manager.ClearBracket(transform);
+        // Safety net for every other way a gem can arrive in this slot: a gauntlet swap, or a save
+        // file being restored. ClearBracket only acts when this slot is the one currently holding
+        // the bracket, so it is a no-op the rest of the time. Skipped during placement, where the
+        // bracket is the player's cursor and has to stay put over an occupied slot.
+        if (_manager != null && HasGem() && !IsPlacingMode) _manager.ClearBracket(transform);
 
         // Dynamic check for child gems to update interactability
         UpdateButtonInteractability();
@@ -189,7 +203,10 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
 
         // A gem draws its own selection bracket, and Unity delivers pointer-enter to this parent
         // slot as well as to the gem. Without this the two highlights stack on the same square.
-        if (HasGem()) return;
+        //
+        // Placement mode is the exception: the gem being placed is detached and follows the popup,
+        // so the slot's bracket is the only cursor the player has and must show even when occupied.
+        if (HasGem() && !IsPlacingMode) return;
 
         _manager.UpdateBracket(transform);
     }

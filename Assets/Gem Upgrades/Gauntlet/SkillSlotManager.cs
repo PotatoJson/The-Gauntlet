@@ -132,7 +132,11 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandle
 
         // Same reason as GemDropSlot: an equipped skill gem already shows its own bracket, and
         // pointer-enter reaches this slot too, so drawing both stacks two highlights.
-        if (GetEquippedSkillGem() != null) return;
+        //
+        // Placement mode is the exception: the gem being placed is detached, so this bracket is
+        // the player's only cursor and has to show even when the slot is already filled.
+        bool isPlacing = GemPopupMenu.Instance != null && GemPopupMenu.Instance.IsPlacingMode;
+        if (GetEquippedSkillGem() != null && !isPlacing) return;
 
         _manager.UpdateBracket(transform);
     }

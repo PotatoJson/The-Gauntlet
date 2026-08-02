@@ -79,6 +79,15 @@ public Transform primaryGauntlet;
 
     public bool IsReplaceUIPending => _isReplaceUIPending;
 
+    /// <summary>
+    /// True while the primary/secondary pages are sliding. The page tween grabs controller focus
+    /// for the header when it lands, so anything that wants focus afterwards has to wait this out.
+    /// </summary>
+    public bool IsTransitioning => _isTransitioning;
+
+    /// <summary>True when the primary gauntlet is the page currently on screen.</summary>
+    public bool IsDisplayingPrimary => _isDisplayingPrimary;
+
     private DraggableGem _lastSelectedGem;
     private bool _isWarningActive = false;
     private bool _isDisplayingPrimary = true;
@@ -378,6 +387,11 @@ public Transform primaryGauntlet;
 
         // The popups drive focus deliberately, so leave their buttons alone.
         if (_isWarningActive || _isReplaceUIPending) return;
+
+        // Placement mode owns the selection: it IS the player's cursor for the gem being carried.
+        // Note the popup's GameObject can be inactive while placing, so the guard at the top of
+        // Update does not cover this.
+        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.IsPlacingMode) return;
 
         if (gamepadNow) ClearHoverHighlight();
         else ClearSelectionHighlight();
