@@ -21724,7 +21724,11 @@ MonoBehaviour:
   elitePrefab: {fileID: 8262436188853443978, guid: d6f4b39a39dd96a44addac3e3e934b94, type: 3}
   peeperPrefab: {fileID: 6769150171900720745, guid: e176cd6a272654048a5d48f73746e972, type: 3}
   casterPrefab: {fileID: 8018765667397676023, guid: acaee64eb43423e4e96cf053a6a617c2, type: 3}
-  bossPrefab: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
+  shieldPrefab: {fileID: 0}
+  spinningPrefab: {fileID: 0}
+  biterPrefab: {fileID: 0}
+  bossPrefabs:
+  - {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
   chambers:
   - chamberName: Chamber1
     spawnOnStart: 1
@@ -21733,7 +21737,10 @@ MonoBehaviour:
     eliteSpawnPoints: {fileID: 932243702}
     peeperSpawnPoints: {fileID: 1276226030}
     casterSpawnPoints: {fileID: 706549851}
-    bossSpawnPoint: {fileID: 0}
+    shieldSpawnPoints: {fileID: 0}
+    spinningSpawnPoints: {fileID: 0}
+    biterSpawnPoints: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 410800431}
     - {fileID: 910904381}
@@ -21750,7 +21757,10 @@ MonoBehaviour:
     eliteSpawnPoints: {fileID: 1617546018}
     peeperSpawnPoints: {fileID: 0}
     casterSpawnPoints: {fileID: 314830384}
-    bossSpawnPoint: {fileID: 0}
+    shieldSpawnPoints: {fileID: 0}
+    spinningSpawnPoints: {fileID: 0}
+    biterSpawnPoints: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 2098358003}
     doorOpenTrigger: Trigger
@@ -21766,7 +21776,10 @@ MonoBehaviour:
     eliteSpawnPoints: {fileID: 228093683}
     peeperSpawnPoints: {fileID: 136816610}
     casterSpawnPoints: {fileID: 447035450}
-    bossSpawnPoint: {fileID: 0}
+    shieldSpawnPoints: {fileID: 0}
+    spinningSpawnPoints: {fileID: 0}
+    biterSpawnPoints: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 1277039473}
     doorOpenTrigger: Trigger
@@ -21783,7 +21796,10 @@ MonoBehaviour:
     eliteSpawnPoints: {fileID: 505641347}
     peeperSpawnPoints: {fileID: 0}
     casterSpawnPoints: {fileID: 184709337}
-    bossSpawnPoint: {fileID: 0}
+    shieldSpawnPoints: {fileID: 0}
+    spinningSpawnPoints: {fileID: 0}
+    biterSpawnPoints: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 2073834226}
     doorOpenTrigger: Trigger
@@ -21799,7 +21815,12 @@ MonoBehaviour:
     eliteSpawnPoints: {fileID: 0}
     peeperSpawnPoints: {fileID: 0}
     casterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 1959231145}
+    shieldSpawnPoints: {fileID: 0}
+    spinningSpawnPoints: {fileID: 0}
+    biterSpawnPoints: {fileID: 0}
+    bossSpawns:
+    - spawnPoint: {fileID: 1959231145}
+      bossPrefab: {fileID: 4735697497377127661, guid: 7ade90e918cea4b4eba2dcdd3397209a, type: 3}
     chamberDoorAnimators:
     - {fileID: 1768506705}
     doorOpenTrigger: Trigger

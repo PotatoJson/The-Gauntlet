@@ -2,6 +2,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
+public class BossSpawnPoint
+{
+    [Tooltip("Where this boss will spawn.")]
+    public Transform spawnPoint;
+
+    [Tooltip("Which boss prefab to spawn here. Drag one of the prefabs from the EnemySpawner's Global Enemy Prefabs > Boss Prefabs list.")]
+    public GameObject bossPrefab;
+}
+
+[System.Serializable]
 public class ChamberData
 {
     public string chamberName = "New Chamber";
@@ -28,9 +38,9 @@ public class ChamberData
     [Tooltip("Parent GameObject containing all Biter spawn points. Leave empty if none.")]
     public Transform biterSpawnPoints;
 
-    [Header("Boss Spawn (Single Point)")]
-    [Tooltip("A single Transform for the Boss spawn point. Not a container. Leave empty if no boss in this chamber.")]
-    public Transform bossSpawnPoint;
+    [Header("Boss Spawns")]
+    [Tooltip("One entry per boss in this chamber. Each entry has its own spawn point and its own prefab, so a chamber can mix different bosses. Leave empty if no boss in this chamber.")]
+    public List<BossSpawnPoint> bossSpawns = new List<BossSpawnPoint>();
 
     [Header("Door Settings")]
     [Tooltip("The Animator for the door that opens when this chamber is cleared.")]
@@ -57,7 +67,9 @@ public class EnemySpawner : MonoBehaviour
     public GameObject shieldPrefab;
     public GameObject spinningPrefab;
     public GameObject biterPrefab;
-    public GameObject bossPrefab;
+
+    [Tooltip("Pool of boss prefabs available to place in chambers. In each chamber's Boss Spawns list, drag whichever of these prefabs you want at each spawn point.")]
+    public List<GameObject> bossPrefabs = new List<GameObject>();
 
     [Header("Chambers Configuration")]
     [Tooltip("Add and configure your individual chambers here.")]
@@ -123,10 +135,10 @@ public class EnemySpawner : MonoBehaviour
         {
             // Updated to Unity 6 syntax: FindFirstObjectByType
             PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
-            
+
             // Now we just directly read CurrentHealth instead of doing math!
             int startingHealth = playerHealth != null ? Mathf.RoundToInt(playerHealth.CurrentHealth) : 100;
-            
+
             MetricsTracker.Instance.StartChamber(chamber.chamberName, startingHealth);
         }
 
@@ -139,10 +151,12 @@ public class EnemySpawner : MonoBehaviour
         SpawnEnemyType(spinningPrefab, chamber.spinningSpawnPoints, chamber.activeEnemies);
         SpawnEnemyType(biterPrefab, chamber.biterSpawnPoints, chamber.activeEnemies);
 
-        // Spawn Boss explicitly at its single spawn point
-        if (bossPrefab != null && chamber.bossSpawnPoint != null)
+        // Each boss entry picks its own prefab, so a chamber can spawn several different bosses.
+        foreach (BossSpawnPoint bossSpawn in chamber.bossSpawns)
         {
-            GameObject spawnedBoss = Instantiate(bossPrefab, chamber.bossSpawnPoint.position, chamber.bossSpawnPoint.rotation);
+            if (bossSpawn.bossPrefab == null || bossSpawn.spawnPoint == null) continue;
+
+            GameObject spawnedBoss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
             chamber.activeEnemies.Add(spawnedBoss);
         }
     }
@@ -327,4 +341,3 @@ public class ChamberTriggerListener : MonoBehaviour
         }
     }
 }
-

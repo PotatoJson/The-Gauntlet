@@ -87371,7 +87371,8 @@ MonoBehaviour:
   shieldPrefab: {fileID: 0}
   spinningPrefab: {fileID: 0}
   biterPrefab: {fileID: 0}
-  bossPrefab: {fileID: 4805591952013779706, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
+  bossPrefabs:
+  - {fileID: 4805591952013779706, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
   chambers:
   - chamberName: SpawnChamber
     spawnOnStart: 1
@@ -87383,7 +87384,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 1166012654}
     doorOpenTrigger: Trigger
@@ -87402,7 +87403,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 1923974481}
     - {fileID: 1715511263}
@@ -87422,7 +87423,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 4270581609977715068}
     - {fileID: 1159265945}
@@ -87448,7 +87449,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators: []
     doorOpenTrigger: Trigger
     chamberRewardObject: {fileID: 19957452}
@@ -87466,7 +87467,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators: []
     doorOpenTrigger: Trigger
     chamberRewardObject: {fileID: 572371400}
@@ -87485,7 +87486,7 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 0}
+    bossSpawns: []
     chamberDoorAnimators:
     - {fileID: 100866536}
     - {fileID: 1714573770}
@@ -87505,7 +87506,9 @@ MonoBehaviour:
     shieldSpawnPoints: {fileID: 0}
     spinningSpawnPoints: {fileID: 0}
     biterSpawnPoints: {fileID: 0}
-    bossSpawnPoint: {fileID: 1258212138}
+    bossSpawns:
+    - spawnPoint: {fileID: 1258212138}
+      bossPrefab: {fileID: 4805591952013779706, guid: 096449a3c4dafe94194d4390c79e2273, type: 3}
     chamberDoorAnimators:
     - {fileID: 884951806}
     - {fileID: 501333652236144943}
