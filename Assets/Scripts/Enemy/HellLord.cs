@@ -148,7 +148,7 @@ public class HellLord : BaseEnemy
         {
             if (!isEngaged && BossHealthBar.Instance != null)
             {
-                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
+                BossHealthBar.Instance.ShowBossHealthBar(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
             }
             
             if (enableDebugLogs && !isEngaged)
@@ -587,13 +587,19 @@ public class HellLord : BaseEnemy
             EndBeamAttack();
         }
 
-        if (!isAware && BossHealthBar.Instance != null)
-            BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
-        
+        // Unconditional: this boss could be damaged from range before ever engaging, and the old
+        // '!isAware' guard meant that first hit was the ONLY chance to register the bar. Showing a
+        // bar that already exists just refreshes it.
+        if (BossHealthBar.Instance != null)
+            BossHealthBar.Instance.ShowBossHealthBar(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
+
         base.TakeDamage(damage);
 
         if (BossHealthBar.Instance != null)
-            BossHealthBar.Instance.UpdateHealth(currentHealth, maxHealth);
+        {
+            if (IsDead()) BossHealthBar.Instance.HideBossHealthBar(this);
+            else BossHealthBar.Instance.UpdateHealth(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
+        }
     }
 
     public override void ApplyStun(float duration)
@@ -607,6 +613,11 @@ public class HellLord : BaseEnemy
     {
         StopCasting();
         EndBeamAttack();
+
+        // This boss never cleared its own bar, so it lingered until some other boss's death hid
+        // the shared one.
+        if (BossHealthBar.Instance != null) BossHealthBar.Instance.HideBossHealthBar(this);
+
         base.Die();
     }
 

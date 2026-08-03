@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -31,6 +32,13 @@ public class GameplayInputGate : MonoBehaviour
     private InputActionMap _playerMap;
     private Coroutine _restoreRoutine;
     private int _unguardedFrames;
+
+    // Who currently wants gameplay input off. Keyed by the menu itself rather than counted, so a
+    // menu that suspends twice cannot inflate a counter and strand the player.
+    private readonly List<Object> _holders = new List<Object>();
+
+    /// <summary>True while any menu is holding gameplay input off.</summary>
+    public bool IsSuspended => _holders.Count > 0;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Bootstrap()
@@ -76,6 +84,7 @@ public class GameplayInputGate : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         _unguardedFrames = 0;
+        _holders.Clear();
 
         if (_restoreRoutine != null)
         {
@@ -109,10 +118,12 @@ public class GameplayInputGate : MonoBehaviour
         }
     }
 
-    /// <summary>Blocks gameplay input. Call when a menu opens.</summary>
-    public void Suspend()
+    /// <summary>Blocks gameplay input. Call when a menu opens, passing the menu itself.</summary>
+    public void Suspend(Object owner)
     {
         _unguardedFrames = 0;
+
+        if (owner != null && !_holders.Contains(owner)) _holders.Add(owner);
 
         if (_restoreRoutine != null)
         {
@@ -125,16 +136,21 @@ public class GameplayInputGate : MonoBehaviour
     }
 
     /// <summary>
-    /// Gives gameplay input back once the closing press has been released. Call when a menu closes.
+    /// Gives gameplay input back once the closing press has been released, provided no other menu
+    /// is still holding it. Call when a menu closes, passing the same owner it suspended with.
     ///
-    /// Deliberately NOT reference counted. These menus are modal and share their close paths, so a
-    /// suspend raised by one of them is routinely released through another one's ConfirmClose, and
-    /// a counter left the player permanently unable to act whenever the pairing did not line up.
-    /// Restoring slightly early is a far better failure mode than dead controls.
+    /// Keyed by owner rather than counted: these menus share their close paths, so one menu's
+    /// suspend is routinely released through another's ConfirmClose. An unmatched release is a
+    /// harmless no-op instead of a counter drifting out of step.
     /// </summary>
-    public void RestoreWhenReleased()
+    public void RestoreWhenReleased(Object owner)
     {
         _unguardedFrames = 0;
+
+        if (owner != null) _holders.Remove(owner);
+
+        // Something else still wants input off - a reward screen opened over the pause menu, say.
+        if (_holders.Count > 0) return;
 
         if (_restoreRoutine != null) StopCoroutine(_restoreRoutine);
         _restoreRoutine = StartCoroutine(RestoreRoutine());
@@ -168,8 +184,17 @@ public class GameplayInputGate : MonoBehaviour
     {
         if (_restoreRoutine != null) return;
 
+        // A menu destroyed without releasing would otherwise hold input off forever.
+        for (int i = _holders.Count - 1; i >= 0; i--)
+        {
+            if (_holders[i] == null) _holders.RemoveAt(i);
+        }
+
         InputActionMap map = PlayerMap;
 
+        // Every menu here freezes time while it is open, so input being off while time runs means
+        // something failed to release. Menus that are genuinely open sit at timeScale 0 and are
+        // therefore never caught by this.
         bool stuck = map != null && !map.enabled && Time.timeScale > 0f;
         if (!stuck)
         {
@@ -181,10 +206,34 @@ public class GameplayInputGate : MonoBehaviour
         if (_unguardedFrames <= watchdogGraceFrames) return;
 
         _unguardedFrames = 0;
-        Debug.LogWarning("[GameplayInputGate] Gameplay input was still suspended while the game was " +
-                         "running. A menu closed without restoring it, so it is being restored now.");
 
-        RestoreWhenReleased();
+        if (_holders.Count > 0)
+        {
+            // Naming the holders matters: this means a menu suspended under one owner and was
+            // closed through another one's path, which is a bug worth chasing rather than
+            // silently papering over.
+            Debug.LogWarning($"[GameplayInputGate] Gameplay input is still held by " +
+                             $"[{DescribeHolders()}] while the game is running. Forcing release so " +
+                             "the player is not locked out - check that owner's close path.");
+
+            _holders.Clear();
+        }
+        else
+        {
+            Debug.LogWarning("[GameplayInputGate] Gameplay input was still suspended while the game " +
+                             "was running. A menu closed without restoring it, so it is being " +
+                             "restored now.");
+        }
+
+        RestoreWhenReleased(null);
+    }
+
+    private string DescribeHolders()
+    {
+        List<string> names = new List<string>();
+        foreach (Object holder in _holders) names.Add(holder != null ? holder.name : "<destroyed>");
+
+        return string.Join(", ", names);
     }
 
     /// <summary>

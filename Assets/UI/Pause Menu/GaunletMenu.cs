@@ -215,7 +215,7 @@ public class GauntletMenu : MonoBehaviour
             mainButtonsGroup.blocksRaycasts = true;
         }
 
-        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend();
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
         else _playerMap.Disable();
 
         _uiMap.Enable();
@@ -245,7 +245,7 @@ public class GauntletMenu : MonoBehaviour
         //_uiMap.Disable();
 
         // Waits for the closing press to be released before gameplay input comes back.
-        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased();
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
         else _playerMap.Enable();
 
         // Ensure sub-menus are closed and buttons re-enabled
@@ -263,7 +263,14 @@ public class GauntletMenu : MonoBehaviour
         exitSequence.OnComplete(() => {
             menuCanvas.SetActive(false);
             settingsPanel.gameObject.SetActive(false);
-            Time.timeScale = 1f;
+
+            // This lands half a second after Resume was pressed, by which point another menu (a
+            // reward screen, say) may already be open. Unfreezing time under it would let the game
+            // run behind the menu, so only restore it if nothing else is holding input.
+            bool anotherMenuOpen = GameplayInputGate.Instance != null &&
+                                   GameplayInputGate.Instance.IsSuspended;
+
+            if (!anotherMenuOpen) Time.timeScale = 1f;
         });
     }
 

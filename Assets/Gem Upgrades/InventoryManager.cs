@@ -705,6 +705,12 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
         if (statsManager != null) statsManager.SyncWithUI(primaryGauntlet, secondaryGauntlet);
 
+        // Release OUR hold in both branches. TryEquipNewGauntlet suspends input under this object,
+        // but GauntletMenu lives on the always-active UIManager, so the branch below effectively
+        // always takes ResumeGame - which only releases GauntletMenu's own hold. Leaving this one
+        // behind kept input suspended forever after swapping a gauntlet.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
+
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
         if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
         {
@@ -714,9 +720,6 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         {
             if (gauntletMenu != null) gauntletMenu.CloseUpgradeMenu();
             gameObject.SetActive(false);
-
-            // Matches the Suspend in TryEquipNewGauntlet; ResumeGame covers the other branch.
-            if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased();
 
             Time.timeScale = 1f;
         }
@@ -974,7 +977,7 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
 
             // This path opens the screen without going through GauntletMenu.PauseGame, so it has
             // to suspend gameplay input itself or clicks in here reach PlayerCombat.
-            if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend();
+            if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
             // Note: If you have a player input script to disable (like camera look), disable it here!
         }
 
@@ -1141,15 +1144,22 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
 
         Transform targetSlot = isPrimary ? primaryGauntlet : secondaryGauntlet;
         DraggableGem savedSkillGem = null;
+        List<DraggableGem> savedStatGems = new List<DraggableGem>();
 
-        // Step 1: Safely EVICT any slotted gems so the player doesn't lose them!
-        GauntletManager oldManager = targetSlot.GetComponentInChildren<GauntletManager>();
+        // Step 1: Lift the old gems out so they survive the swap.
+        //
+        // These used to be dumped straight onto the reward board, which quietly destroyed them:
+        // Reward_Gem_Container is the same object RewardMenuManager uses as its gem spawn area, and
+        // that wipes all of its children whenever the reward menu opens or closes. The skill gem
+        // survived only because it was re-slotted instead. Stat gems are now carried across too,
+        // and only genuine overflow reaches the board.
+        GauntletManager oldManager = targetSlot.GetComponentInChildren<GauntletManager>(true);
         if (oldManager != null)
         {
             //saves skill gem as well now
             if (oldManager.SkillSlot != null)
             {
-                savedSkillGem = oldManager.SkillSlot.GetComponentInChildren<DraggableGem>();
+                savedSkillGem = oldManager.SkillSlot.GetComponentInChildren<DraggableGem>(true);
                 if (savedSkillGem != null)
                 {
                     savedSkillGem.transform.SetParent(transform); // Temporarily hide it in the inventory root
@@ -1158,28 +1168,21 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
 
             foreach (GameObject slot in oldManager.fingerSlots)
             {
-                DraggableGem gem = slot.GetComponentInChildren<DraggableGem>();
+                if (slot == null) continue;
+
+                DraggableGem gem = slot.GetComponentInChildren<DraggableGem>(true);
                 if (gem != null)
                 {
-                    // Toss the gem onto the board safely
-                    Transform rewardContainer = GameObject.Find("Reward_Gem_Container").transform;
-                    gem.parentAfterDrag = rewardContainer;
-                    gem.transform.SetParent(rewardContainer);
-
-                    RectTransform gemRect = gem.GetComponent<RectTransform>();
-                    if (RewardMenuManager.Instance != null)
-                        gemRect.anchoredPosition = RewardMenuManager.Instance.CalculateSafeScatterPoint(gemRect);
-
-                    gem.ReturnToInventory();
-                    AnimateSingleGemDrop(gem);
+                    savedStatGems.Add(gem);
+                    gem.transform.SetParent(transform); // Park it in the inventory root for now
                 }
             }
         }
 
-        // Step 2: Destroy the old gauntlet
+        // Step 2: Destroy the old gauntlet. The rescued gems are parented elsewhere by now, so
+        // there is nothing left here to preserve.
         foreach (Transform child in targetSlot)
         {
-            if (savedSkillGem != null && child == savedSkillGem.transform) continue; 
             Destroy(child.gameObject);
         }
 
@@ -1202,6 +1205,13 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
                     skillSlotManager.SlotSkillGem(savedSkillGem);
                 }
             }
+
+            RestoreStatGemsAfterSwap(gm, savedStatGems);
+        }
+        else
+        {
+            // No manager on the new gauntlet, so there is nowhere to put them back.
+            foreach (DraggableGem gem in savedStatGems) EvictGemToBoard(gem);
         }
 
         // Step 4: Reset UI layout so the player sees their new gear
@@ -1209,6 +1219,76 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         else if (!isPrimary && _isDisplayingPrimary) ToggleEquippedGauntletDisplay();
 
         FocusFirstAvailableGem();
+    }
+
+    /// <summary>
+    /// Puts the rescued stat gems back into the new gauntlet, in their old order, filling only the
+    /// slots it has actually unlocked. Anything that no longer fits goes to the board.
+    /// </summary>
+    private void RestoreStatGemsAfterSwap(GauntletManager gm, List<DraggableGem> savedGems)
+    {
+        int nextSlot = 0;
+
+        foreach (DraggableGem gem in savedGems)
+        {
+            if (gem == null) continue;
+
+            // Find the next free unlocked slot.
+            while (nextSlot < gm.fingerSlots.Count && nextSlot < gm.currentActiveSlots &&
+                   gm.fingerSlots[nextSlot] != null &&
+                   gm.fingerSlots[nextSlot].GetComponentInChildren<DraggableGem>(true) != null)
+            {
+                nextSlot++;
+            }
+
+            bool hasRoom = nextSlot < gm.fingerSlots.Count && nextSlot < gm.currentActiveSlots &&
+                           gm.fingerSlots[nextSlot] != null;
+
+            if (!hasRoom)
+            {
+                // The new gauntlet has fewer sockets than the old one, so this gem cannot come with.
+                EvictGemToBoard(gem);
+                continue;
+            }
+
+            Transform slot = gm.fingerSlots[nextSlot].transform;
+            gem.parentAfterDrag = slot;
+            gem.transform.SetParent(slot);
+            gem.transform.localPosition = Vector3.zero;
+            gem.transform.localScale = Vector3.one;
+
+            RectTransform gemRect = gem.GetComponent<RectTransform>();
+            RectTransform slotRect = slot.GetComponent<RectTransform>();
+            if (gemRect != null && slotRect != null) gemRect.sizeDelta = slotRect.rect.size;
+
+            nextSlot++;
+        }
+    }
+
+    /// <summary>
+    /// Drops a gem onto the reward board. Note this is a lossy destination: the reward menu clears
+    /// that container when it opens or closes, so only use it when there is genuinely no socket.
+    /// </summary>
+    private void EvictGemToBoard(DraggableGem gem)
+    {
+        if (gem == null) return;
+
+        GameObject container = GameObject.Find("Reward_Gem_Container");
+        if (container == null)
+        {
+            Debug.LogWarning($"[InventoryManager] Nowhere to put '{gem.name}' - no Reward_Gem_Container.");
+            return;
+        }
+
+        gem.parentAfterDrag = container.transform;
+        gem.transform.SetParent(container.transform);
+
+        RectTransform gemRect = gem.GetComponent<RectTransform>();
+        if (gemRect != null && RewardMenuManager.Instance != null)
+            gemRect.anchoredPosition = RewardMenuManager.Instance.CalculateSafeScatterPoint(gemRect);
+
+        gem.ReturnToInventory();
+        AnimateSingleGemDrop(gem);
     }
 
     public bool AutoSlotSkillGem(GameObject skillGemPrefab)

@@ -29,6 +29,13 @@ public class MainMenuManager : MonoBehaviour
 
     private void Start()
     {
+        // Gameplay leaves the cursor hidden and locked. Anything that reaches the menu without
+        // going through the pause menu's ReturnToMainMenu - a level portal, for instance - used to
+        // arrive with no cursor at all and nothing the player could click.
+        Time.timeScale = 1f;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         // Ensure the correct panels are active on startup
         mainMenuPanel.SetActive(true);
         settingsPanel.SetActive(false);

@@ -31,6 +31,13 @@ public class PersistentEquipment : MonoBehaviour
     public List<GameObject> secondaryGems = new List<GameObject>();
     public GameObject secondarySkillGemPrefab;
 
+    [Header("Saved Progression")]
+    [Tooltip("The player's level and EXP, carried between levels alongside the gear. Filled in " +
+             "automatically from the EXP bar - these values are a live readout, not settings.")]
+    public int playerLevel = 1;
+    public float playerExp = 0f;
+    public float expToNextLevel = 100f;
+
     private void Awake()
     {
         if (Instance == null)
@@ -88,8 +95,39 @@ public class PersistentEquipment : MonoBehaviour
         primarySkillGemPrefab = ExtractSkillGem(pManager);
         secondarySkillGemPrefab = ExtractSkillGem(sManager);
 
+        // 3. Level and EXP ride along with the gear, so they survive a level transition too.
+        CaptureProgression();
+
         Debug.Log("Equipment successfully saved to the Backpack!");
     }
+
+    #region Progression
+
+    /// <summary>Reads the player's level and EXP off the EXP bar into the backpack.</summary>
+    public void CaptureProgression()
+    {
+        ProgressBarCircle bar = ProgressBarCircle.Instance;
+        if (bar == null) return;
+
+        playerLevel = bar.currentLevel;
+        playerExp = bar.currentExp;
+        expToNextLevel = bar.expToNextLevel;
+    }
+
+    /// <summary>
+    /// Pushes the stored level and EXP back onto the EXP bar. Called by the bar itself when it
+    /// starts, so a bar spawned fresh in a new level picks up where the last one left off.
+    /// </summary>
+    public void ApplyProgression(ProgressBarCircle bar)
+    {
+        if (bar == null || !hasSavedData) return;
+
+        bar.currentLevel = Mathf.Max(1, playerLevel);
+        bar.currentExp = playerExp;
+        if (expToNextLevel > 0f) bar.expToNextLevel = expToNextLevel;
+    }
+
+    #endregion
 
     private GameObject ExtractSkillGem(GauntletManager gm)
     {
@@ -186,6 +224,13 @@ public class PersistentEquipment : MonoBehaviour
         data.secondaryRarity = (int)secondaryRarity;
         data.secondaryGemNames = ToNames(secondaryGems);
         data.secondarySkillGemName = PrefabName(secondarySkillGemPrefab);
+
+        // Read the bar one last time so a checkpoint always stores the level as it stands.
+        CaptureProgression();
+
+        data.playerLevel = playerLevel;
+        data.playerExp = playerExp;
+        data.expToNextLevel = expToNextLevel;
     }
 
     /// <summary>
@@ -216,6 +261,13 @@ public class PersistentEquipment : MonoBehaviour
         secondaryRarity = ToRarity(data.secondaryRarity);
         secondaryGems = ToPrefabs(data.secondaryGemNames);
         secondarySkillGemPrefab = FindGemPrefab(data.secondarySkillGemName);
+
+        // The EXP bar reads these back out of here when it starts in the restored scene.
+        playerLevel = Mathf.Max(1, data.playerLevel);
+        playerExp = data.playerExp;
+        if (data.expToNextLevel > 0f) expToNextLevel = data.expToNextLevel;
+
+        ApplyProgression(ProgressBarCircle.Instance);
     }
 
     public GameObject FindGemPrefab(string prefabName)

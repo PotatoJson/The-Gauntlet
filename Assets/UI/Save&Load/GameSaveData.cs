@@ -31,6 +31,11 @@ public class GameSaveData
     /// <summary>The MetricsTracker run ID, so telemetry stays stitched to one run across a quit.</summary>
     public string runID;
 
+    // --- Progression ---
+    public int playerLevel = 1;
+    public float playerExp;
+    public float expToNextLevel = 100f;
+
     // --- Stats ---
     public float currentHealth;
     public float maxHealthAtSave;

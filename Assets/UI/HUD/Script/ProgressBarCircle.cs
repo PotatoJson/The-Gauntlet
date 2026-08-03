@@ -73,6 +73,13 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
     private void Start()
     {
+        // Pull level and EXP back out of the Backpack so progression carries between levels the
+        // same way the gear does. Must happen before the visuals are drawn.
+        if (Application.isPlaying && PersistentEquipment.Instance != null)
+        {
+            PersistentEquipment.Instance.ApplyProgression(this);
+        }
+
         UpdateVisualsInstantly();
     }
 

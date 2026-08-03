@@ -117,7 +117,7 @@ public class DemonBoss : BaseEnemy
             // NEW: Show health bar if hit from afar before aggroing!
             if (BossHealthBar.Instance != null)
             {
-                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
+                BossHealthBar.Instance.ShowBossHealthBar(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
             }
 
         }
@@ -126,11 +126,16 @@ public class DemonBoss : BaseEnemy
         hasOpenedWithCharge = true;
 
         currentHealth -= damage;
-        BossHealthBar.Instance.UpdateHealth(currentHealth, maxHealth);
+
+        // Passing 'this' keeps each boss on its own bar, so two bosses can be fought at once.
+        if (BossHealthBar.Instance != null)
+        {
+            BossHealthBar.Instance.UpdateHealth(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
+        }
 
         if (currentHealth <= 0)
         {
-            BossHealthBar.Instance.HideBossHealthBar();
+            if (BossHealthBar.Instance != null) BossHealthBar.Instance.HideBossHealthBar(this);
             Die();
             return;
         }
@@ -160,7 +165,7 @@ public class DemonBoss : BaseEnemy
             // NEW: Show the boss health bar the moment the boss aggros!
             if (!isEngaged && BossHealthBar.Instance != null)
             {
-                BossHealthBar.Instance.ShowBossHealthBar(currentHealth, maxHealth, bossNameString.GetLocalizedString());
+                BossHealthBar.Instance.ShowBossHealthBar(this, currentHealth, maxHealth, bossNameString.GetLocalizedString());
             }
 
             isEngaged = true;
