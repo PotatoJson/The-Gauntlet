@@ -39,6 +39,7 @@ public class PlayerStatsManager : MonoBehaviour
     // These store the SUM of all amounts found on equipped gems
     [HideInInspector] public float retaliationTotal = 0f; 
     [HideInInspector] public float executionerTotal = 0f;
+    [HideInInspector] public float manaOnKillTotal = 0f;
 
     //Dictionaries for different stats depending on stat bonus type
     private Dictionary<StatModifierType, float> _flatBonuses = new Dictionary<StatModifierType, float>();
@@ -115,6 +116,7 @@ public class PlayerStatsManager : MonoBehaviour
                 if(newGauntlet.SocketedStatGems != null && i < newGauntlet.SocketedStatGems.Length)
                 {
                     newGauntlet.SocketedStatGems[i] = statGem;
+                    newGauntlet.SocketedGemTiers[i] = gemUI.Tier;
                 }
                 else
                 {
@@ -147,6 +149,7 @@ public class PlayerStatsManager : MonoBehaviour
 
         retaliationTotal = 0f;
         executionerTotal = 0f;
+        manaOnKillTotal = 0f;
         Debug.Log($"[Backend Check] The Stats Manager found {allMods.Count} total modifiers equipped!");
         foreach (GemModifier mod in allMods)
         {
@@ -158,6 +161,11 @@ public class PlayerStatsManager : MonoBehaviour
             if (mod.StatType == StatModifierType.Executioner)
             {
                 executionerTotal += mod.Amount;
+                continue;
+            }
+            if (mod.StatType == StatModifierType.ManaOnKill)
+            {
+                manaOnKillTotal += mod.Amount;
                 continue;
             }
             

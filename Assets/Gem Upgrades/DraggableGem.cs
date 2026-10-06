@@ -34,6 +34,22 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public GameObject originalPrefab;
 
+    public const int MaxTier = 5;
+
+    /// <summary>
+    /// This gem's tier. Starts at the linked data's GemTier (1 for every gem) and a stat gem's
+    /// modifiers are multiplied by it. Raised by <see cref="GemCrafting"/>, carried between levels
+    /// by PersistentEquipment.
+    /// </summary>
+    // 0 = never set, so the data's tier is used. Not initialised in Awake: gems restored under the
+    // hidden character screen get their tier assigned before Awake runs, and Awake would overwrite it.
+    private int _tier;
+    public int Tier
+    {
+        get => _tier > 0 ? _tier : Mathf.Clamp(LinkedGemData != null ? LinkedGemData.GemTier : 1, 1, MaxTier);
+        set => _tier = Mathf.Clamp(value, 1, MaxTier);
+    }
+
     private void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();

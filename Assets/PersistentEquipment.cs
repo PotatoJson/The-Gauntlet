@@ -22,6 +22,7 @@ public class PersistentEquipment : MonoBehaviour
     public GameObject primaryGauntletPrefab;
     public GauntletRarity primaryRarity;
     public List<GameObject> primaryGems = new List<GameObject>();
+    public List<int> primaryGemTiers = new List<int>(); // parallel to primaryGems
     [FormerlySerializedAs("ultimateGemPrefab")]
     public GameObject primarySkillGemPrefab;
 
@@ -29,6 +30,7 @@ public class PersistentEquipment : MonoBehaviour
     public GameObject secondaryGauntletPrefab;
     public GauntletRarity secondaryRarity;
     public List<GameObject> secondaryGems = new List<GameObject>();
+    public List<int> secondaryGemTiers = new List<int>(); // parallel to secondaryGems
     public GameObject secondarySkillGemPrefab;
 
     [Header("Saved Progression")]
@@ -87,9 +89,11 @@ public class PersistentEquipment : MonoBehaviour
         // 1. Clear old gems and save the new ones
         primaryGems.Clear();
         secondaryGems.Clear();
+        primaryGemTiers.Clear();
+        secondaryGemTiers.Clear();
 
-        ExtractGems(inv.primaryGauntlet, primaryGems);
-        ExtractGems(inv.secondaryGauntlet, secondaryGems);
+        ExtractGems(inv.primaryGauntlet, primaryGems, primaryGemTiers);
+        ExtractGems(inv.secondaryGauntlet, secondaryGems, secondaryGemTiers);
 
         // 2. Save Skill Gems
         primarySkillGemPrefab = ExtractSkillGem(pManager);
@@ -168,7 +172,7 @@ public class PersistentEquipment : MonoBehaviour
         return null;
     }
 
-    private void ExtractGems(Transform gauntletParent, List<GameObject> gemList)
+    private void ExtractGems(Transform gauntletParent, List<GameObject> gemList, List<int> tierList)
     {
         GauntletManager gm = gauntletParent.GetComponentInChildren<GauntletManager>(true);
         if (gm != null)
@@ -178,6 +182,7 @@ public class PersistentEquipment : MonoBehaviour
                 if (slot == null)
                 {
                     gemList.Add(null);
+                    tierList.Add(1);
                     continue;
                 }
 
@@ -198,11 +203,13 @@ public class PersistentEquipment : MonoBehaviour
 
                     // A null keeps this slot's index aligned even when the lookup failed.
                     gemList.Add(prefab);
+                    tierList.Add(gem.Tier);
                 }
                 else
                 {
                     // Empty slot, save a null space to keep index alignment perfect
                     gemList.Add(null);
+                    tierList.Add(1);
                 }
             }
         }
@@ -218,11 +225,13 @@ public class PersistentEquipment : MonoBehaviour
         data.primaryGauntletName = PrefabName(primaryGauntletPrefab);
         data.primaryRarity = (int)primaryRarity;
         data.primaryGemNames = ToNames(primaryGems);
+        data.primaryGemTiers = new List<int>(primaryGemTiers);
         data.primarySkillGemName = PrefabName(primarySkillGemPrefab);
 
         data.secondaryGauntletName = PrefabName(secondaryGauntletPrefab);
         data.secondaryRarity = (int)secondaryRarity;
         data.secondaryGemNames = ToNames(secondaryGems);
+        data.secondaryGemTiers = new List<int>(secondaryGemTiers);
         data.secondarySkillGemName = PrefabName(secondarySkillGemPrefab);
 
         // Read the bar one last time so a checkpoint always stores the level as it stands.
@@ -255,11 +264,13 @@ public class PersistentEquipment : MonoBehaviour
         primaryGauntletPrefab = FindGauntletPrefab(data.primaryGauntletName);
         primaryRarity = ToRarity(data.primaryRarity);
         primaryGems = ToPrefabs(data.primaryGemNames);
+        primaryGemTiers = data.primaryGemTiers != null ? new List<int>(data.primaryGemTiers) : new List<int>(); // old saves: empty = tier 1
         primarySkillGemPrefab = FindGemPrefab(data.primarySkillGemName);
 
         secondaryGauntletPrefab = FindGauntletPrefab(data.secondaryGauntletName);
         secondaryRarity = ToRarity(data.secondaryRarity);
         secondaryGems = ToPrefabs(data.secondaryGemNames);
+        secondaryGemTiers = data.secondaryGemTiers != null ? new List<int>(data.secondaryGemTiers) : new List<int>();
         secondarySkillGemPrefab = FindGemPrefab(data.secondarySkillGemName);
 
         // The EXP bar reads these back out of here when it starts in the restored scene.

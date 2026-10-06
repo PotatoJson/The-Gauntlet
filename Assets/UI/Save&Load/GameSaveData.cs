@@ -53,11 +53,13 @@ public class GameSaveData
     public string primaryGauntletName;
     public int primaryRarity;
     public List<string> primaryGemNames = new List<string>();
+    public List<int> primaryGemTiers = new List<int>();
     public string primarySkillGemName;
 
     public string secondaryGauntletName;
     public int secondaryRarity;
     public List<string> secondaryGemNames = new List<string>();
+    public List<int> secondaryGemTiers = new List<int>();
     public string secondarySkillGemName;
 
     public bool IsUsable => saveVersion == CurrentVersion && !string.IsNullOrEmpty(sceneName);

@@ -6,8 +6,9 @@ public class RunTimeGauntlet
     public GauntletData BaseGauntlet;
     public EquipSlot CurrentSlot = EquipSlot.None;
     //gem sockets
-    public StatGemData[] SocketedStatGems; 
-    public SkillGemData ActiveSkillGem; 
+    public StatGemData[] SocketedStatGems;
+    public int[] SocketedGemTiers; // parallel to SocketedStatGems; a gem's modifiers are multiplied by its tier
+    public SkillGemData ActiveSkillGem;
 
     public RunTimeGauntlet(GauntletData gauntletData, EquipSlot initialSlot)
     {
@@ -17,6 +18,7 @@ public class RunTimeGauntlet
         //always creating an array based on the max number of slots to prevent gems from being destroyed
         //if we allow the player to swap gauntlets back and forth.
         SocketedStatGems = new StatGemData[5];
+        SocketedGemTiers = new int[5];
     }
 
     //Hand gem slot Restriction logic
@@ -35,9 +37,17 @@ public class RunTimeGauntlet
     {
         List<GemModifier> allMods = new List<GemModifier>();
         
-        foreach(StatGemData gem in GetActiveStatGems())
+        for(int i = 0; i < SocketedStatGems.Length; i++)
         {
-            allMods.AddRange(gem.Modifiers);
+            if(SocketedStatGems[i] == null) continue;
+
+            int tier = Mathf.Max(1, SocketedGemTiers[i]);
+            foreach(GemModifier mod in SocketedStatGems[i].Modifiers)
+            {
+                GemModifier scaled = mod;
+                scaled.Amount *= tier;
+                allMods.Add(scaled);
+            }
         }
 
         if(CurrentSlot == EquipSlot.Primary && BaseGauntlet.InherentPassives != null)
@@ -66,6 +76,7 @@ public class RunTimeGauntlet
         for(int i = 0; i < SocketedStatGems.Length; i++)
         {
             SocketedStatGems[i] = null;
+            SocketedGemTiers[i] = 0;
         }
         return extractedGems;
     }

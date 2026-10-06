@@ -9,6 +9,7 @@ public class GemEffectsManager : MonoBehaviour
     [SerializeField] private PlayerMovement _movement;
     [SerializeField] private PlayerHealth _healthScript;
     [SerializeField] private PlayerStamina _staminaScript;
+    private PlayerMana _manaScript;
     [SerializeField] private HitboxController _leftHitBox;
     [SerializeField] private HitboxController _rightHitBox;
     [SerializeField] private PlayerStatsManager _statsManager;
@@ -21,6 +22,7 @@ public class GemEffectsManager : MonoBehaviour
     {
         _healthScript = GetComponent<PlayerHealth>(); 
         _staminaScript = GetComponent<PlayerStamina>();
+        _manaScript = GetComponent<PlayerMana>();
         _statsManager = GetComponent<PlayerStatsManager>();
 
     }
@@ -40,6 +42,11 @@ public class GemEffectsManager : MonoBehaviour
 
     private void HandleEnemyDeath(BaseEnemy deadEnemy)
     {
+        if (_statsManager != null && _statsManager.manaOnKillTotal > 0 && _manaScript != null)
+        {
+            _manaScript.RestoreMana(_statsManager.manaOnKillTotal);
+        }
+
         if (_statsManager != null && _statsManager.executionerTotal > 0)
         {
             float staminaToRestore = _statsManager.executionerTotal;

@@ -197,7 +197,7 @@ public Transform primaryGauntlet;
             if (pm != null)
             {
                 pm.InitializeGauntlet(true, pack.primaryRarity);
-                RestoreGemsToGauntlet(pm, pack.primaryGems);
+                RestoreGemsToGauntlet(pm, pack.primaryGems, pack.primaryGemTiers);
 
                 if (pack.primarySkillGemPrefab != null && pm.SkillSlot != null)
                 {
@@ -229,7 +229,7 @@ public Transform primaryGauntlet;
             if (sm != null)
             {
                 sm.InitializeGauntlet(false, pack.secondaryRarity);
-                RestoreGemsToGauntlet(sm, pack.secondaryGems); // Put gems back in slots!
+                RestoreGemsToGauntlet(sm, pack.secondaryGems, pack.secondaryGemTiers); // Put gems back in slots!
 
                 if (pack.secondarySkillGemPrefab != null && sm.SkillSlot != null)
                 {
@@ -270,7 +270,7 @@ public Transform primaryGauntlet;
         }
     }
 
-    private void RestoreGemsToGauntlet(GauntletManager gm, List<GameObject> savedGems)
+    private void RestoreGemsToGauntlet(GauntletManager gm, List<GameObject> savedGems, List<int> savedTiers)
     {
         // Loop through the saved gem list and put them back exactly where they were
         for (int i = 0; i < gm.fingerSlots.Count && i < savedGems.Count; i++)
@@ -287,6 +287,7 @@ public Transform primaryGauntlet;
                 {
                     // Ensure the gem knows it belongs in this slot so it doesn't fly away
                     gemScript.parentAfterDrag = gm.fingerSlots[i].transform;
+                    if (savedTiers != null && i < savedTiers.Count) gemScript.Tier = Mathf.Clamp(savedTiers[i], 1, DraggableGem.MaxTier);
                 }
             }
         }
@@ -1374,7 +1375,7 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
             descriptionBoxAnchor.gameObject.SetActive(true);
             if (detailCanvasGroup != null) detailCanvasGroup.alpha = 1f;
 
-            detailNameText.text = targetGem.gemName.GetLocalizedString();
+            detailNameText.text = targetGem.gemName.GetLocalizedString() + $" (Tier {targetGem.Tier})";
             detailDescriptionText.text = targetGem.gemDescription.GetLocalizedString();
             if (detailIcon != null)
             {

@@ -19,6 +19,9 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
     [Tooltip("Drag your Red Arrow UI object here")]
     [SerializeField] private GameObject redArrow;
 
+    [Tooltip("When set, replaces the red arrow and the bar-wide breathing with the pixel-art LEVEL UP badge")]
+    [SerializeField] private LevelUpIndicator indicator;
+
     [Header("Level & EXP Settings")]
     public int currentLevel = 1;
     public float currentExp = 0f;
@@ -102,7 +105,11 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
 
         _pendingLevelUps += levelsGained;
 
-        if (_pendingLevelUps > 0)
+        if (_pendingLevelUps > 0 && indicator != null)
+        {
+            indicator.Show(_pendingLevelUps);
+        }
+        else if (_pendingLevelUps > 0)
         {
             // 1. Start the bar breathing
             if (_pulseTween == null || !_pulseTween.IsActive())
@@ -153,6 +160,13 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
                         txtLevel.transform.DOKill();
                         txtLevel.transform.localScale = _originalTextScale;
                         txtLevel.transform.DOPunchScale(_originalTextScale * 0.6f, 0.35f, 8, 1f);
+
+                        if (indicator != null)
+                        {
+                            indicator.Burst();
+                            txtLevel.color = new Color(1f, 0.9f, 0.4f, 1f);
+                            txtLevel.DOColor(levelTextColor, 0.6f).SetUpdate(true);
+                        }
                     }
                     if (fillBar != null) fillBar.fillAmount = 0f;
                 });
@@ -266,6 +280,12 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         if (_pendingLevelUps > 0)
         {
             _pendingLevelUps--;
+
+            if (indicator != null)
+            {
+                if (_pendingLevelUps > 0) indicator.Show(_pendingLevelUps);
+                else indicator.Hide();
+            }
 
             // If no more levels are pending, completely kill all animations!
             if (_pendingLevelUps <= 0)

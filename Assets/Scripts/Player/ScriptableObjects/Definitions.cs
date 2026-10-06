@@ -58,6 +58,7 @@ public enum StatModifierType
     // Appended last: gem assets store this enum by number, so never insert above.
     MaxMana,
     ManaRegen,
+    ManaOnKill, //Killing an enemy gives mana back
 }
 
 public enum SkillCategory
