@@ -12,6 +12,8 @@ public class PlayerStatsManager : MonoBehaviour
     public float BaseMaxPoise = 100f;
     public float BaseStaminaRegen = 60f;
     public float BaseStaminaDelay = 3f;
+    public float BaseMana = 100f;
+    public float BaseManaRegen = 5f; // per second
     [HideInInspector] public float berserkerDamageMultiplier = 1f;
     
 
@@ -23,6 +25,8 @@ public class PlayerStatsManager : MonoBehaviour
     public float CurrentMaxPoise {get; private set;}
     public float CurrentStaminaRegen {get; private set;}
     public float CurrentStaminaDelay {get; private set;}
+    public float CurrentMana {get; private set;}
+    public float CurrentManaRegen {get; private set;}
 
     public RunTimeGauntlet PrimaryGauntlet;
     public RunTimeGauntlet SecondaryGauntlet;
@@ -235,6 +239,9 @@ public class PlayerStatsManager : MonoBehaviour
 
         CurrentStamina = totalStamina;
         CurrentMaxPoise = totalPoise;
+
+        CurrentMana = (BaseMana + GetFlatBonus(StatModifierType.MaxMana)) * GetPercentMultiplier(StatModifierType.MaxMana);
+        CurrentManaRegen = (BaseManaRegen + GetFlatBonus(StatModifierType.ManaRegen)) * GetPercentMultiplier(StatModifierType.ManaRegen);
     }
 
     private float GetFlatBonus(StatModifierType statType)

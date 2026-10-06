@@ -24,6 +24,7 @@ public class PlayerCombat : MonoBehaviour
     private PlayerControls _input;
     private PlayerStatsManager _statsManager;
     private PlayerStamina _staminaScript;
+    private PlayerMana _manaScript;
     private PlayerHealth _healthScript;
 
     [Header("Physical Hitboxes")]
@@ -94,6 +95,7 @@ public class PlayerCombat : MonoBehaviour
         _stateManager = GetComponent<PlayerManager>();
         _statsManager = GetComponent<PlayerStatsManager>();
         _staminaScript = GetComponent<PlayerStamina>();
+        _manaScript = GetComponent<PlayerMana>();
         _healthScript = GetComponent<PlayerHealth>();
 
         _playerMap = inputAsset.FindActionMap("Player");
@@ -214,15 +216,13 @@ public class PlayerCombat : MonoBehaviour
         if (currentState != PlayerState.Idle && currentState != PlayerState.Walking) return;
 
         RunTimeGauntlet targetGauntlet = isLeftGauntlet ? _statsManager.SecondaryGauntlet : _statsManager.PrimaryGauntlet;
-        float currentCooldown = isLeftGauntlet ? _leftSkillCooldownTimer : _rightSkillCooldownTimer;
-        
+
         if (targetGauntlet == null || targetGauntlet.ActiveSkillGem == null) return;
-        if (currentCooldown > 0) return;
 
         SkillGemData slottedSkill = targetGauntlet.ActiveSkillGem;
 
-        if (!_staminaScript.HasEnoughStamina(slottedSkill.StaminaCost)) return;
-        _staminaScript.ConsumeStamina(slottedSkill.StaminaCost);
+        if (!_manaScript.HasEnoughMana(_manaScript.SkillCost)) return;
+        _manaScript.ConsumeMana(_manaScript.SkillCost);
 
         ForceSnapToLockOn();
         _currentlyCastingGauntlet = targetGauntlet;
@@ -243,14 +243,12 @@ public class PlayerCombat : MonoBehaviour
                 // Swap the empty dummy state with the actual left-handed animation
                 _overrideController["CastLeft_Dummy"] = variant.Value.LeftGauntletAnim;
                 _animator.SetTrigger("CastLeftSkill");
-                _leftSkillCooldownTimer = slottedSkill.Cooldown;
             }
             else if (!isLeftGauntlet && variant.Value.RightGauntletAnim != null)
             {
                 // Swap the empty dummy state with the actual right-handed animation
                 _overrideController["CastRight_Dummy"] = variant.Value.RightGauntletAnim;
                 _animator.SetTrigger("CastRightSkill");
-                _rightSkillCooldownTimer = slottedSkill.Cooldown;
             }
             else
             {

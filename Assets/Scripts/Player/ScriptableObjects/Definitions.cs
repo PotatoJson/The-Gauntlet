@@ -54,6 +54,10 @@ public enum StatModifierType
     ParryAttackBuff, //LOL no parry yet but this could be cool
     Retaliation, //Damage Increases as health lowers
     Executioner, //Killing an enemy gives stamina back
+
+    // Appended last: gem assets store this enum by number, so never insert above.
+    MaxMana,
+    ManaRegen,
 }
 
 public enum SkillCategory

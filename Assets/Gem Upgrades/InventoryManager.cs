@@ -714,7 +714,9 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         GauntletMenu gauntletMenu = FindFirstObjectByType<GauntletMenu>();
         if (gauntletMenu != null && gauntletMenu.gameObject.activeInHierarchy)
         {
-            gauntletMenu.ResumeGame();
+            // Pause menu only exists underneath if the player opened it with Esc first.
+            if (gauntletMenu.IsPaused) gauntletMenu.ResumeGame();
+            else gauntletMenu.CloseInventoryOnly();
         }
         else
         {

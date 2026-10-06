@@ -96,8 +96,7 @@ public class GauntletMenu : MonoBehaviour
             // The user requested that this action NEVER closes the menu.
             if (!_isPaused && characterScreenRoot != null && !characterScreenRoot.activeSelf)
             {
-                PauseGame();
-                OpenUpgradeMenu();
+                OpenInventoryOnly();
             }
         }
 
@@ -346,6 +345,29 @@ public class GauntletMenu : MonoBehaviour
             });
     }
 
+
+    public bool IsPaused => _isPaused;
+
+    // Inventory hotkey path: freezes the game but never shows the pause menu.
+    private void OpenInventoryOnly()
+    {
+        characterScreenRoot.SetActive(true);
+        Time.timeScale = 0f;
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
+        else _playerMap.Disable();
+        ShowCursor();
+    }
+
+    // Counterpart of OpenInventoryOnly, also used when the inventory closes without the pause menu open.
+    public void CloseInventoryOnly()
+    {
+        if (characterScreenRoot != null) characterScreenRoot.SetActive(false);
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
+        else _playerMap.Enable();
+
+        HideCursor();
+        if (GameplayInputGate.Instance == null || !GameplayInputGate.Instance.IsSuspended) Time.timeScale = 1f;
+    }
 
     // Call this from the Pause Menu's "Upgrade/Character" Button OnClick()
     public void OpenUpgradeMenu()

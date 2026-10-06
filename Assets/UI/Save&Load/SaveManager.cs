@@ -196,6 +196,9 @@ public class SaveManager : MonoBehaviour
         if (stamina == null) stamina = FindFirstObjectByType<PlayerStamina>();
         if (stamina != null) data.currentStamina = stamina.CurrentStamina;
 
+        PlayerMana mana = FindFirstObjectByType<PlayerMana>();
+        if (mana != null) data.currentMana = mana.CurrentMana;
+
         // --- Position ---
         Transform playerTransform = health.transform;
         data.SetPosition(playerTransform.position);
@@ -304,6 +307,9 @@ public class SaveManager : MonoBehaviour
 
         PlayerStamina stamina = FindFirstObjectByType<PlayerStamina>();
         if (stamina != null) stamina.RestoreState(data.currentStamina);
+
+        PlayerMana mana = FindFirstObjectByType<PlayerMana>();
+        if (mana != null) mana.RestoreState(data.currentMana);
 
         // 4. Position. This runs last so it overrides the PlayerSpawn teleport that
         //    PlayerPersistence performs on every scene load.

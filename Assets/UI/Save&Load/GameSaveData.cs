@@ -40,8 +40,8 @@ public class GameSaveData
     public float currentHealth;
     public float maxHealthAtSave;
 
-    // The "mana" bar is driven by PlayerStamina, so that is what gets stored.
     public float currentStamina;
+    public float currentMana = -1f; // -1 = not in the save (older file), start full
     public float currentPoise;
     public int currentPotions;
 

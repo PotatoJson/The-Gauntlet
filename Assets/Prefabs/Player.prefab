@@ -51,6 +51,7 @@ GameObject:
   - component: {fileID: 7300029207042372441}
   - component: {fileID: 1328476746531781019}
   - component: {fileID: 1951633073746790973}
+  - component: {fileID: 5759774807375061343}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -309,6 +310,8 @@ MonoBehaviour:
   BaseMaxPoise: 100
   BaseStaminaRegen: 60
   BaseStaminaDelay: 3
+  BaseMana: 100
+  BaseManaRegen: 5
   berserkerDamageMultiplier: 1
   DefaultPrimary: {fileID: 11400000, guid: 960120bce33a6674ebabbd798d2ec07a, type: 2}
   DefaultSecondary: {fileID: 11400000, guid: 960120bce33a6674ebabbd798d2ec07a, type: 2}
@@ -353,6 +356,19 @@ MonoBehaviour:
   spawnOffset: {x: 0, y: 0, z: 0}
   useRevealEffect: 1
   revealShader: {fileID: 4800000, guid: 7f220144c4e227247a7db7f9e1b0c703, type: 3}
+--- !u!114 &5759774807375061343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682075080402086317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da50246b66d80394186ed78feac3f73e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMana
+  _skillCost: 20
 --- !u!1 &3354600228069912316
 GameObject:
   m_ObjectHideFlags: 0
