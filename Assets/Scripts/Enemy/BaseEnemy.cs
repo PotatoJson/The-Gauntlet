@@ -540,12 +540,16 @@ public abstract class BaseEnemy : MonoBehaviour
         currentHealth -= damage;
         GetComponentInChildren<EnemyHealthBar>()?.ShowHealthBar();
 
-        if (currentHealth <= 0) { Die(); return; }
-
-        if(damage >= 20)
+        // Skills reach here directly (melee plays its own feedback from HitboxController). Small hits like
+        // burn ticks stay silent; strong hits and kills get the full pause/flash/nudge.
+        bool killed = currentHealth <= 0;
+        if (!HitFeel.InMelee && (killed || damage >= 20f))
         {
-            StartCoroutine(EnemyHitstopRoutine(0.1f));
+            HitFeel.EnemyHit(this, killed ? HitStrength.Kill : HitStrength.Heavy);
         }
+
+        if (killed) { Die(); return; }
+
         if (isHitImmune || isCharging && damage < 20f) return;
 
         isAttacking = false;
@@ -554,13 +558,6 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.velocity = Vector3.zero;
 
         EnterHitStun();
-    }
-
-    private IEnumerator EnemyHitstopRoutine(float duration)
-    {
-        FreezeForHitstop();
-        yield return new WaitForSeconds(duration);
-        UnfreezeFromHitstop();
     }
 
     public void SpawnHitVFX(Vector3 hitPosition, Vector3 hitDirection)
@@ -805,11 +802,17 @@ public abstract class BaseEnemy : MonoBehaviour
         SetSpeedMultiplier(1f);
     }
 
+    // Freezes can overlap (a hit pause during a jolt stun, two quick hits). Counting them means the
+    // enemy only resumes when the last one ends, and the speed saved is always the real one, not 0.
+    private int _hitstopHolds;
+
     public void FreezeForHitstop()
     {
+        if (_hitstopHolds++ > 0) return;
+
         // 1. Freeze the animation mid-frame
         if (animator != null) animator.speed = 0f;
-        
+
         // 2. Safely halt the pathfinding without breaking their AI state
         if (navAgent.isOnNavMesh)
         {
@@ -821,9 +824,11 @@ public abstract class BaseEnemy : MonoBehaviour
 
     public void UnfreezeFromHitstop()
     {
-        // 1. Unpause the animation
-        if (animator != null) animator.speed = 1f;
-        
+        if (_hitstopHolds == 0 || --_hitstopHolds > 0) return;
+
+        // 1. Unpause the animation (at the current slow/speed status, not blindly 1)
+        if (animator != null) animator.speed = _currentSpeedMultiplier;
+
         // 2. Give them their speed back so they continue exactly what they were doing
         if (navAgent.isOnNavMesh)
         {

@@ -288,7 +288,9 @@ public class PlayerCombat : MonoBehaviour
         if (prefabToSpawn != null && _currentSpawnPoint != null)
         {
             GameObject activeSkill = Instantiate(prefabToSpawn, _currentSpawnPoint.position, transform.rotation);
-            
+
+            if (currentElement == ElementType.Fire) ImpactFrame.Play();
+
             BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
             if (projectileScript != null)
             {

@@ -90,8 +90,13 @@ public class HitboxController : MonoBehaviour
             
             if(_alreadyHit.Add(enemyRoot))
             {
-                enemyScript.TakeDamage(_currentDamage);
-                
+                HitFeel.InMelee = true; // BaseEnemy skips its own feedback; this hit plays the melee version below
+                try { enemyScript.TakeDamage(_currentDamage); }
+                finally { HitFeel.InMelee = false; }
+
+                HitFeel.EnemyHit(enemyScript, enemyScript.IsDead() ? HitStrength.Kill
+                    : _currentAttackType == CombatInput.Heavy ? HitStrength.Heavy : HitStrength.Light);
+
                 Vector3 spawnPosition = other.ClosestPoint(transform.position);
                 Vector3 punchDirection = (other.transform.position - transform.position).normalized;
                 punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));

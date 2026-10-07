@@ -99,6 +99,40 @@ public class PlayerCamera : MonoBehaviour
     private float _originalPivotHeight;
     #endregion
 
+    #region Hit Nudge
+    [Header("Hit Nudge")]
+    [Tooltip("How fast a hit nudge settles. Higher = snappier.")]
+    [SerializeField] private float kickRecovery = 16f;
+    private Vector2 _kickOffset;
+    private float _kickRoll;
+
+    /// <summary>
+    /// A small camera knock for hits. The camera dips and slides a little with the direction of the hit,
+    /// rolls a touch, and settles back within about a fifth of a second.
+    /// </summary>
+    public void Kick(Vector3 worldDirection, float magnitude)
+    {
+        if (cameraObject == null) return;
+
+        worldDirection.y = 0f;
+        Vector3 local = cameraObject.transform.InverseTransformDirection(worldDirection.normalized);
+        _kickOffset += new Vector2(local.x * magnitude * 0.6f, -magnitude);
+        _kickOffset = Vector2.ClampMagnitude(_kickOffset, 0.25f);
+        _kickRoll = Mathf.Clamp(_kickRoll + Random.Range(-1f, 1f) * magnitude * 12f, -3f, 3f);
+    }
+
+    private void ApplyKick()
+    {
+        float settle = 1f - Mathf.Exp(-kickRecovery * Time.unscaledDeltaTime);
+        _kickOffset = Vector2.Lerp(_kickOffset, Vector2.zero, settle);
+        _kickRoll = Mathf.Lerp(_kickRoll, 0f, settle);
+
+        // x/y only: HandleCollisions rebuilds the local position every frame, so nothing accumulates.
+        cameraObject.transform.localPosition += new Vector3(_kickOffset.x, _kickOffset.y, 0f);
+        cameraObject.transform.localRotation = Quaternion.Euler(0f, 0f, _kickRoll);
+    }
+    #endregion
+
     #region Setup & Public Methods
     private void Awake()
     {
@@ -213,6 +247,7 @@ public class PlayerCamera : MonoBehaviour
             CheckTargetLineOfSight();
             HandleRotations(isMouseInput);
             HandleCollisions();
+            ApplyKick();
             HandleLockOnUI();
         }
     }

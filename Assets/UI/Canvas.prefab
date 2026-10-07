@@ -3817,6 +3817,7 @@ GameObject:
   - component: {fileID: 1401902851801756137}
   - component: {fileID: 2481241463296407876}
   - component: {fileID: 4790314859602846499}
+  - component: {fileID: 1659837435967872297}
   m_Layer: 5
   m_Name: RawImage
   m_TagString: Untagged
@@ -3878,6 +3879,25 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
+--- !u!114 &1659837435967872297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3146695287671373449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ae0741970e73ab40b5439ceb877e2ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactFrame
+  impactMaterial: {fileID: 2100000, guid: b2e621237597c894592b56919e073788, type: 2}
+  lightFraction: 0.35
+  strength: 0.5
+  lightColor: {r: 1, g: 0.82, b: 0.5, a: 1}
+  darkColor: {r: 0, g: 0, b: 0, a: 1}
+  duration: 0.035
+  minInterval: 0.14
 --- !u!1 &3174756449497508575
 GameObject:
   m_ObjectHideFlags: 0

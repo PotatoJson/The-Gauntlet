@@ -275,6 +275,8 @@ public class PlayerHealth : MonoBehaviour
 
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + _currentHealth);
+
+        HitFeel.PlayerHit(damage, attacker);
         if (_currentHealth <= 0)
         {
             if (MetricsTracker.Instance != null)
