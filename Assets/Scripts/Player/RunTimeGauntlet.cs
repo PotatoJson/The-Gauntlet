@@ -9,6 +9,7 @@ public class RunTimeGauntlet
     public StatGemData[] SocketedStatGems;
     public int[] SocketedGemTiers; // parallel to SocketedStatGems; a gem's modifiers are multiplied by its tier
     public SkillGemData ActiveSkillGem;
+    public int ActiveSkillTier = 1; // the skill gem's tier; scales skill damage
 
     public RunTimeGauntlet(GauntletData gauntletData, EquipSlot initialSlot)
     {

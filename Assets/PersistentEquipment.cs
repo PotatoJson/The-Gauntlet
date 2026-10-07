@@ -25,6 +25,7 @@ public class PersistentEquipment : MonoBehaviour
     public List<int> primaryGemTiers = new List<int>(); // parallel to primaryGems
     [FormerlySerializedAs("ultimateGemPrefab")]
     public GameObject primarySkillGemPrefab;
+    public int primarySkillGemTier = 1;
 
     [Header("Saved Secondary")]
     public GameObject secondaryGauntletPrefab;
@@ -32,6 +33,7 @@ public class PersistentEquipment : MonoBehaviour
     public List<GameObject> secondaryGems = new List<GameObject>();
     public List<int> secondaryGemTiers = new List<int>(); // parallel to secondaryGems
     public GameObject secondarySkillGemPrefab;
+    public int secondarySkillGemTier = 1;
 
     [Header("Saved Progression")]
     [Tooltip("The player's level and EXP, carried between levels alongside the gear. Filled in " +
@@ -39,6 +41,17 @@ public class PersistentEquipment : MonoBehaviour
     public int playerLevel = 1;
     public float playerExp = 0f;
     public float expToNextLevel = 100f;
+
+    [Header("Shrines")]
+    [Tooltip("Keys of the shrines already used this run (filled in automatically).")]
+    public List<string> usedShrines = new List<string>();
+
+    public bool IsShrineUsed(string key) => usedShrines.Contains(key);
+
+    public void MarkShrineUsed(string key)
+    {
+        if (!usedShrines.Contains(key)) usedShrines.Add(key);
+    }
 
     private void Awake()
     {
@@ -96,8 +109,8 @@ public class PersistentEquipment : MonoBehaviour
         ExtractGems(inv.secondaryGauntlet, secondaryGems, secondaryGemTiers);
 
         // 2. Save Skill Gems
-        primarySkillGemPrefab = ExtractSkillGem(pManager);
-        secondarySkillGemPrefab = ExtractSkillGem(sManager);
+        primarySkillGemPrefab = ExtractSkillGem(pManager, out primarySkillGemTier);
+        secondarySkillGemPrefab = ExtractSkillGem(sManager, out secondarySkillGemTier);
 
         // 3. Level and EXP ride along with the gear, so they survive a level transition too.
         CaptureProgression();
@@ -133,8 +146,9 @@ public class PersistentEquipment : MonoBehaviour
 
     #endregion
 
-    private GameObject ExtractSkillGem(GauntletManager gm)
+    private GameObject ExtractSkillGem(GauntletManager gm, out int tier)
     {
+        tier = 1;
         if (gm == null || gm.SkillSlot == null) return null;
 
         SkillSlotManager skillSlot = gm.SkillSlot.GetComponent<SkillSlotManager>();
@@ -145,6 +159,7 @@ public class PersistentEquipment : MonoBehaviour
         DraggableGem equipped = skillSlot.GetEquippedSkillGem();
         if (equipped == null || equipped.LinkedGemData == null) return null;
 
+        tier = equipped.Tier;
         GameObject prefab = FindPrefabForGemData(equipped.LinkedGemData);
         if (prefab == null)
         {
@@ -227,12 +242,15 @@ public class PersistentEquipment : MonoBehaviour
         data.primaryGemNames = ToNames(primaryGems);
         data.primaryGemTiers = new List<int>(primaryGemTiers);
         data.primarySkillGemName = PrefabName(primarySkillGemPrefab);
+        data.primarySkillGemTier = primarySkillGemTier;
+        data.usedShrines = new List<string>(usedShrines);
 
         data.secondaryGauntletName = PrefabName(secondaryGauntletPrefab);
         data.secondaryRarity = (int)secondaryRarity;
         data.secondaryGemNames = ToNames(secondaryGems);
         data.secondaryGemTiers = new List<int>(secondaryGemTiers);
         data.secondarySkillGemName = PrefabName(secondarySkillGemPrefab);
+        data.secondarySkillGemTier = secondarySkillGemTier;
 
         // Read the bar one last time so a checkpoint always stores the level as it stands.
         CaptureProgression();
@@ -266,12 +284,15 @@ public class PersistentEquipment : MonoBehaviour
         primaryGems = ToPrefabs(data.primaryGemNames);
         primaryGemTiers = data.primaryGemTiers != null ? new List<int>(data.primaryGemTiers) : new List<int>(); // old saves: empty = tier 1
         primarySkillGemPrefab = FindGemPrefab(data.primarySkillGemName);
+        primarySkillGemTier = Mathf.Max(1, data.primarySkillGemTier);
+        usedShrines = data.usedShrines != null ? new List<string>(data.usedShrines) : new List<string>();
 
         secondaryGauntletPrefab = FindGauntletPrefab(data.secondaryGauntletName);
         secondaryRarity = ToRarity(data.secondaryRarity);
         secondaryGems = ToPrefabs(data.secondaryGemNames);
         secondaryGemTiers = data.secondaryGemTiers != null ? new List<int>(data.secondaryGemTiers) : new List<int>();
         secondarySkillGemPrefab = FindGemPrefab(data.secondarySkillGemName);
+        secondarySkillGemTier = Mathf.Max(1, data.secondarySkillGemTier);
 
         // The EXP bar reads these back out of here when it starts in the restored scene.
         playerLevel = Mathf.Max(1, data.playerLevel);

@@ -301,7 +301,7 @@ public class PlayerCombat : MonoBehaviour
                     currentTarget = PlayerCamera.Instance.currentLockOnTarget;
                 }
 
-                projectileScript.Initialize(_statsManager.CurrentDamage, _statsManager.CurrentMaxPoise, currentTarget);
+                projectileScript.Initialize(_statsManager.CurrentDamage * GemTierInfo.SkillDamageMultiplier(_currentlyCastingGauntlet.ActiveSkillTier), _statsManager.CurrentMaxPoise, currentTarget);
 
                 if (projectileScript is FireballProjectile fireball)
                 {
@@ -458,9 +458,36 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    // Heavy charge VFX: one per fist, built the first time that hand charges.
+    private ChargePulseVFX _leftChargeVfx, _rightChargeVfx, _activeChargeVfx;
+
+    private void BeginChargeVfx()
+    {
+        bool right = _currentAttackNode != null && _currentAttackNode.StrikingHand != StrikeHand.Left;
+        HitboxController fist = right ? _rightHitbox : _leftHitbox;
+        if (fist == null) return;
+
+        ref ChargePulseVFX slot = ref (right ? ref _rightChargeVfx : ref _leftChargeVfx);
+        if (slot == null) slot = ChargePulseVFX.Create(fist.transform);
+
+        GauntletData gauntlet = right
+            ? _statsManager.PrimaryGauntlet?.BaseGauntlet
+            : _statsManager.SecondaryGauntlet?.BaseGauntlet;
+
+        _activeChargeVfx = slot;
+        _activeChargeVfx.Begin(ChargePulseVFX.ElementColor(gauntlet != null ? gauntlet.Element : ElementType.Physical));
+    }
+
     private void HandleHeavyChargeTimer()
     {
-        if(!_isCharging) return;
+        if(!_isCharging)
+        {
+            // Charge ended some other way (interrupted); let the effect fade without a burst.
+            if (_activeChargeVfx != null && _activeChargeVfx.IsActive) _activeChargeVfx.Cancel();
+            return;
+        }
+
+        _activeChargeVfx?.SetCharge(_chargeTimer / Mathf.Max(0.01f, MaxChargeDuration));
         _chargeTimer += Time.deltaTime;
         if(_chargeTimer >= MaxChargeDuration)
         {
@@ -546,6 +573,7 @@ public class PlayerCombat : MonoBehaviour
         {
             _isCharging = true;
             _animator.speed = _pullBackSpeed;
+            BeginChargeVfx();
         }
     }
 
@@ -560,6 +588,9 @@ public class PlayerCombat : MonoBehaviour
     public void HeavyAttackSwing()
     {
         _animator.speed = 1f;
+
+        // Only a swing that was really charging goes off; the animation event also calls this on uncharged swings.
+        if (_isCharging) _activeChargeVfx?.Release();
         _isCharging = false;
         _chargeTimer = 0f;
 

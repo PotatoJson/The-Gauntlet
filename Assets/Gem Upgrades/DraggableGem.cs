@@ -7,7 +7,7 @@ using UnityEngine.Localization;
 public enum GemType { Stat, Skill }
 
 [RequireComponent(typeof(CanvasGroup))]
-public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler
+public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, ISubmitHandler, IDropHandler
 //IPointerClickHandler
 {
     [Header("Back End Stuff")]
@@ -47,7 +47,33 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public int Tier
     {
         get => _tier > 0 ? _tier : Mathf.Clamp(LinkedGemData != null ? LinkedGemData.GemTier : 1, 1, MaxTier);
-        set => _tier = Mathf.Clamp(value, 1, MaxTier);
+        set
+        {
+            _tier = Mathf.Clamp(value, 1, MaxTier);
+            RefreshTierVisuals();
+        }
+    }
+
+    [Header("Tier Look")]
+    [Tooltip("Small roman numeral in the corner of the gem; hidden at tier 1.")]
+    [SerializeField] private TMPro.TMP_Text tierBadge;
+
+    /// <summary>Corner numeral and outline colour for this gem's tier. Safe to call before Awake.</summary>
+    public void RefreshTierVisuals()
+    {
+        int tier = Tier;
+        Color color = GemTierInfo.TierColor(tier);
+
+        if (tierBadge != null)
+        {
+            tierBadge.gameObject.SetActive(tier > 1);
+            tierBadge.text = GemTierInfo.RomanNumeral(tier);
+            tierBadge.color = Color.Lerp(color, Color.white, 0.35f);
+        }
+
+        // Tier 1 keeps the original plain black outline; higher tiers glow in their quality colour.
+        Outline outline = GetComponent<Outline>();
+        if (outline != null) outline.effectColor = tier > 1 ? color : Color.black;
     }
 
     private void Awake()
@@ -55,6 +81,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         _rectTransform = GetComponent<RectTransform>();
         _canvasGroup = GetComponent<CanvasGroup>();
         _originalSizeDelta = _rectTransform.sizeDelta;
+        RefreshTierVisuals();
     }
 
     private void Start()
@@ -238,6 +265,51 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void OnSubmit(BaseEventData eventData)
     {
         ForceOpenPopUI();
+    }
+
+    /// <summary>
+    /// Another gem was dropped on this one. Two identical gems of the same tier merge into one a tier
+    /// higher. An equipped gem refuses anything else; a gem that isn't equipped hands the drop on to
+    /// whatever holds it (the return zone, the board).
+    /// </summary>
+    public void OnDrop(PointerEventData eventData)
+    {
+        DraggableGem dropped = eventData.pointerDrag != null ? eventData.pointerDrag.GetComponent<DraggableGem>() : null;
+
+        if (dropped != null && dropped != this)
+        {
+            if (GemCrafting.TryMergeDropped(this, dropped)) return;
+
+            // The only thing that may happen to an equipped gem is a merge. Anything else (a different gem, the
+            // same gem at another tier, a full-tier gem) would fall through to the slot, which replaces the
+            // occupant and destroys it. Refuse instead and leave both gems as they are.
+            if (IsEquipped())
+            {
+                PlayRejectFeedback();
+                return;
+            }
+        }
+
+        // Not equipped (e.g. on the reward board): let whatever holds this gem handle the drop as before.
+        if (transform.parent != null)
+        {
+            ExecuteEvents.ExecuteHierarchy(transform.parent.gameObject, eventData, ExecuteEvents.dropHandler);
+        }
+    }
+
+    /// <summary>A short shake: "that drop did nothing".</summary>
+    public void PlayRejectFeedback()
+    {
+        transform.DOKill(true);
+        transform.DOShakePosition(0.3f, new Vector3(8f, 0f, 0f), 22, 90f, false, true).SetUpdate(true).SetLink(gameObject);
+    }
+
+    /// <summary>A quick pop so the player sees which gem just levelled up.</summary>
+    public void PlayMergeFeedback()
+    {
+        transform.DOKill(true);
+        transform.localScale = Vector3.one;
+        transform.DOPunchScale(Vector3.one * 0.45f, 0.4f, 8, 0.8f).SetUpdate(true).SetLink(gameObject);
     }
 
     private void OnDestroy()

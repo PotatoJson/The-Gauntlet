@@ -94,6 +94,7 @@ public class PlayerStatsManager : MonoBehaviour
                 if (skillGem != null)
                 {
                     newGauntlet.ActiveSkillGem = skillGem.LinkedGemData as SkillGemData;
+                    newGauntlet.ActiveSkillTier = skillGem.Tier;
                 }
                 else
                 {

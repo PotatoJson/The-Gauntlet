@@ -76,6 +76,21 @@ public class RewardMenuManager : MonoBehaviour
         return _currentlySlottedGem == null || _currentlySlottedGem == gem;
     }
 
+    public bool IsActiveRewardGem(DraggableGem gem) => _activeRewardGems.Contains(gem);
+
+    /// <summary>
+    /// A reward was merged into a gem the player already owns instead of being slotted. That is the pick for
+    /// this level-up: the other rewards lock, and the merged-into gem stands in for the "chosen" gem.
+    /// </summary>
+    public void OnGemMergedFromReward(DraggableGem consumed, DraggableGem kept)
+    {
+        if (!_activeRewardGems.Remove(consumed)) return;
+        if (_isOverflowMode) return;
+
+        _currentlySlottedGem = kept;
+        UpdateGemInteractability(false);
+    }
+
     public void OnGemSlotted(DraggableGem gem)
     {
         if (!_activeRewardGems.Contains(gem)) return;

@@ -293,10 +293,55 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: ec1b15f451de3b74e8c9c594716665ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 71202343620280328}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ec1b15f451de3b74e8c9c594716665ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9200524912253641667}
   m_SourcePrefab: {fileID: 100100000, guid: ec1b15f451de3b74e8c9c594716665ff, type: 3}
 --- !u!4 &8617506443457890439 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: ec1b15f451de3b74e8c9c594716665ff, type: 3}
   m_PrefabInstance: {fileID: 8078667245276884844}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8997163872280564285 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ec1b15f451de3b74e8c9c594716665ff, type: 3}
+  m_PrefabInstance: {fileID: 8078667245276884844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9200524912253641667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8997163872280564285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d30a8a248e50464e984db8d9ecf6039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShrineInteractable
+  promptPrefab: {fileID: 9115048475440569668, guid: f76d0e31b7321d04cb0adc71aa8dd8f4, type: 3}
+  interactionRadius: 4.5
+  promptHeight: 4.4
+  promptString:
+    m_TableReference:
+      m_TableCollectionName: Gem
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Shrine_Prompt
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  spentString:
+    m_TableReference:
+      m_TableCollectionName: Gem
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: Shrine_Spent
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  spentTint: {r: 0.45, g: 0.45, b: 0.5, a: 1}
+  references:
+    version: 2
+    RefIds: []

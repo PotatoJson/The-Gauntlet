@@ -41,6 +41,14 @@ public class SkillSlotManager : MonoBehaviour, IDropHandler, IPointerEnterHandle
                     if (!RewardMenuManager.Instance.CanDragGem(incomingGem)) return;
                 }
 
+                // 2b. An occupied slot never destroys the gem in it: the only thing allowed is a merge.
+                DraggableGem occupant = GetEquippedSkillGem();
+                if (occupant != null && occupant != incomingGem)
+                {
+                    if (!GemCrafting.TryMergeDropped(occupant, incomingGem)) occupant.PlayRejectFeedback();
+                    return;
+                }
+
                 // 3. CLAIM THE GEM: Tell the drag system this slot is its new home!
                 incomingGem.parentAfterDrag = transform;
                 SlotSkillGem(incomingGem);

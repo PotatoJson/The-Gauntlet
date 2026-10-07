@@ -543,7 +543,39 @@ public class GemPopupMenu : MonoBehaviour
                   $"from '{(sourceSlot != null ? sourceSlot.name : "board")}', " +
                   $"displacing '{(displacedGem != null ? displacedGem.name : "nothing")}'.");
 
+        // Same kind of gem at a different tier (or at max) can't merge, and swapping it would hand the player's
+        // upgraded gem back to the board. Refuse and stay in placement mode so another slot can be chosen.
+        if (displacedGem != null && displacedGem != _targetGem &&
+            displacedGem.LinkedGemData == _targetGem.LinkedGemData &&
+            !GemCrafting.CanMerge(displacedGem, _targetGem))
+        {
+            displacedGem.PlayRejectFeedback();
+            return;
+        }
+
+        // A gem carried in from the reward board may not displace an equipped gem: that would push the
+        // player's gem onto the board. Only a merge (below) or a swap between two gauntlet slots is allowed.
+        if (displacedGem != null && displacedGem != _targetGem && !IsGauntletSlot(sourceSlot) &&
+            !GemCrafting.CanMerge(displacedGem, _targetGem))
+        {
+            displacedGem.PlayRejectFeedback();
+            return;
+        }
+
         EndPlacementMode(); // Visually restore gem AND disable slots!
+
+        // Carrying a gem onto an identical one of the same tier merges them (same as dragging with the mouse).
+        if (displacedGem != null && displacedGem != _targetGem && GemCrafting.TryMergeDropped(displacedGem, _targetGem))
+        {
+            CloseMenu();
+            RefreshInventoryNavigation();
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+                if (displacedGem != null) EventSystem.current.SetSelectedGameObject(displacedGem.gameObject);
+            }
+            return;
+        }
 
         // Dropping a gem back on the slot it already occupied is a no-op, not a swap with itself.
         if (displacedGem == _targetGem) displacedGem = null;

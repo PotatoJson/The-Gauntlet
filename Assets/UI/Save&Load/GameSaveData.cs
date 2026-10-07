@@ -55,12 +55,17 @@ public class GameSaveData
     public List<string> primaryGemNames = new List<string>();
     public List<int> primaryGemTiers = new List<int>();
     public string primarySkillGemName;
+    public int primarySkillGemTier = 1;
 
     public string secondaryGauntletName;
     public int secondaryRarity;
     public List<string> secondaryGemNames = new List<string>();
     public List<int> secondaryGemTiers = new List<int>();
     public string secondarySkillGemName;
+    public int secondarySkillGemTier = 1;
+
+    /// <summary>Shrines already used this run, so they stay spent after loading.</summary>
+    public List<string> usedShrines = new List<string>();
 
     public bool IsUsable => saveVersion == CurrentVersion && !string.IsNullOrEmpty(sceneName);
 

@@ -55,6 +55,9 @@ public Transform primaryGauntlet;
     [SerializeField] private GameObject descriptionBoxAnchor;
     [SerializeField] private CanvasGroup detailCanvasGroup;
     [SerializeField] private TMP_Text detailNameText;
+    public TMP_Text DetailNameText => detailNameText; // reused as the look/font template by the shrine screen
+    public Image DetailPanelImage => descriptionBoxAnchor != null ? descriptionBoxAnchor.GetComponent<Image>() : null;
+    [SerializeField] private TMP_Text detailTierText; // "Tier 2 - Polished", kept apart from the gem's own title
 [SerializeField] private TMP_Text detailDescriptionText;
     [SerializeField] private Image detailIcon;
 
@@ -208,6 +211,7 @@ public Transform primaryGauntlet;
                     if (skillGemScript != null && skillSlotManager != null)
                     {
                         skillGemScript.parentAfterDrag = pm.SkillSlot.transform;
+                        skillGemScript.Tier = pack.primarySkillGemTier;
                         skillSlotManager.SlotSkillGem(skillGemScript);
                     }
                 }
@@ -240,6 +244,7 @@ public Transform primaryGauntlet;
                     if (skillGemScript != null && skillSlotManager != null)
                     {
                         skillGemScript.parentAfterDrag = sm.SkillSlot.transform;
+                        skillGemScript.Tier = pack.secondarySkillGemTier;
                         skillSlotManager.SlotSkillGem(skillGemScript);
                     }
                 }
@@ -1375,7 +1380,12 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
             descriptionBoxAnchor.gameObject.SetActive(true);
             if (detailCanvasGroup != null) detailCanvasGroup.alpha = 1f;
 
-            detailNameText.text = targetGem.gemName.GetLocalizedString() + $" (Tier {targetGem.Tier})";
+            detailNameText.text = targetGem.gemName.GetLocalizedString();
+            if (detailTierText != null)
+            {
+                detailTierText.text = GemTierInfo.Label(targetGem.Tier);
+                detailTierText.color = GemTierInfo.TierColor(targetGem.Tier);
+            }
             detailDescriptionText.text = targetGem.gemDescription.GetLocalizedString();
             if (detailIcon != null)
             {

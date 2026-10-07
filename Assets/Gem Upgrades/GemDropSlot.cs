@@ -141,6 +141,20 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
                 if (!RewardMenuManager.Instance.CanDragGem(incomingGem)) return;
             }
 
+            // An occupied slot never swallows the gem that is in it: the only thing allowed here is a merge.
+            DraggableGem occupant = null;
+            foreach (Transform child in transform)
+            {
+                DraggableGem existing = child.GetComponent<DraggableGem>();
+                if (existing != null && existing != incomingGem) occupant = existing;
+            }
+
+            if (occupant != null)
+            {
+                if (!GemCrafting.TryMergeDropped(occupant, incomingGem)) occupant.PlayRejectFeedback();
+                return;
+            }
+
             foreach (Transform child in transform) { Destroy(child.gameObject); }
 
             incomingGem.parentAfterDrag = transform;

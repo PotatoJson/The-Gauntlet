@@ -91,6 +91,7 @@ public class GauntletMenu : MonoBehaviour
         {
             // Block inventory toggle if we are choosing a gauntlet reward
             if (GauntletChoiceUI.Instance != null && GauntletChoiceUI.Instance.gameObject.activeInHierarchy) return;
+            if (ShrineUpgradeUI.IsOpen) return;
 
             // ONLY allow opening the menu if it's currently closed. 
             // The user requested that this action NEVER closes the menu.
@@ -171,6 +172,9 @@ public class GauntletMenu : MonoBehaviour
         {
             return;
         }
+
+        // The shrine screen handles its own Escape.
+        if (ShrineUpgradeUI.IsOpen) return;
 
         if (characterScreenRoot != null && characterScreenRoot.activeSelf)
         {
