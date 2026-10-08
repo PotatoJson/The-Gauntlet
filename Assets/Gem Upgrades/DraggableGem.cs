@@ -74,6 +74,10 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         // Tier 1 keeps the original plain black outline; higher tiers glow in their quality colour.
         Outline outline = GetComponent<Outline>();
         if (outline != null) outline.effectColor = tier > 1 ? color : Color.black;
+
+        // ...and get an animated aura that gets richer with the quality.
+        if (tier > 1) GemAura.Ensure(this).Apply(tier, color);
+        else GemAura.Remove(this);
     }
 
     private void Awake()
@@ -146,14 +150,26 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
     }
 
+    /// <summary>Set by a drop that has already moved this gem (a swap), so OnEndDrag doesn't place it a second time.</summary>
+    [System.NonSerialized] public bool placedByDrop;
+
     public void OnEndDrag(PointerEventData eventData)
     {
         if (!_canDrag) return;
-        transform.SetParent(parentAfterDrag);
-        _canvasGroup.blocksRaycasts = true;
-        _canvasGroup.alpha = 1f;
 
-        AnimateToNewHome();
+        if (placedByDrop)
+        {
+            placedByDrop = false;
+            _canvasGroup.alpha = 1f; // the swap flight handles raycasts and position itself
+        }
+        else
+        {
+            transform.SetParent(parentAfterDrag);
+            _canvasGroup.blocksRaycasts = true;
+            _canvasGroup.alpha = 1f;
+
+            AnimateToNewHome();
+        }
 
         if (InventoryManager.Instance != null && gameObject.activeInHierarchy)
         {
@@ -285,6 +301,19 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             // occupant and destroys it. Refuse instead and leave both gems as they are.
             if (IsEquipped())
             {
+                // Two equipped gems of the same kind of slot can trade places. Nothing is lost, so that is allowed.
+                Transform sourceSlot = dropped.parentAfterDrag;
+                bool fromGauntlet = GemSwapFx.IsGauntletSlot(sourceSlot);
+                bool compatible = dropped.LinkedGemData != null && LinkedGemData != null &&
+                                  dropped.LinkedGemData.gemType == LinkedGemData.gemType;
+
+                if (fromGauntlet && compatible)
+                {
+                    dropped.placedByDrop = true;
+                    GemSwapFx.Swap(dropped, transform.parent, this, sourceSlot);
+                    return;
+                }
+
                 PlayRejectFeedback();
                 return;
             }
@@ -295,6 +324,14 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             ExecuteEvents.ExecuteHierarchy(transform.parent.gameObject, eventData, ExecuteEvents.dropHandler);
         }
+    }
+
+    /// <summary>A small pop when a gem lands in its slot after a swap.</summary>
+    public void PlayLandFeedback()
+    {
+        transform.DOKill(true);
+        transform.localScale = Vector3.one;
+        transform.DOPunchScale(Vector3.one * 0.3f, 0.3f, 8, 0.8f).SetUpdate(true).SetLink(gameObject);
     }
 
     /// <summary>A short shake: "that drop did nothing".</summary>

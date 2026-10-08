@@ -91,6 +91,17 @@ public class RewardMenuManager : MonoBehaviour
         UpdateGemInteractability(false);
     }
 
+    /// <summary>
+    /// A gem is about to be destroyed by a merge. If it was the gem standing in as this level-up's pick, the pick
+    /// moves to the gem that absorbed it. Without this the pick reads as null once the gem is destroyed, so the
+    /// reward looks unclaimed and the other rewards unlock again.
+    /// </summary>
+    public void OnGemConsumedByMerge(DraggableGem consumed, DraggableGem kept)
+    {
+        _activeRewardGems.Remove(consumed);
+        if (_currentlySlottedGem == consumed) _currentlySlottedGem = kept;
+    }
+
     public void OnGemSlotted(DraggableGem gem)
     {
         if (!_activeRewardGems.Contains(gem)) return;
@@ -128,8 +139,16 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
+    private int _lastOpenFrame = -1;
+
     public void OpenRewardMenu()
     {
+        // The level-up button reaches this twice in one click (its UnityEvent AND a direct call in
+        // ProgressBarCircle). The duplicate used to just throw away the first set of gems; with animated arrivals it
+        // left the first gem's summoning effect playing over nothing. One open per frame.
+        if (_lastOpenFrame == Time.frameCount) return;
+        _lastOpenFrame = Time.frameCount;
+
         _isCurrentlyRewardPhase = true; // Set flag
         _isOverflowMode = false;
         SetupMenuExecution();
@@ -225,7 +244,8 @@ public class RewardMenuManager : MonoBehaviour
 
         if (InventoryManager.Instance != null)
         {
-            InventoryManager.Instance.AnimateGemArrivalDrops(gemsForAnimation);
+            // Hellbent arrival: the gems are summoned one at a time out of collapsing rings of fire.
+            HellGemSpawnFx.Play(gemsForAnimation, gemSpawnAreaRoot, mainPaperPlate);
         }
 
 

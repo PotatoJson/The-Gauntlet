@@ -154,6 +154,8 @@ public class PlayerCombat : MonoBehaviour
         if (_leftSkillCooldownTimer > 0) _leftSkillCooldownTimer -= Time.deltaTime;
         if (_rightSkillCooldownTimer > 0) _rightSkillCooldownTimer -= Time.deltaTime;
 
+        RecoverFromCutOffAttack();
+
         if(_stateManager.RequestBufferClear)
         {
             ConsumeBuffer();
@@ -169,6 +171,31 @@ public class PlayerCombat : MonoBehaviour
         HandleHeavyChargeTimer();
         ProcessAttackRotation();
         ProcessCombatLogic();
+    }
+
+    // Failsafe for an attack whose animation was cut short (landing during a jump attack, a stagger, ...). The
+    // attack state is only ever left by the EndAttack animation event, and EndAttack even refuses to run while a
+    // combo is queued, so a clip that never reaches its events leaves the player stuck in "Attacking" for good.
+    // If the animator is back on plain locomotion while we still think we're attacking, end the attack.
+    private float _attackIdleTimer;
+
+    private void RecoverFromCutOffAttack()
+    {
+        if (_stateManager.GetCurrentState() != PlayerState.Attacking || _isCharging || _animator == null)
+        {
+            _attackIdleTimer = 0f;
+            return;
+        }
+
+        bool backToLocomotion = !_animator.IsInTransition(0) && _animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion");
+        _attackIdleTimer = backToLocomotion ? _attackIdleTimer + Time.deltaTime : 0f; // animator time, so slow-mo can't trip it
+
+        if (_attackIdleTimer < 0.5f) return;
+
+        Debug.LogWarning("[PlayerCombat] The attack animation ended without its EndAttack event; recovering from the stuck Attacking state.");
+        _attackIdleTimer = 0f;
+        _comboQueued = false;
+        EndAttack();
     }
 
     #region InputBuffer
@@ -288,8 +315,6 @@ public class PlayerCombat : MonoBehaviour
         if (prefabToSpawn != null && _currentSpawnPoint != null)
         {
             GameObject activeSkill = Instantiate(prefabToSpawn, _currentSpawnPoint.position, transform.rotation);
-
-            if (currentElement == ElementType.Fire) ImpactFrame.Play();
 
             BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
             if (projectileScript != null)

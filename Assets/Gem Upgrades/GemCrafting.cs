@@ -37,7 +37,11 @@ public static class GemCrafting
         keep.Tier++;
 
         // Taking the reward by merging counts as choosing it: the other rewards lock, like a normal pick.
-        if (rewardMode) reward.OnGemMergedFromReward(consume, keep);
+        if (rewardMode)
+        {
+            reward.OnGemMergedFromReward(consume, keep);
+            reward.OnGemConsumedByMerge(consume, keep); // the pick must survive its gem being merged away
+        }
 
         // Detach first so the stat sync below can't still count the consumed gem while it waits to be destroyed.
         consume.transform.SetParent(null, false);

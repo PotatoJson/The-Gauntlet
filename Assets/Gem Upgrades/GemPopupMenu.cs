@@ -580,17 +580,20 @@ public class GemPopupMenu : MonoBehaviour
         // Dropping a gem back on the slot it already occupied is a no-op, not a swap with itself.
         if (displacedGem == _targetGem) displacedGem = null;
 
-        PlaceGemInSlot(_targetGem, targetSlot);
+        bool isSwap = displacedGem != null && IsGauntletSlot(sourceSlot);
+
+        // A real swap flies the two gems past each other (so it is obvious they traded places); otherwise it's a plain placement.
+        if (isSwap) GemSwapFx.Swap(_targetGem, targetSlot, displacedGem, sourceSlot);
+        else PlaceGemInSlot(_targetGem, targetSlot);
 
         if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
             RewardMenuManager.Instance.OnGemSlotted(_targetGem);
 
         if (displacedGem != null)
         {
-            if (IsGauntletSlot(sourceSlot))
+            if (isSwap)
             {
-                // A real swap: the occupant takes the carried gem's old home.
-                PlaceGemInSlot(displacedGem, sourceSlot);
+                // Already handled by GemSwapFx above: the occupant took the carried gem's old home.
             }
             else
             {
