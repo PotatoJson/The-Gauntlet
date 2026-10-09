@@ -13,6 +13,14 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
     public float effectDuration = 1.7f;
     public Vector3 spawnOffset = Vector3.zero;
 
+    [Header("Camera Intro")]
+    [Tooltip("The camera starts in front of the player, then sweeps round behind them once the effect has played.")]
+    public bool useCameraIntro = true;
+    [Tooltip("How far the camera looks down at the player during the intro, in degrees.")]
+    public float introPitch = 8f;
+    [Tooltip("Seconds the camera takes to travel round the player.")]
+    public float orbitDuration = 1.4f;
+
     [Header("Reveal Settings")]
     public bool useRevealEffect = true;
     public Shader revealShader;
@@ -80,6 +88,10 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         if (_movement != null) _movement.enabled = false;
         if (_combat != null) _combat.enabled = false;
 
+        // Frame the player straight away so the first rendered frame is already on them. The
+        // snap below repeats after the wait in case PlayerPersistence moves the player later.
+        FocusCamera();
+
         // Wait a frame to ensure all other systems (like PlayerPersistence) have moved the player
         yield return null;
 
@@ -101,14 +113,7 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         }
 
         // 3. Camera Initial Snap
-        if (PlayerCamera.Instance != null)
-        {
-            if (PlayerCamera.Instance.playerTarget == null)
-                PlayerCamera.Instance.playerTarget = transform;
-
-            PlayerCamera.Instance.SnapToTarget();
-            PlayerCamera.Instance.ResetRotation(); // --- THE FIX: Snap rotation behind player ---
-        }
+        FocusCamera();
 
         // 4. VFX
         if (teleportEffectPrefab != null)
@@ -158,8 +163,40 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
             SetRenderersEnabled(true);
         }
 
+        // 7. Camera sweeps round the player and settles into the normal over-the-shoulder view
+        if (useCameraIntro && PlayerCamera.Instance != null)
+        {
+            PlayerCamera cam = PlayerCamera.Instance;
+            float t = 0f;
+            while (t < orbitDuration)
+            {
+                t += Time.deltaTime;
+                float e = Mathf.SmoothStep(0f, 1f, t / orbitDuration);
+                // Read the yaw every frame: a restored save can still be turning the player.
+                cam.SetLookAngles(transform.eulerAngles.y + 180f * (1f - e), Mathf.Lerp(introPitch, 0f, e));
+                cam.HandleAllCameraActions(Vector2.zero, false);
+                yield return null;
+            }
+
+            cam.SetLookAngles(transform.eulerAngles.y, 0f);
+            cam.HandleAllCameraActions(Vector2.zero, false);
+        }
+
         if (_movement != null) _movement.enabled = true;
         if (_combat != null) _combat.enabled = true;
+    }
+
+    // Points the camera at this player, snaps it onto them and applies the rotation right now.
+    // With the intro on, the camera starts in front of the player looking back at them.
+    private void FocusCamera()
+    {
+        PlayerCamera cam = PlayerCamera.Instance;
+        if (cam == null) return;
+
+        // The spawn-time player replaces any stand-in the new scene's camera pointed at.
+        cam.FocusOn(transform);
+        if (useCameraIntro) cam.SetLookAngles(transform.eulerAngles.y + 180f, introPitch);
+        cam.HandleAllCameraActions(Vector2.zero, false); // applies position/rotation this frame
     }
 
     private void PrepareReveal()

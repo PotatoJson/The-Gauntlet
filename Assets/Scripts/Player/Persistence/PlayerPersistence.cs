@@ -43,6 +43,9 @@ public class PlayerPersistence : MonoBehaviour
 
             // 5. Re-enable the physics
             if (cc != null) cc.enabled = true;
+
+            // The camera must not spend a frame looking at the old level's position.
+            if (PlayerCamera.Instance != null) PlayerCamera.Instance.FocusOn(transform, resetRotation: false); // the spawn effect sets the camera angle
             
             // 6. Update your respawn system so spikes don't send you back to Level 1!
             PlayerHealth health = GetComponent<PlayerHealth>();

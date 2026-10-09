@@ -154,15 +154,26 @@ public class PlayerCamera : MonoBehaviour
         }
     }
 
+    private bool _initialised;
+
     private void Start()
     {
+        Initialise();
+    }
+
+    // Reads the camera's authored layout once. The spawn effect can frame the camera before this
+    // object's own Start has run, and SnapToTarget would otherwise overwrite the authored distance.
+    private void Initialise()
+    {
+        if (_initialised) return;
+        _initialised = true;
 
         _cameraZPosition = cameraObject.transform.localPosition.z;
-        
-        if (playerTarget != null) 
-            _previousTargetPosition = playerTarget.position; 
 
-        if (cameraPivotTransform != null) 
+        if (playerTarget != null)
+            _previousTargetPosition = playerTarget.position;
+
+        if (cameraPivotTransform != null)
             _originalPivotHeight = cameraPivotTransform.localPosition.y;
     }
 
@@ -196,6 +207,8 @@ public class PlayerCamera : MonoBehaviour
 
     public void SnapToTarget()
     {
+        Initialise();
+
         if (playerTarget != null)
         {
             // Teleport the camera base
@@ -216,6 +229,30 @@ public class PlayerCamera : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Frames a freshly spawned player: follows its CameraTarget child (the camera's authored
+    /// height), snaps onto it and faces the same way the player does.
+    /// </summary>
+    public void FocusOn(Transform player, bool resetRotation = true)
+    {
+        Transform cameraTarget = null;
+        foreach (Transform t in player.GetComponentsInChildren<Transform>(true))
+        {
+            if (t.name == "CameraTarget") { cameraTarget = t; break; }
+        }
+        playerTarget = cameraTarget != null ? cameraTarget : player;
+
+        SnapToTarget();
+        if (resetRotation) ResetRotation();
+    }
+
+    /// <summary>Sets where the camera looks (applied on the next HandleAllCameraActions). Positive pitch looks down.</summary>
+    public void SetLookAngles(float yaw, float pitch)
+    {
+        _leftAndRightLookAngle = yaw;
+        _upAndDownLookAngle = Mathf.Clamp(pitch, minimumPivot, maximumPivot);
+    }
+
     public void ResetRotation()
     {
         if (playerTarget != null)
@@ -230,7 +267,8 @@ public class PlayerCamera : MonoBehaviour
     public void HandleAllCameraActions(Vector2 input, bool isMouseInput = false)
     {
         if (Time.deltaTime == 0f) return;
-        
+
+        Initialise();
         _cameraInput = input;
 
         // Tick down the target switch cooldown every frame
