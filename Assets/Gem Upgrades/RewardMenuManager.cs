@@ -295,70 +295,96 @@ public class RewardMenuManager : MonoBehaviour
     {
         RectTransform spawnAreaCanvas = gemSpawnAreaRoot.GetComponent<RectTransform>();
 
-        int maxAttempts = 50; // --- NEW: Safety limit ---
-        int currentAttempt = 0;
+        // Keep the whole gem (not just its centre) clear of the UI.
+        Vector2 half = gemRect.rect.size * 0.5f;
+        float pad = 25f;
+        Vector2 clear = half + new Vector2(pad, pad);
+
+        // The Graphic-based bounds cover the art that is really on screen (the gauntlet hand is far
+        // bigger than its 100x100 root rect).
+        List<Rect> blockers = new List<Rect>();
+        AddBlocker(blockers, switchGauntletBtn, spawnAreaCanvas);
+        AddBlocker(blockers, descriptionPanelGroup != null ? descriptionPanelGroup.GetComponent<RectTransform>() : null, spawnAreaCanvas);
+        if (InventoryManager.Instance != null)
+        {
+            AddBlocker(blockers, InventoryManager.Instance.primaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas);
+            AddBlocker(blockers, InventoryManager.Instance.secondaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas);
+        }
+
+        // Banner sits across the top, so everything above its lower edge is off limits (also covers Return/Swap).
+        float maxY = float.MaxValue;
+        List<Rect> banner = new List<Rect>();
+        AddBlocker(banner, titleBannerHolder, spawnAreaCanvas);
+        if (banner.Count > 0) maxY = banner[0].yMin - clear.y;
 
         float halfWidth = (mainPaperPlate.rect.width / 2f) - 60f;
         float halfHeight = (mainPaperPlate.rect.height / 2f) - 60f;
 
-        while (currentAttempt < maxAttempts)
+        Vector2 best = new Vector2(Random.Range(-150, -50), Random.Range(-100, 100));
+        for (int attempt = 0; attempt < 120; attempt++)
         {
-            currentAttempt++;
-            // 1. Pick a random point relative to the Paper Plate
-            float randX = Random.Range(-halfWidth, halfWidth);
-            float randY = Random.Range(-halfHeight, halfHeight);
+            Vector3 worldPoint = mainPaperPlate.TransformPoint(new Vector3(Random.Range(-halfWidth, halfWidth), Random.Range(-halfHeight, halfHeight), 0));
+            Vector2 p = spawnAreaCanvas.InverseTransformPoint(worldPoint);
 
-            // 2. Convert to screen space, then back to the gem canvas space
-            Vector3 worldPoint = mainPaperPlate.TransformPoint(new Vector3(randX, randY, 0));
-            Vector2 testPoint = spawnAreaCanvas.InverseTransformPoint(worldPoint);
+            if (p.y > maxY) continue;
 
-            // 3. Avoid the Top Banner and Swap Button
-            if (IsPointInsideBlocker(testPoint, titleBannerHolder, spawnAreaCanvas)) continue;
-            if (IsPointInsideBlocker(testPoint, switchGauntletBtn, spawnAreaCanvas)) continue;
-
-            // 4.Avoid the Gauntlets! 
-            if (InventoryManager.Instance != null)
+            bool blocked = false;
+            foreach (Rect r in blockers)
             {
-                if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.primaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
-                if (IsPointInsideBlocker(testPoint, InventoryManager.Instance.secondaryGauntlet.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
+                if (p.x > r.xMin - clear.x && p.x < r.xMax + clear.x && p.y > r.yMin - clear.y && p.y < r.yMax + clear.y) { blocked = true; break; }
             }
-            if (descriptionPanelGroup != null)
-            {
-                if (IsPointInsideBlocker(testPoint, descriptionPanelGroup.GetComponent<RectTransform>(), spawnAreaCanvas)) continue;
-            }
+            if (blocked) continue;
 
-            return testPoint;
+            best = p;
+
+            // Prefer a spot that doesn't sit on another gem; after 60 tries accept overlap rather than fail.
+            if (attempt < 60 && OverlapsOtherGem(p, gemRect, half)) continue;
+            return p;
         }
 
-        // Fallback: slightly offset so they don't perfectly stack
-        float spreadX = mainPaperPlate.rect.width * 0.4f;
-        float spreadY = mainPaperPlate.rect.height * 0.4f;
-        return new Vector2(Random.Range(-150, -50), Random.Range(-100, 100));
+        return best;
     }
 
-    private bool IsPointInsideBlocker(Vector2 targetPoint, RectTransform blocker, RectTransform canvas)
+    private bool OverlapsOtherGem(Vector2 p, RectTransform self, Vector2 half)
     {
-        if (blocker == null) return false;
-
-        // Translate the blocker's world boundaries down into local canvas space matching the gems
-        Vector3[] blockerCorners = new Vector3[4];
-        blocker.GetWorldCorners(blockerCorners);
-
-        float minX = float.MaxValue, maxX = float.MinValue;
-        float minY = float.MaxValue, maxY = float.MinValue;
-
-        for (int i = 0; i < 4; i++)
+        foreach (Transform child in gemSpawnAreaRoot)
         {
-            Vector2 localPos = canvas.InverseTransformPoint(blockerCorners[i]);
-            if (localPos.x < minX) minX = localPos.x;
-            if (localPos.x > maxX) maxX = localPos.x;
-            if (localPos.y < minY) minY = localPos.y;
-            if (localPos.y > maxY) maxY = localPos.y;
+            if (child == self || !child.gameObject.activeInHierarchy) continue;
+            Vector2 o = ((RectTransform)child).anchoredPosition;
+            if (Mathf.Abs(o.x - p.x) < half.x * 2f + 30f && Mathf.Abs(o.y - p.y) < half.y * 2f + 30f) return true;
+        }
+        return false;
+    }
+
+    // Adds the on-screen bounds (own rect + visible Graphics underneath) in the gem canvas space.
+    private void AddBlocker(List<Rect> list, RectTransform blocker, RectTransform canvas)
+    {
+        if (blocker == null) return;
+
+        Vector3[] c = new Vector3[4];
+        float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+
+        void Grow(RectTransform rt)
+        {
+            rt.GetWorldCorners(c);
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 l = canvas.InverseTransformPoint(c[i]);
+                if (l.x < minX) minX = l.x;
+                if (l.x > maxX) maxX = l.x;
+                if (l.y < minY) minY = l.y;
+                if (l.y > maxY) maxY = l.y;
+            }
         }
 
-        // Add a 30 pixel safety margin buffer around the edges of the central gauntlet board
-        return (targetPoint.x >= minX - 30f && targetPoint.x <= maxX + 30f &&
-                targetPoint.y >= minY - 30f && targetPoint.y <= maxY + 30f);
+        Grow(blocker);
+        foreach (Graphic g in blocker.GetComponentsInChildren<Graphic>(false))
+        {
+            if (g.color.a < 0.05f) continue;
+            Grow(g.rectTransform);
+        }
+
+        list.Add(Rect.MinMaxRect(minX, minY, maxX, maxY));
     }
 
     private void TrapControllerFocus(List<Button> spawnedButtons)
