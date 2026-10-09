@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
@@ -25,7 +26,13 @@ public class MainMenuManager : MonoBehaviour
     [Tooltip("Drag your Main Menu 'Play' Button here so the controller knows where to return!")]
     public GameObject firstMainMenuButton;
 
+    [Header("Transition")]
+    [Tooltip("Full-screen black overlay (CanvasGroup) that fades in when Play / New Run is pressed.")]
+    public CanvasGroup fadeOverlay;
+    public float fadeDuration = 0.9f;
+
     private bool _isUsingGamepad = false;
+    private bool _isLeaving = false;
 
     private void Start()
     {
@@ -98,7 +105,11 @@ public class MainMenuManager : MonoBehaviour
     public void OnPlayClicked()
     {
         Time.timeScale = 1f;
+        FadeThen(PlayOrContinue);
+    }
 
+    private void PlayOrContinue()
+    {
         if (SaveManager.Instance != null && SaveManager.Instance.HasSave)
         {
             // ResumeFromCheckpoint loads the saved scene itself and re-adopts the run ID,
@@ -118,7 +129,22 @@ public class MainMenuManager : MonoBehaviour
     /// </summary>
     public void OnNewRunClicked()
     {
-        StartFreshRun();
+        FadeThen(StartFreshRun);
+    }
+
+    // Fades the screen to black, then runs the action that loads the next scene.
+    private void FadeThen(System.Action load)
+    {
+        if (_isLeaving) return;
+        _isLeaving = true;
+
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+
+        if (fadeOverlay == null) { load(); return; }
+
+        fadeOverlay.transform.SetAsLastSibling();
+        fadeOverlay.blocksRaycasts = true; // no more clicks while leaving
+        fadeOverlay.DOFade(1f, fadeDuration).SetEase(Ease.InOutSine).SetUpdate(true).OnComplete(() => load());
     }
 
     private void StartFreshRun()

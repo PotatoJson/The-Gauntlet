@@ -15,6 +15,11 @@ public class UIBreathingLight : MonoBehaviour
     [Range(0f, 1f)] public float minAlpha = 0.1f;
     [Range(0f, 1f)] public float maxAlpha = 1.0f;
 
+    [Tooltip("Extra size swell at full brightness, e.g. 0.12 = +12%. 0 = alpha only.")]
+    public float scalePulse = 0f;
+    [Tooltip("Seconds to wait before starting, so two eyes don't breathe in perfect lockstep.")]
+    public float startDelay = 0f;
+
     private void Start()
     {
         if (glowingEyeImage != null)
@@ -28,7 +33,18 @@ public class UIBreathingLight : MonoBehaviour
             glowingEyeImage.DOFade(maxAlpha, breathDuration)
                 .SetEase(breathEase)
                 .SetLoops(-1, LoopType.Yoyo)
+                .SetDelay(startDelay)
                 .SetUpdate(true); // SetUpdate(true) ensures it plays even if the menu is paused
+
+            if (scalePulse > 0f)
+            {
+                Vector3 baseScale = glowingEyeImage.rectTransform.localScale;
+                glowingEyeImage.rectTransform.DOScale(baseScale * (1f + scalePulse), breathDuration)
+                    .SetEase(breathEase)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetDelay(startDelay)
+                    .SetUpdate(true);
+            }
         }
     }
 
@@ -38,6 +54,7 @@ public class UIBreathingLight : MonoBehaviour
         if (glowingEyeImage != null)
         {
             glowingEyeImage.DOKill();
+            glowingEyeImage.rectTransform.DOKill();
         }
     }
 }
