@@ -581,7 +581,7 @@ public class HellLord : BaseEnemy
 
     public override void TakeDamage(float damage)
     {
-        if (!isHitImmune)
+        if (!isHitImmune && !IsDotTick)
         {
             StopCasting();
             EndBeamAttack();

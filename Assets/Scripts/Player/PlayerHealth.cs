@@ -303,6 +303,14 @@ public class PlayerHealth : MonoBehaviour
     private void HandleStagger(int poiseDamage, GameObject attacker)
     {
         PoiseRecoveryTimer = PoiseRecoveryDelay;
+
+        // An Earth gauntlet's passive gem: basic attacks shrug off hits, heavy attacks are easier to break.
+        PlayerCombat combat = GetComponent<PlayerCombat>();
+        if (combat != null)
+        {
+            poiseDamage = Mathf.Max(1, Mathf.RoundToInt(poiseDamage * combat.IncomingPoiseMultiplier()));
+        }
+
         //see if player gets thrown from attack
         Debug.Log($"[POISE] Took {poiseDamage} poise damage! (Poise before hit: {CurrentPoise}/{_maxPoise})");
 

@@ -27,7 +27,9 @@ public class SkillCooldownUI : MonoBehaviour
         if (playerCombat == null || statsManager == null) return;
 
         // --- Left UI: Primary Gauntlet ---
-        bool hasPrimarySkill = statsManager.PrimaryGauntlet != null && statsManager.PrimaryGauntlet.ActiveSkillGem != null;
+        // A passive gem has no cast, so it gets no cooldown readout.
+        bool hasPrimarySkill = statsManager.PrimaryGauntlet != null && statsManager.PrimaryGauntlet.ActiveSkillGem != null
+                               && !statsManager.PrimaryGauntlet.ActiveSkillGem.IsPassive;
         if (leftSkillContainer != null) leftSkillContainer.SetActive(hasPrimarySkill);
 
         if (hasPrimarySkill && leftSkillOverlay != null && playerCombat.RightMaxCooldown > 0)
@@ -42,7 +44,8 @@ public class SkillCooldownUI : MonoBehaviour
         }
 
         // --- Right UI: Secondary Gauntlet ---
-        bool hasSecondarySkill = statsManager.SecondaryGauntlet != null && statsManager.SecondaryGauntlet.ActiveSkillGem != null;
+        bool hasSecondarySkill = statsManager.SecondaryGauntlet != null && statsManager.SecondaryGauntlet.ActiveSkillGem != null
+                                 && !statsManager.SecondaryGauntlet.ActiveSkillGem.IsPassive;
         if (rightSkillContainer != null) rightSkillContainer.SetActive(hasSecondarySkill);
 
         if (hasSecondarySkill && rightSkillOverlay != null && playerCombat.LeftMaxCooldown > 0)

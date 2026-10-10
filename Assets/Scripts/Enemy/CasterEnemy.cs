@@ -380,7 +380,7 @@ public class CasterEnemy : BaseEnemy
 
     public override void TakeDamage(float damage)
     {
-        if (!isHitImmune)
+        if (!isHitImmune && !IsDotTick)
         {
             StopChanneling();
             StopRepositioning();

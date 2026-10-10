@@ -69,11 +69,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChamberRewardTrigger
   rewardType: 2
   skillGemChance: 0.15
-  skillGemReward: {fileID: 0}
+  SkillGemUIPrefab: {fileID: 0}
+  alternateSkillGemUIPrefabs:
+  - {fileID: 3363818813761411258, guid: 112a194a068e3ec46a5e6876508ba035, type: 3}
   skillGemVisualPrefab: {fileID: 0}
   gemSpawnLocation: {fileID: 0}
   glowingVisual: {fileID: 5260326820119746626}
   collectVFX: {fileID: 0}
+  linkedAlternativeReward: {fileID: 0}
 --- !u!1001 &8860193123597170127
 PrefabInstance:
   m_ObjectHideFlags: 0

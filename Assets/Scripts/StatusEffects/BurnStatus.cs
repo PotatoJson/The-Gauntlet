@@ -25,7 +25,9 @@ public class BurnStatus : BaseStatusEffect
         _tickTimer += Time.deltaTime;
         if (_tickTimer >= 1f)
         {
-            target.TakeDamage(_dps);
+            BaseEnemy.IsDotTick = true; // hurts, but doesn't flinch them out of what they're doing
+            try { target.TakeDamage(_dps); }
+            finally { BaseEnemy.IsDotTick = false; }
             _tickTimer = 0f;
         }
     }

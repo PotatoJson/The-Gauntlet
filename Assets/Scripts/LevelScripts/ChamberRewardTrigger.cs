@@ -19,6 +19,9 @@ public class ChamberRewardTrigger : MonoBehaviour
 
     [Header("Skill Gem Settings")]
     public GameObject SkillGemUIPrefab;
+    [Tooltip("Other skill gems this reward can be. One is picked at random from these plus the gem above, " +
+             "so every skill gem can show up here, not only the one set in the scene.")]
+    public List<GameObject> alternateSkillGemUIPrefabs = new List<GameObject>();
     [Tooltip("Drag your pure visual cube prefab here (NO colliders/scripts needed)")]
     public GameObject skillGemVisualPrefab;
     [Tooltip("Where should the physical gem drop?")]
@@ -121,8 +124,18 @@ public class ChamberRewardTrigger : MonoBehaviour
 
     private void GiveSkillGem()
     {
-        if (InventoryManager.Instance == null || SkillGemUIPrefab == null) return;
-        bool success = InventoryManager.Instance.AutoSlotSkillGem(SkillGemUIPrefab);
+        if (InventoryManager.Instance == null) return;
+
+        var choices = new List<GameObject>();
+        if (SkillGemUIPrefab != null) choices.Add(SkillGemUIPrefab);
+        foreach (GameObject alternate in alternateSkillGemUIPrefabs)
+        {
+            if (alternate != null && !choices.Contains(alternate)) choices.Add(alternate);
+        }
+        if (choices.Count == 0) return;
+
+        GameObject chosenGem = choices[Random.Range(0, choices.Count)];
+        bool success = InventoryManager.Instance.AutoSlotSkillGem(chosenGem);
 
         if (success)
         {
@@ -138,7 +151,7 @@ public class ChamberRewardTrigger : MonoBehaviour
             Debug.LogWarning($"[Reward] Both Gauntlets already have Skill Gems!");
             if (RewardMenuManager.Instance != null)
             {
-                RewardMenuManager.Instance.OpenOverflowMenu(new List<GameObject> { SkillGemUIPrefab });
+                RewardMenuManager.Instance.OpenOverflowMenu(new List<GameObject> { chosenGem });
             }
         }
     }

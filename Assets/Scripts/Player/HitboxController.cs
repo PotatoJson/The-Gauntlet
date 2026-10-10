@@ -29,9 +29,12 @@ public class HitboxController : MonoBehaviour
         _collider.enabled = false;
     }
 
-    public void EnableCollider(int damage, int poise, CombatInput attackType, ElementType element)
+    private AttackPassive _passive;
+
+    public void EnableCollider(int damage, int poise, CombatInput attackType, ElementType element, AttackPassive passive = default)
     {
         _alreadyHit.Clear();
+        _passive = passive;
         _currentDamage = damage;
         _currentPoiseDamage = poise;
         _currentAttackType = attackType;
@@ -102,6 +105,9 @@ public class HitboxController : MonoBehaviour
                 punchDirection += new Vector3(Random.Range(-0.1f, 0.1f), 1.1f, Random.Range(-0.1f, 0.1f));
                 
                 enemyScript.SpawnHitVFX(spawnPosition, punchDirection);
+
+                // Passive skill gem in this fist's gauntlet: burn / chain lightning / frost.
+                AttackPassiveEffects.OnHit(_passive, enemyScript, _currentDamage, _currentAttackType, this);
 
                 if (_currentAttackType == CombatInput.Heavy)
                 {

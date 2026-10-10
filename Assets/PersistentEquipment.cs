@@ -184,6 +184,20 @@ public class PersistentEquipment : MonoBehaviour
             if (prefabGem != null && prefabGem.LinkedGemData == gemData) return projectPrefab;
         }
 
+        // A gem that can drop as a reward must be restorable too. The reward pool is the list that
+        // actually gets maintained, so fall back to it when this database is missing a gem.
+        RewardMenuManager rewards = RewardMenuManager.Instance;
+        if (rewards != null)
+        {
+            foreach (GameObject poolPrefab in rewards.allGemPrefabs)
+            {
+                if (poolPrefab == null) continue;
+
+                DraggableGem poolGem = poolPrefab.GetComponent<DraggableGem>();
+                if (poolGem != null && poolGem.LinkedGemData == gemData) return poolPrefab;
+            }
+        }
+
         return null;
     }
 
@@ -304,6 +318,20 @@ public class PersistentEquipment : MonoBehaviour
 
     public GameObject FindGemPrefab(string prefabName)
     {
+        // Same fallback as FindPrefabForGemData: the reward pool covers gems missing from the database.
+        RewardMenuManager rewards = RewardMenuManager.Instance;
+        if (rewards != null && !string.IsNullOrEmpty(prefabName))
+        {
+            foreach (GameObject prefab in masterGemDatabase)
+            {
+                if (prefab != null && prefab.name == prefabName) return prefab;
+            }
+            foreach (GameObject prefab in rewards.allGemPrefabs)
+            {
+                if (prefab != null && prefab.name == prefabName) return prefab;
+            }
+        }
+
         return FindInDatabase(masterGemDatabase, prefabName, "gem");
     }
 

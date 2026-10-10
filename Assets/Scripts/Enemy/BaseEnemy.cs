@@ -136,6 +136,9 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         navAgent = GetComponent<NavMeshAgent>();
 
+        // Burn / chill / jolt need one; no enemy prefab carries it, so skills were applying nothing.
+        StatusManager.For(this);
+
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
@@ -519,6 +522,12 @@ public abstract class BaseEnemy : MonoBehaviour
     #endregion
 
     #region Damage, Health & Hitboxes
+    /// <summary>
+    /// True while a damage-over-time tick is being dealt. Ticks hurt but don't flinch the enemy, otherwise
+    /// a burning enemy could never finish an attack.
+    /// </summary>
+    public static bool IsDotTick;
+
     public virtual void TakeDamage(float damage)
     {
         //Force the enemy to report its health
@@ -549,6 +558,8 @@ public abstract class BaseEnemy : MonoBehaviour
         }
 
         if (killed) { Die(); return; }
+
+        if (IsDotTick) return;
 
         if (isHitImmune || isCharging && damage < 20f) return;
 

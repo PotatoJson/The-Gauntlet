@@ -21,6 +21,10 @@ public class SkillGemData : GemData
     public float Cooldown;
     public float StaminaCost; //womp
 
+    [Tooltip("A passive gem is never cast (no Q/E, no mana, no cooldown). It empowers the basic and heavy attacks " +
+             "of the gauntlet it is socketed in, in a way that depends on that gauntlet's element.")]
+    public bool IsPassive;
+
 
     [Header("Elemental Variation")]
     [Tooltip("Add prefabs for each element the skill supports")]

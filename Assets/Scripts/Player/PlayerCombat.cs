@@ -245,6 +245,7 @@ public class PlayerCombat : MonoBehaviour
         RunTimeGauntlet targetGauntlet = isLeftGauntlet ? _statsManager.SecondaryGauntlet : _statsManager.PrimaryGauntlet;
 
         if (targetGauntlet == null || targetGauntlet.ActiveSkillGem == null) return;
+        if (targetGauntlet.ActiveSkillGem.IsPassive) return; // nothing to cast, and it must not cost mana
 
         SkillGemData slottedSkill = targetGauntlet.ActiveSkillGem;
 
@@ -512,13 +513,65 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        _activeChargeVfx?.SetCharge(_chargeTimer / Mathf.Max(0.01f, MaxChargeDuration));
+        float maxCharge = EffectiveMaxCharge();
+        _activeChargeVfx?.SetCharge(_chargeTimer / maxCharge);
         _chargeTimer += Time.deltaTime;
-        if(_chargeTimer >= MaxChargeDuration)
+        if(_chargeTimer >= maxCharge)
         {
             HeavyAttackSwing();
         }
     }
+
+    #region Empowered Attacks (passive skill gem)
+    // The passive skill gem only changes punches thrown by the gauntlet it is socketed in:
+    // right fist = Primary gauntlet, left fist = Secondary. Fire / Ice / Lightning add on-hit effects in
+    // HitboxController (AttackPassiveEffects); Earth and Wind change the swing itself, here.
+    private const float EarthChargeScale = 1.5f;     // heavy takes longer to charge...
+    private const float EarthLightPoiseTaken = 0.4f; // ...basic attacks shrug off hits...
+    private const float EarthHeavyPoiseTaken = 1.6f; // ...but a heavy is easy to break
+    private const float WindChargeScale = 0.5f;      // heavy charges twice as fast
+    private const float WindChargeBonus = 1.0f;      // and gains up to +100% (instead of +50%) for a full charge
+    private const float WindWindUpScale = 1.25f;     // and winds up faster
+
+    private AttackPassive PassiveFor(bool rightFist)
+    {
+        RunTimeGauntlet gauntlet = rightFist ? _statsManager.PrimaryGauntlet : _statsManager.SecondaryGauntlet;
+        if (gauntlet == null || gauntlet.BaseGauntlet == null) return default;
+
+        SkillGemData gem = gauntlet.ActiveSkillGem;
+        if (gem == null || !gem.IsPassive) return default;
+
+        return new AttackPassive { Active = true, Element = gauntlet.BaseGauntlet.Element, Tier = gauntlet.ActiveSkillTier };
+    }
+
+    // The passive of whichever fist the current attack uses (same hand rule as ArmTargetHitbox).
+    private AttackPassive CurrentPassive =>
+        _currentAttackNode == null ? default : PassiveFor(_currentAttackNode.StrikingHand == StrikeHand.Right);
+
+    private float EffectiveMaxCharge()
+    {
+        float max = MaxChargeDuration;
+        AttackPassive passive = CurrentPassive;
+
+        if (passive.Active)
+        {
+            if (passive.Element == ElementType.Earth) max *= EarthChargeScale;
+            else if (passive.Element == ElementType.Wind) max *= WindChargeScale;
+        }
+        return Mathf.Max(0.01f, max);
+    }
+
+    /// <summary>How much of an incoming hit's poise damage lands right now (PlayerHealth multiplies by it).</summary>
+    public float IncomingPoiseMultiplier()
+    {
+        if (_currentAttackNode == null || _stateManager.GetCurrentState() != PlayerState.Attacking) return 1f;
+
+        AttackPassive passive = CurrentPassive;
+        if (!passive.Active || passive.Element != ElementType.Earth) return 1f;
+
+        return (_currentAttackType == CombatInput.Heavy || _isCharging) ? EarthHeavyPoiseTaken : EarthLightPoiseTaken;
+    }
+    #endregion
 
 #region AnimationEvents
     public void ArmTargetHitbox()
@@ -544,10 +597,12 @@ public class PlayerCombat : MonoBehaviour
         int currentPoise = Mathf.RoundToInt(_statsManager.CurrentPoiseDamage); // need to add poiseDamage to _statsManager
 
         float chargeBonus = 1.0f;
+        AttackPassive passive = PassiveFor(_currentAttackNode.StrikingHand == StrikeHand.Right);
 
         if(_isCharging && _chargeTimer > 0)
         {
-            chargeBonus += (_chargeTimer / MaxChargeDuration) * 0.5f;
+            float maxBonus = (passive.Active && passive.Element == ElementType.Wind) ? WindChargeBonus : 0.5f;
+            chargeBonus += Mathf.Clamp01(_chargeTimer / EffectiveMaxCharge()) * maxBonus;
         }
 
         int finalDamage = Mathf.RoundToInt(currentDamage * _currentAttackNode.DamageMult * chargeBonus);
@@ -555,7 +610,7 @@ public class PlayerCombat : MonoBehaviour
 
         if(_activeHitbox != null)
         {
-            _activeHitbox.EnableCollider(finalDamage, finalPoise, _currentAttackType, strikeElement);
+            _activeHitbox.EnableCollider(finalDamage, finalPoise, _currentAttackType, strikeElement, passive);
         }
     }
 
@@ -606,7 +661,9 @@ public class PlayerCombat : MonoBehaviour
     {
         if (!_isCharging)
         {
-            _animator.speed = _normHeavyWindUp;
+            AttackPassive passive = CurrentPassive;
+            bool wind = passive.Active && passive.Element == ElementType.Wind;
+            _animator.speed = _normHeavyWindUp * (wind ? WindWindUpScale : 1f);
         }
     }
 
