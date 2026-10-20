@@ -1,7 +1,12 @@
+using DG.Tweening;
 using UnityEngine;
 
 public class EyeEnemy : BaseEnemy
 {
+    // Ranged enemies keep their own spacing; they don't queue for the melee attack tokens.
+    protected override bool UsesAttackTokens => false;
+
+
     [Header("Eye Enemy Settings")]
     [SerializeField] private float preferredDistance = 10f;
     [SerializeField] private float fireballCooldown = 5f;
@@ -11,6 +16,8 @@ public class EyeEnemy : BaseEnemy
 
     [Header("Projectile")]
     [SerializeField] private GameObject fireballPrefab;
+    [Tooltip("Black hole that swallows the eyeball when it dies.")]
+    [SerializeField] private BlackHoleFx deathBlackHolePrefab;
     [SerializeField] private Transform fireballSpawnPoint;
 
     private float fireballTimer = 0f;
@@ -178,6 +185,7 @@ public class EyeEnemy : BaseEnemy
             {
                 projectile.Initialize(gameObject);
                 projectile.SetDirection(directionToPlayer);
+                projectile.stopOnEnvironment = true; // bursts on walls instead of flying through them
             }
 
             ApplyRecoil();
@@ -250,6 +258,7 @@ public class EyeEnemy : BaseEnemy
         }
 
         animator?.SetTrigger(AnimDie);
+        SpawnDeathBlackHole();
         gameObject.layer = LayerMask.NameToLayer("Default");
 
         var col = GetComponent<Collider>();
@@ -262,6 +271,22 @@ public class EyeEnemy : BaseEnemy
         {
             Destroy(gameObject, 3f);
         }
+    }
+
+    // The eyeball is swallowed by a small black hole where it floated: it shrinks into it while the hole opens,
+    // spins and collapses.
+    private void SpawnDeathBlackHole()
+    {
+        if (deathBlackHolePrefab == null) return;
+
+        Vector3 centre = transform.position + Vector3.up;
+        Renderer body = GetComponentInChildren<Renderer>();
+        if (body != null) centre = body.bounds.center;
+
+        BlackHoleFx hole = Instantiate(deathBlackHolePrefab, centre, Quaternion.identity);
+        hole.Play();
+
+        transform.DOScale(Vector3.zero, 1.0f).SetEase(Ease.InCubic).SetLink(gameObject);
     }
 
     public void OnDieAnimationEnd()

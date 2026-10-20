@@ -7,9 +7,21 @@ public class EnemyProjectile : MonoBehaviour
     [SerializeField] private float damage = 15f;
     [SerializeField] private float lifetime = 10f;
 
+    [Header("Impact")]
+    [SerializeField] private ImpactFx impactPrefab;
+    [SerializeField] private float impactRadius = 1.2f;
+
+    /// <summary>Off for the Caster's fireballs: it plays its own landing burst where they hit the ground.</summary>
+    [System.NonSerialized] public bool spawnImpactOnHit = true;
+
+    /// <summary>On for the Eyeball's fireballs, so they burst on walls instead of flying through them.</summary>
+    [System.NonSerialized] public bool stopOnEnvironment;
+
     private Collider _projectileCollider;
     private GameObject _instigator;
     private Vector3 _moveDirection = Vector3.forward;
+    private float _age;
+    private bool _burst;
 
     private void Awake()
     {
@@ -55,7 +67,19 @@ public class EnemyProjectile : MonoBehaviour
 
     private void Update()
     {
+        _age += Time.deltaTime;
         transform.position += _moveDirection * speed * Time.deltaTime;
+    }
+
+    private void Burst()
+    {
+        if (_burst) return;
+        _burst = true;
+
+        if (!spawnImpactOnHit || impactPrefab == null) return;
+
+        ImpactFx fx = Instantiate(impactPrefab, transform.position, Quaternion.identity);
+        fx.Play(impactRadius);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -68,6 +92,15 @@ public class EnemyProjectile : MonoBehaviour
         {
             Debug.Log($"[EnemyProjectile] Damaging player for {damage} and destroying projectile.");
             playerHealth.TakeDamage(damage, 0, _instigator);
+            Burst();
+            Destroy(gameObject);
+            return;
+        }
+
+        // Walls and floors stop it (never other enemies, and not in the first instant while it leaves the shooter).
+        if (stopOnEnvironment && _age > 0.15f && !other.isTrigger && other.GetComponentInParent<BaseEnemy>() == null)
+        {
+            Burst();
             Destroy(gameObject);
         }
     }

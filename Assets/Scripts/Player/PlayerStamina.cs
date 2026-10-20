@@ -37,6 +37,19 @@ public class PlayerStamina : MonoBehaviour
 
     private void Start()
     {
+        // The HUD is its own prefab: scenes that don't wire the bar by hand (the tutorial) used to get a
+        // stamina bar that never moved. Find it at runtime, the way the mana bar does. The mana bar
+        // derives from the same class, so skip it.
+        if (_staminaBar == null)
+        {
+            foreach (AnimatedStaminaBar bar in FindObjectsByType<AnimatedStaminaBar>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (bar is AnimatedManaBar) continue;
+                _staminaBar = bar;
+                break;
+            }
+        }
+
         _maxStamina = _statsManager.CurrentStamina; // Pull the initial max from the manager
         _currentStamina = _maxStamina;
         UpdateUI();

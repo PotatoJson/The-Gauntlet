@@ -4,6 +4,11 @@ using UnityEngine.Localization;
 
 public class DemonBoss : BaseEnemy
 {
+    // Bosses fight on their own terms: no attack tokens, and no one else's alarm wakes them.
+    protected override bool UsesAttackTokens => false;
+    protected override bool CanBeAlerted => false;
+
+
     [Header("Boss Settings")]
     public LocalizedString bossNameString;
     [SerializeField, Tooltip("Health threshold (0 to 1) to trigger Phase 2")]

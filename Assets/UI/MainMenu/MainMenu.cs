@@ -160,6 +160,13 @@ public class MainMenuManager : MonoBehaviour
             SaveManager.Instance.StartNewRun();
         }
 
+        // The Backpack outlives the trip to the menu: without this, the last session's gauntlets and gems
+        // (or whatever the tutorial left behind) would come along into the new run.
+        if (PersistentEquipment.Instance != null)
+        {
+            PersistentEquipment.Instance.ResetForNewRun();
+        }
+
         Time.timeScale = 1f;
         SceneManager.LoadScene("Dungeon Level");
     }
@@ -198,7 +205,7 @@ public class MainMenuManager : MonoBehaviour
         Time.timeScale = 1f;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
-        SceneManager.LoadScene("Tutorial");
+        FadeThen(() => SceneManager.LoadScene("Tutorial"));
     }
     public void CloseSettings()
     {

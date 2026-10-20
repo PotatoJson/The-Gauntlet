@@ -116,6 +116,39 @@ public abstract class BaseEnemy : MonoBehaviour
     private float idleWanderTimer;
     private bool isIdleWandering;
 
+    #region Group AI & Search
+    [Header("Group AI")]
+    [Tooltip("How fast an enemy circles the player while it waits for its turn to attack, as a fraction of its chase speed.")]
+    [SerializeField, Range(0.2f, 1f)] private float circleSpeedFraction = 0.65f;
+    [Tooltip("When this enemy wakes up, every enemy within this distance wakes up with it.")]
+    [SerializeField] private float alertRadius = 14f;
+
+    [Header("Search")]
+    [Tooltip("How long an enemy looks around at the spot it last saw the player before giving up.")]
+    [SerializeField] private float searchLookSeconds = 3f;
+
+    /// <summary>True for melee enemies that take part in the group's attack-token system (see CombatDirector).</summary>
+    protected virtual bool UsesAttackTokens => true;
+
+    /// <summary>False for enemies (bosses) that must never be woken by someone else's alarm.</summary>
+    protected virtual bool CanBeAlerted => true;
+
+    /// <summary>Set by the CombatDirector: only token holders may start an attack and close in.</summary>
+    [System.NonSerialized] public bool HasAttackToken;
+
+    public bool GroupAIActive => UsesAttackTokens;
+    public bool IsEngagedWithPlayer => isAware && isEngaged;
+    public bool IsAttackingOrCharging => isAttacking || isCharging;
+
+    private Vector3 _lastSeenPlayerPos;
+    private bool _hasSeenPlayer;
+    private bool isSearching;
+    private bool _searchDestinationSet;
+    private bool _searchArrived;
+    private float _searchTimer;
+    private float _circleRepathTimer;
+    #endregion
+
     // Animation parameter hashes
     protected static readonly int AnimLightAttack = Animator.StringToHash("LightAttack");
     protected static readonly int AnimHeavyAttack = Animator.StringToHash("HeavyAttack");
@@ -150,6 +183,14 @@ public abstract class BaseEnemy : MonoBehaviour
             playerHealth = player.GetComponent<PlayerHealth>();
             playerManager = player.GetComponent<PlayerManager>();
         }
+
+        CombatDirector.Instance.Register(this);
+        EnemyStatusIcons.Attach(this);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        CombatDirector.Current?.Unregister(this);
     }
 
     protected virtual void Start()
@@ -220,13 +261,135 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (isCharging) UpdateChargeAttack();
 
-        if (isAware && !isStunned && !isAttacking && !isInHitStun)
+        if (isAware && !isStunned && !isAttacking && !isInHitStun && !isSearching)
         {
             FacePlayer();
         }
 
+        UpdateSearching();
+        UpdateGroupMovement();
+
         UpdateAnimatorParameters();
     }
+
+    #region Group Movement
+    // An enemy without an attack token doesn't rush in: it circles the player on the ring the
+    // CombatDirector gives it, facing the player, until it is its turn.
+    protected bool IsWaitingForToken =>
+        UsesAttackTokens && isAware && isEngaged && !HasAttackToken && CombatDirector.Current != null;
+
+    private void UpdateGroupMovement()
+    {
+        if (!IsWaitingForToken || isSearching) return;
+        if (isAttacking || isCharging || isStunned || isInHitStun) return;
+
+        MoveToWaitingSlot();
+    }
+
+    private void MoveToWaitingSlot()
+    {
+        if (!navAgent.isOnNavMesh) return;
+
+        _circleRepathTimer -= Time.deltaTime;
+
+        navAgent.speed = chaseSpeed * circleSpeedFraction;
+        navAgent.isStopped = false;
+
+        if (_circleRepathTimer > 0f) return;
+        _circleRepathTimer = 0.2f;
+
+        Vector3 slot = CombatDirector.Current.GetWaitingPosition(this);
+        if (NavMesh.SamplePosition(slot, out NavMeshHit hit, 3f, NavMesh.AllAreas)) slot = hit.position;
+
+        if (Vector3.SqrMagnitude(navAgent.destination - slot) > 0.25f) navAgent.SetDestination(slot);
+    }
+
+    /// <summary>Wakes this enemy because another one noticed the player (or was hit).</summary>
+    public void Alert()
+    {
+        if (isAware || IsDead() || !CanBeAlerted) return;
+
+        isAware = true;
+        StopIdleWander(true);
+        if (navAgent.isOnNavMesh) navAgent.isStopped = false;
+        playerManager?.SetInCombat();
+    }
+
+    private void RaiseAlarm()
+    {
+        if (alertRadius > 0f) CombatDirector.Current?.AlertAround(this, alertRadius);
+    }
+    #endregion
+
+    #region Search
+    // Lost sight of the player: go to the last place they were seen, look around, then give up and
+    // go back to idling (instead of standing in the doorway forever).
+    private void OnLostSight()
+    {
+        if (!_hasSeenPlayer || !navAgent.isOnNavMesh)
+        {
+            StopChasing();
+            return;
+        }
+
+        if (isSearching) return;
+
+        isSearching = true;
+        _searchDestinationSet = false;
+        _searchArrived = false;
+        _searchTimer = 0f;
+    }
+
+    private void UpdateSearching()
+    {
+        if (!isSearching) return;
+
+        if (IsDead() || !isAware || isAttacking || isCharging || isStunned || isInHitStun || !navAgent.isOnNavMesh)
+        {
+            if (IsDead() || !isAware) isSearching = false;
+            return;
+        }
+
+        if (!_searchDestinationSet)
+        {
+            _searchDestinationSet = true;
+            navAgent.speed = chaseSpeed;
+            navAgent.isStopped = false;
+            navAgent.SetDestination(_lastSeenPlayerPos);
+            return;
+        }
+
+        if (!_searchArrived)
+        {
+            FaceMovementDirection();
+
+            if (!navAgent.pathPending && navAgent.remainingDistance <= navAgent.stoppingDistance + 0.8f)
+            {
+                _searchArrived = true;
+                navAgent.isStopped = true;
+                navAgent.velocity = Vector3.zero;
+            }
+            return;
+        }
+
+        // Look left and right at the spot, then give up.
+        _searchTimer += Time.deltaTime;
+        transform.Rotate(0f, Mathf.Cos(_searchTimer * 2.2f) * 70f * Time.deltaTime, 0f);
+
+        if (_searchTimer >= searchLookSeconds) GiveUpSearch();
+    }
+
+    private void GiveUpSearch()
+    {
+        isSearching = false;
+        isAware = false;
+        isEngaged = false;
+        HasAttackToken = false;
+        idleWanderCenter = transform.position;
+        idleWanderTimer = GetNextIdleWanderDelay();
+        StopChasing();
+    }
+    #endregion
 
     public bool IsBlockingOrStunned() => isStunned || isInHitStun;
 
@@ -265,7 +428,7 @@ public abstract class BaseEnemy : MonoBehaviour
         if (isAttacking || isCharging || isStunned || isInHitStun) return;
         if (!HasLineOfSightToPlayer())
         {
-            StopChasing();
+            OnLostSight();
             return;
         }
 
@@ -291,6 +454,7 @@ public abstract class BaseEnemy : MonoBehaviour
             StopIdleWander(true);
             navAgent.isStopped = false;
             playerManager?.SetInCombat();
+            RaiseAlarm();
         }
     }
 
@@ -319,7 +483,7 @@ public abstract class BaseEnemy : MonoBehaviour
             }
             else
             {
-                StopChasing();
+                OnLostSight();
             }
         }
     }
@@ -335,9 +499,17 @@ public abstract class BaseEnemy : MonoBehaviour
         Vector3 direction = target - origin;
         float distance = direction.magnitude;
 
-        if (distance <= 0.01f) return true;
+        bool visible = distance <= 0.01f ||
+            !Physics.Raycast(origin, direction.normalized, distance, lineOfSightObstructionMask, QueryTriggerInteraction.Ignore);
 
-        return !Physics.Raycast(origin, direction.normalized, distance, lineOfSightObstructionMask, QueryTriggerInteraction.Ignore);
+        if (visible)
+        {
+            _lastSeenPlayerPos = player.position;
+            _hasSeenPlayer = true;
+            isSearching = false;
+        }
+
+        return visible;
     }
 
     private void StopChasing()
@@ -353,7 +525,14 @@ public abstract class BaseEnemy : MonoBehaviour
         if (isAttacking || isStunned || isCharging || isInHitStun || player == null) return;
         if (!HasLineOfSightToPlayer())
         {
-            StopChasing();
+            OnLostSight();
+            return;
+        }
+
+        // No attack token: circle the player instead of walking up to them.
+        if (IsWaitingForToken)
+        {
+            MoveToWaitingSlot();
             return;
         }
 
@@ -518,7 +697,17 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.speed = chaseSpeed;
     }
 
-    protected virtual bool CanPerformAction() => !isAttacking && !isStunned && !isCharging && !isInHitStun && attackCooldownTimer <= 0;
+    protected virtual bool CanPerformAction() =>
+        !isAttacking && !isStunned && !isCharging && !isInHitStun && attackCooldownTimer <= 0 && MayStartAttack();
+
+    // Melee enemies need the group's permission (an attack token) before they swing or charge.
+    private bool MayStartAttack()
+    {
+        if (!UsesAttackTokens) return true;
+
+        CombatDirector director = CombatDirector.Current;
+        return director == null || director.MayAttack(this);
+    }
     #endregion
 
     #region Damage, Health & Hitboxes
@@ -541,7 +730,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
         playerManager?.SetInCombat();
         
-        if (!isAware) { isAware = true; navAgent.isStopped = false; }
+        if (!isAware) { isAware = true; navAgent.isStopped = false; RaiseAlarm(); }
         if (!isEngaged) { isEngaged = true; hasOpenedWithCharge = true; }
 
         StopIdleWander(true);
@@ -584,6 +773,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void Die()
     {
         StopAllCoroutines();
+        CombatDirector.Current?.Unregister(this); // hands its attack token on
         isAttacking = false;
         isCharging = false;
         isRecovering = false;
@@ -668,6 +858,7 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         isAttacking = false;
         isCharging = false;
+        CombatDirector.Current?.NotifyAttackEnded(this);
         navAgent.updatePosition = true;
         navAgent.nextPosition = transform.position;
         FacePlayerImmediate();

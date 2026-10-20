@@ -85,6 +85,7 @@ public class GameplayInputGate : MonoBehaviour
     {
         _unguardedFrames = 0;
         _holders.Clear();
+        _runningHolders.Clear();
 
         if (_restoreRoutine != null)
         {
@@ -118,6 +119,21 @@ public class GameplayInputGate : MonoBehaviour
         }
     }
 
+    // Owners that switched input off on purpose while time keeps running (a tutorial dialogue). The watchdog
+    // below treats "input off while time runs" as a menu that forgot to restore it; these are exempt.
+    private readonly List<Object> _runningHolders = new List<Object>();
+
+    /// <summary>
+    /// Like <see cref="Suspend"/>, for something that blocks input but does not freeze time (the tutorial's
+    /// dialogue). The player stands still and can't attack, and the watchdog leaves it alone. Release it
+    /// with <see cref="RestoreWhenReleased"/> as usual.
+    /// </summary>
+    public void SuspendWhileRunning(Object owner)
+    {
+        if (owner != null && !_runningHolders.Contains(owner)) _runningHolders.Add(owner);
+        Suspend(owner);
+    }
+
     /// <summary>Blocks gameplay input. Call when a menu opens, passing the menu itself.</summary>
     public void Suspend(Object owner)
     {
@@ -147,7 +163,11 @@ public class GameplayInputGate : MonoBehaviour
     {
         _unguardedFrames = 0;
 
-        if (owner != null) _holders.Remove(owner);
+        if (owner != null)
+        {
+            _holders.Remove(owner);
+            _runningHolders.Remove(owner);
+        }
 
         // Something else still wants input off - a reward screen opened over the pause menu, say.
         if (_holders.Count > 0) return;
@@ -190,12 +210,14 @@ public class GameplayInputGate : MonoBehaviour
             if (_holders[i] == null) _holders.RemoveAt(i);
         }
 
+        _runningHolders.RemoveAll(h => h == null);
+
         InputActionMap map = PlayerMap;
 
         // Every menu here freezes time while it is open, so input being off while time runs means
         // something failed to release. Menus that are genuinely open sit at timeScale 0 and are
-        // therefore never caught by this.
-        bool stuck = map != null && !map.enabled && Time.timeScale > 0f;
+        // therefore never caught by this. A deliberate "off but time runs" holder is exempt.
+        bool stuck = map != null && !map.enabled && Time.timeScale > 0f && _runningHolders.Count == 0;
         if (!stuck)
         {
             _unguardedFrames = 0;

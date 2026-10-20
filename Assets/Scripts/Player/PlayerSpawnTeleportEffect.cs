@@ -82,7 +82,23 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         }
     }
 
+    /// <summary>True from the moment the spawn effect starts until the player has control back.</summary>
+    public bool IsPlaying { get; private set; }
+
     private IEnumerator PlaySpawnEffect()
+    {
+        IsPlaying = true;
+        try
+        {
+            yield return RunSpawnEffect();
+        }
+        finally
+        {
+            IsPlaying = false;
+        }
+    }
+
+    private IEnumerator RunSpawnEffect()
     {
         // 1. Disable movement and combat
         if (_movement != null) _movement.enabled = false;
@@ -246,6 +262,8 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
 
     private void OnDisable()
     {
+        IsPlaying = false;
+
         if (_rendererDataList.Count > 0)
         {
             RestoreOriginalMaterials();

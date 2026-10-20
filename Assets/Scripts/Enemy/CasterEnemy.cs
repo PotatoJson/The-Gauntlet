@@ -5,6 +5,10 @@ using System.Collections.Generic;
 
 public class CasterEnemy : BaseEnemy
 {
+    // Ranged enemies keep their own spacing; they don't queue for the melee attack tokens.
+    protected override bool UsesAttackTokens => false;
+
+
     [Header("Caster Settings - Spells")]
     [SerializeField] private GameObject fireballWarningPrefab;
     [SerializeField] private GameObject fireballPrefab;
@@ -25,6 +29,19 @@ public class CasterEnemy : BaseEnemy
     [SerializeField] private float buffAttackSpeedMultiplier = 1.2f;
     [SerializeField] private GameObject buffVfxPrefab;
     [SerializeField] private float buffInterval = 10f;
+
+    [Header("Caster Settings - VFX")]
+    [Tooltip("Glowing circle on the floor marking where fireballs rain down; follows the player while the caster channels.")]
+    [SerializeField] private GroundFx aoeZonePrefab;
+    [Tooltip("Summoning circle under the caster while it channels.")]
+    [SerializeField] private GroundFx channelCirclePrefab;
+    [Tooltip("Small marker on the floor where one fireball is about to land. Replaces the plain warning decal when set.")]
+    [SerializeField] private FireballWarningFx fireballWarningFxPrefab;
+    [Tooltip("Burst where each fireball lands.")]
+    [SerializeField] private ImpactFx fireballImpactPrefab;
+    [SerializeField] private float fireballImpactRadius = 1.6f;
+    [Tooltip("Ring that sweeps out from the caster when it buffs its allies.")]
+    [SerializeField] private ImpactFx buffPulsePrefab;
 
     [Header("Caster Settings - Targeting")]
     [SerializeField] private LayerMask groundMask = ~0;
@@ -153,6 +170,7 @@ public class CasterEnemy : BaseEnemy
         isChanneling = true;
         isAttacking = true;
         castTimer = 0f; // Cast immediately on start
+        BeginChannelFx();
 
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
@@ -165,6 +183,36 @@ public class CasterEnemy : BaseEnemy
     private void StopChanneling()
     {
         isChanneling = false;
+        EndChannelFx();
+    }
+
+    private GroundFx _aoeZone, _channelCircle;
+    private Vector3 _zoneCenter;
+
+    private void BeginChannelFx()
+    {
+        // The danger zone is planted on the floor where the player stands when the channel starts and
+        // stays there: the fireballs fall inside it, so the player has to leave it, not just keep moving.
+        if (aoeZonePrefab != null && player != null && _aoeZone == null)
+        {
+            _aoeZone = Instantiate(aoeZonePrefab, player.position, Quaternion.identity);
+            _aoeZone.Begin(fireballSpawnRadius);
+            _zoneCenter = _aoeZone.transform.position;
+        }
+
+        if (channelCirclePrefab != null && _channelCircle == null)
+        {
+            _channelCircle = Instantiate(channelCirclePrefab, transform.position, Quaternion.identity);
+            _channelCircle.Begin(1.8f, transform);
+        }
+    }
+
+    private void EndChannelFx()
+    {
+        if (_aoeZone != null) _aoeZone.End();
+        if (_channelCircle != null) _channelCircle.End();
+        _aoeZone = null;
+        _channelCircle = null;
     }
 
     private void BeginRepositioning()
@@ -277,17 +325,26 @@ public class CasterEnemy : BaseEnemy
             Debug.Log($"{gameObject.name}: Applying buff to {candidates[i].gameObject.name}.");
             candidates[i].ApplyPermanentBuff(buffDamageMultiplier, buffAttackSpeedMultiplier, buffVfxPrefab);
         }
+
+        if (buffPulsePrefab != null)
+        {
+            ImpactFx pulse = Instantiate(buffPulsePrefab, transform.position + Vector3.up * 0.1f, Quaternion.identity);
+            pulse.Play(buffRadius, new Color(1f, 0.35f, 0.3f, 1f));
+        }
     }
 
     private void CastFireballWave()
     {
         if (player == null) return;
 
+        // Fireballs fall inside the planted zone; without the zone effect they fall around the player as before.
+        Vector3 center = _aoeZone != null ? _zoneCenter : player.position;
+
         for (int i = 0; i < fireballsPerTick; i++)
         {
-            // Find a random point within a circle around the player
+            // Find a random point within a circle around the centre
             Vector2 randomCirclePoint = Random.insideUnitCircle * fireballSpawnRadius;
-            Vector3 basePosition = player.position + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
+            Vector3 basePosition = center + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
 
             Vector3 targetPosition = basePosition;
             if (TryGetGroundPosition(basePosition, out Vector3 groundPosition))
@@ -303,9 +360,16 @@ public class CasterEnemy : BaseEnemy
     private IEnumerator FireballSequenceRoutine(Vector3 targetPosition)
     {
         GameObject warningInstance = null;
-        
-        // 1. Spawn the projection/warning on the ground at targetPosition with X rotated by 90
-        if (fireballWarningPrefab != null)
+        FireballWarningFx warningFx = null;
+
+        // 1. Spawn the projection/warning on the ground at targetPosition. The effect marker fills up until
+        //    the fireball lands (delay + the time it takes to fall); the old decal is the fallback.
+        if (fireballWarningFxPrefab != null)
+        {
+            warningFx = Instantiate(fireballWarningFxPrefab, targetPosition + Vector3.up * 0.04f, Quaternion.identity);
+            warningFx.Begin(fireballImpactRadius, impactDelay + fireballSpawnHeight / Mathf.Max(0.1f, fireballSpeed));
+        }
+        else if (fireballWarningPrefab != null)
         {
             warningInstance = Instantiate(fireballWarningPrefab, targetPosition, Quaternion.Euler(90f, 0f, 0f));
         }
@@ -325,23 +389,45 @@ public class CasterEnemy : BaseEnemy
             Quaternion downwardRotation = Quaternion.LookRotation(Vector3.down);
             
             fireballInstance = Instantiate(fireballPrefab, skySpawnPosition, downwardRotation);
-            fireballInstance.GetComponent<EnemyProjectile>()?.SetSpeed(fireballSpeed);
+            EnemyProjectile projectile = fireballInstance.GetComponent<EnemyProjectile>();
+            if (projectile != null)
+            {
+                projectile.SetSpeed(fireballSpeed);
+                projectile.spawnImpactOnHit = false; // this routine plays the landing burst itself
+            }
         }
         else
         {
             Debug.LogWarning($"{gameObject.name}: Fireball Prefab is missing!");
         }
 
-        // 4. Wait until the fireball is destroyed before removing the warning
+        // 4. Follow the fireball down. It either lands (burst on the ground) or hits the player first
+        //    (burst where it was); then the warning goes away.
         if (fireballInstance != null)
         {
+            Vector3 lastPosition = targetPosition;
+
             while (fireballInstance != null)
             {
+                lastPosition = fireballInstance.transform.position;
+                if (lastPosition.y <= targetPosition.y + 0.3f) break; // reached the ground
                 yield return null; // Wait for the next frame
             }
+
+            if (warningFx != null) warningFx.End();
+
+            if (fireballImpactPrefab != null)
+            {
+                Vector3 at = fireballInstance != null ? targetPosition : lastPosition;
+                ImpactFx impact = Instantiate(fireballImpactPrefab, at + Vector3.up * 0.05f, Quaternion.identity);
+                impact.Play(fireballImpactRadius);
+            }
+
+            if (fireballInstance != null) Destroy(fireballInstance);
         }
 
         // 5. Remove the projection
+        if (warningFx != null) warningFx.End();
         if (warningInstance != null)
         {
             Destroy(warningInstance);
@@ -350,19 +436,37 @@ public class CasterEnemy : BaseEnemy
 
     private bool TryGetGroundPosition(Vector3 position, out Vector3 groundPosition)
     {
-        Vector3 rayOrigin = position + Vector3.up * groundProbeHeight;
-        float rayDistance = groundProbeHeight + groundProbeDistance;
+        // Probe from just above the spot, not 10m up: indoors that start is above the ceiling, and the
+        // "ground" it found was the roof, so the markers and bursts ended up out of sight overhead.
+        float probeHeight = Mathf.Min(groundProbeHeight, 2.5f);
+        Vector3 rayOrigin = position + Vector3.up * probeHeight;
+        float rayDistance = probeHeight + groundProbeDistance;
 
-        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, groundMask, QueryTriggerInteraction.Ignore))
+        // The player and enemies standing there are not the floor.
+        int count = Physics.RaycastNonAlloc(rayOrigin, Vector3.down, _groundHits, rayDistance, groundMask, QueryTriggerInteraction.Ignore);
+        float best = float.MaxValue;
+        bool found = false;
+        groundPosition = position;
+
+        for (int i = 0; i < count; i++)
         {
-            groundPosition = hit.point;
-            groundPosition.y += warningSurfaceOffset;
-            return true;
+            RaycastHit hit = _groundHits[i];
+            if (hit.collider.GetComponentInParent<PlayerHealth>() != null) continue;
+            if (hit.collider.GetComponentInParent<BaseEnemy>() != null) continue;
+
+            if (hit.distance < best)
+            {
+                best = hit.distance;
+                groundPosition = hit.point;
+                groundPosition.y += warningSurfaceOffset;
+                found = true;
+            }
         }
 
-        groundPosition = position;
-        return false;
+        return found;
     }
+
+    private readonly RaycastHit[] _groundHits = new RaycastHit[16];
 
     /// <summary>
     /// PUBLIC METHOD: Call this from the Throwable Object's script interaction on collision.

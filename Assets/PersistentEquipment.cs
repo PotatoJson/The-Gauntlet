@@ -46,6 +46,37 @@ public class PersistentEquipment : MonoBehaviour
     [Tooltip("Keys of the shrines already used this run (filled in automatically).")]
     public List<string> usedShrines = new List<string>();
 
+    /// <summary>
+    /// Forgets everything carried over from a previous play session: gauntlets, gems, skill gems, level and
+    /// used shrines. The Backpack survives scene loads (and a trip back to the main menu), so a new run or
+    /// the tutorial must wipe it first or they would start with the last session's gear. The master gem
+    /// and gauntlet lists are settings, not saved data, and are left alone.
+    /// </summary>
+    public void ResetForNewRun()
+    {
+        hasSavedData = false;
+
+        primaryGauntletPrefab = null;
+        primaryRarity = default;
+        primaryGems.Clear();
+        primaryGemTiers.Clear();
+        primarySkillGemPrefab = null;
+        primarySkillGemTier = 1;
+
+        secondaryGauntletPrefab = null;
+        secondaryRarity = default;
+        secondaryGems.Clear();
+        secondaryGemTiers.Clear();
+        secondarySkillGemPrefab = null;
+        secondarySkillGemTier = 1;
+
+        playerLevel = 1;
+        playerExp = 0f;
+        expToNextLevel = 0f; // 0 = "keep the bar's own default"
+
+        usedShrines.Clear();
+    }
+
     public bool IsShrineUsed(string key) => usedShrines.Contains(key);
 
     public void MarkShrineUsed(string key)

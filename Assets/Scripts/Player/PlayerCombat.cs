@@ -522,6 +522,9 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    /// <summary>True while the player is winding up a heavy attack (enemies read this as an opening).</summary>
+    public bool IsChargingHeavy => _isCharging;
+
     #region Empowered Attacks (passive skill gem)
     // The passive skill gem only changes punches thrown by the gauntlet it is socketed in:
     // right fist = Primary gauntlet, left fist = Secondary. Fire / Ice / Lightning add on-hit effects in

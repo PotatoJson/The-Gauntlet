@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class EliteEnemy : BaseEnemy
 {
+    // The tutorial dummy just stands there; it must not hold the group's attack tokens.
+    protected override bool UsesAttackTokens => !isTutorialDummy;
+
+
     [Header("Elite Attack Damage")]
     [SerializeField] private float swordSwingDamage = 35f;
     [SerializeField] private float swordSlamDamage = 50f;

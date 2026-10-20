@@ -31,6 +31,9 @@ public class ShrineInteractable : MonoBehaviour
     private bool _inRange;
     private bool _spent;
 
+    /// <summary>True once the player has used this shrine's power.</summary>
+    public bool IsSpent => _spent;
+
     /// <summary>Stable per-shrine id: same shrine, same key, every time the level loads.</summary>
     public string Key
     {

@@ -214,17 +214,36 @@ public class RewardMenuManager : MonoBehaviour
         }
     }
 
+    private List<GameObject> _forcedRewards;
+
+    /// <summary>The next reward menu offers exactly these gem prefabs (once) instead of a random pick. Used by the tutorial.</summary>
+    public void SetNextRewards(IEnumerable<GameObject> gems)
+    {
+        _forcedRewards = gems != null ? new List<GameObject>(gems) : null;
+    }
+
     private void GenerateScatterRewards(int count)
     {
         foreach (Transform child in gemSpawnAreaRoot) { child.DOKill(); Destroy(child.gameObject); }
 
         List<GameObject> chosenGems = new List<GameObject>();
-        int maxRewards = Mathf.Min(count, allGemPrefabs.Count);
 
-        while (chosenGems.Count < maxRewards)
+        if (_forcedRewards != null && _forcedRewards.Count > 0)
         {
-            GameObject randomGem = allGemPrefabs[Random.Range(0, allGemPrefabs.Count)];
-            if (!chosenGems.Contains(randomGem)) chosenGems.Add(randomGem);
+            // A scripted reward (the tutorial): exactly these gems, this once. Duplicates are allowed,
+            // which is what lets the tutorial teach merging.
+            chosenGems.AddRange(_forcedRewards);
+            _forcedRewards = null;
+        }
+        else
+        {
+            int maxRewards = Mathf.Min(count, allGemPrefabs.Count);
+
+            while (chosenGems.Count < maxRewards)
+            {
+                GameObject randomGem = allGemPrefabs[Random.Range(0, allGemPrefabs.Count)];
+                if (!chosenGems.Contains(randomGem)) chosenGems.Add(randomGem);
+            }
         }
 
         List<Button> spawnedButtons = new List<Button>();

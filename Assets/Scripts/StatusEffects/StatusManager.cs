@@ -28,6 +28,9 @@ public class StatusManager : MonoBehaviour
         }
     }
 
+    /// <summary>The statuses on this enemy right now (read-only; for the icons above its head).</summary>
+    public IReadOnlyList<BaseStatusEffect> Active => _activeStatuses;
+
     /// <summary>The enemy's StatusManager, added on the spot when it doesn't have one yet.</summary>
     public static StatusManager For(BaseEnemy enemy)
     {

@@ -4,6 +4,11 @@ using UnityEngine.Localization;
 
 public class HellLord : BaseEnemy
 {
+    // Bosses fight on their own terms: no attack tokens, and no one else's alarm wakes them.
+    protected override bool UsesAttackTokens => false;
+    protected override bool CanBeAlerted => false;
+
+
     [Header("Hell Lord - Melee")]
     [SerializeField] private float swordSwingDamage = 30f;
     [SerializeField] private float attackDistance = 3f;

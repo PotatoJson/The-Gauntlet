@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class SpinningEnemy : BaseEnemy
 {
+    // The spinning enemy is its own kind of rush, so it ignores the group's attack tokens.
+    protected override bool UsesAttackTokens => false;
+
+
     [Header("Spin Attack Damage")]
     [SerializeField] private float spinDamage = 10f;
 
