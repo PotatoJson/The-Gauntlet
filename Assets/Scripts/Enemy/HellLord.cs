@@ -77,6 +77,18 @@ public class HellLord : BaseEnemy
     {
         base.Start();
         hasOpenedWithCharge = true;
+
+        // A slow hellfire ring around his feet from the start, so he has presence before the fight begins.
+        EnemyFx.Ring(transform, 3.5f, EnemyFx.Hell, 0.05f, 15f);
+    }
+
+    private GroundFx _castRing;
+    private GroundFx _beamRing;
+
+    private void EndCastFx()
+    {
+        if (_castRing != null) _castRing.End();
+        _castRing = null;
     }
 
     protected override void Update()
@@ -293,6 +305,11 @@ public class HellLord : BaseEnemy
 
         isBeamActive = true;
 
+        // Charging the beam: a tight, fast ring and a flare at his feet.
+        EnemyFx.Impact(transform.position, 3f, EnemyFx.Fire);
+        if (_beamRing != null) _beamRing.End();
+        _beamRing = EnemyFx.Ring(transform, 2.6f, EnemyFx.Fire, 0.05f, 120f);
+
         if (beamSpawnPoint != null && player != null)
         {
             Vector3 targetPosition = player.position + Vector3.up * 1.2f;
@@ -389,6 +406,9 @@ public class HellLord : BaseEnemy
             beamInstance = null;
         }
 
+        if (_beamRing != null) _beamRing.End();
+        _beamRing = null;
+
         isBeamActive = false;
     }
 
@@ -464,6 +484,11 @@ public class HellLord : BaseEnemy
             Debug.Log("[HellLord DEBUG] BeginCastSequence started.");
         }
 
+        // A summoning circle as wide as the fireball field and a burst as it opens.
+        EndCastFx();
+        EnemyFx.Impact(transform.position, fireballSpawnRadius, EnemyFx.Hell);
+        _castRing = EnemyFx.Ring(transform, fireballSpawnRadius, EnemyFx.Hell, 0.05f, 70f);
+
         castRoutine = StartCoroutine(CastSequenceRoutine());
     }
 
@@ -499,6 +524,7 @@ public class HellLord : BaseEnemy
 
         isCasting = false;
         castRoutine = null;
+        EndCastFx();
         OnAttackEnd();
     }
 
@@ -628,6 +654,7 @@ public class HellLord : BaseEnemy
 
     private void StopCasting()
     {
+        EndCastFx();
         if (!isCasting) return;
 
         if (castRoutine != null)
@@ -648,6 +675,9 @@ public class HellLord : BaseEnemy
     public void EnableSwordSwingHitbox()
     {
         swordHitbox?.EnableHitbox(swordSwingDamage, heavyAttackPoiseDamage);
+
+        // The visible arc of the blade.
+        EnemyFx.Slash(transform, 3.4f, 0.9f, EnemyFx.Hell, 170f, 0.35f);
     }
 
     public void DisableSwordHitbox()

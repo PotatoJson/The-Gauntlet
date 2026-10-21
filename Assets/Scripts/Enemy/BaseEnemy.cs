@@ -808,8 +808,11 @@ public abstract class BaseEnemy : MonoBehaviour
     public bool IsDead() => currentHealth <= 0;
 
     // ============== UPDATED HITBOX LOGIC ==============
-    public void OnLightAttackHit() => TryDamagePlayerHitbox(lightAttackDamage, lightAttackPoiseDamage, lightAttackHitboxOffset, lightAttackHitboxSize);
-    public void OnHeavyAttackHit() => TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackPoiseDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize);
+    public void OnLightAttackHit() { OnMeleeHitFx(false); TryDamagePlayerHitbox(lightAttackDamage, lightAttackPoiseDamage, lightAttackHitboxOffset, lightAttackHitboxSize); }
+    public void OnHeavyAttackHit() { OnMeleeHitFx(true); TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackPoiseDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize); }
+
+    /// <summary>The swing animation reached its hit frame. Enemies override this to play their own effect.</summary>
+    protected virtual void OnMeleeHitFx(bool heavy) { }
     public void OnChargeAttackHit() => TryDamagePlayerHitbox(chargeAttackDamage, chargeAttackPoiseDamage, chargeAttackHitboxOffset, chargeAttackHitboxSize);
 
     protected bool TryDamagePlayerHitbox(float damage, int poiseDamage, Vector3 localOffset, Vector3 boxSize)

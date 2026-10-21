@@ -37,6 +37,14 @@ public class TutorialNotificationManager : MonoBehaviour
         if (notificationText != null)
         {
             notificationText.alpha = 0f;
+
+            // Every other piece of UI text swaps to a CJK-capable font for Chinese and Japanese. This one
+            // never did, so those players saw empty boxes instead of the message.
+            if (notificationText.GetComponent<LocalizedFontAsset>() == null)
+            {
+                var localizedFont = notificationText.gameObject.AddComponent<LocalizedFontAsset>();
+                localizedFont.AssetReference = new LocalizedTmpFont { TableReference = "UIFonts", TableEntryReference = "MainFont" };
+            }
         }
     }
 
@@ -56,6 +64,9 @@ public class TutorialNotificationManager : MonoBehaviour
         // --- 3. FETCH THE TRANSLATED HAND WORD ---
         string hand = isPrimary ? primaryString.GetLocalizedString() : secondaryString.GetLocalizedString();
         
+        // The caller passes the plain English name; translate the one we know about.
+        if (itemName == "Skill Gem") itemName = new LocalizedString("UIStrings", "Skill Gem Name").GetLocalizedString();
+
         // --- 4. FETCH THE SMART STRING WITH VARIABLES ---
         notificationText.text = notificationFormatString.GetLocalizedString(hand, itemName, keybind);
         

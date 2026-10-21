@@ -26,11 +26,41 @@ public class GroundFx : MonoBehaviour
     private bool _ending;
     private float _pulseClock;
 
-    /// <summary>Starts the effect: a circle of this radius, following the transform (or staying where it is).</summary>
-    public void Begin(float radius, Transform follow = null)
+    private BaseEnemy _followEnemy;
+    private bool _hadFollow;
+    private float _lift;
+
+    /// <summary>How fast the circle turns, in degrees per second (the Beyblade's spin ring is much faster than a summoning circle).</summary>
+    public void SetSpin(float degreesPerSecond) => spinDegreesPerSecond = degreesPerSecond;
+
+    /// <summary>
+    /// Starts the effect: a circle of this radius, following the transform (or staying where it is).
+    /// An optional tint recolours it; lift raises it off the floor (a ring around a body rather than under it).
+    /// If the followed object is an enemy, the circle ends by itself when that enemy dies.
+    /// </summary>
+    public void Begin(float radius, Transform follow = null, Color? tint = null, float lift = 0f)
     {
         _follow = follow;
+        _hadFollow = follow != null;
+        _followEnemy = follow != null ? follow.GetComponentInParent<BaseEnemy>() : null;
+        _lift = lift;
         _fixedPosition = transform.position;
+
+        if (tint.HasValue)
+        {
+            foreach (SpriteRenderer sprite in sprites)
+            {
+                if (sprite == null) continue;
+                Color c = tint.Value; c.a = sprite.color.a; sprite.color = c;
+            }
+
+            foreach (ParticleSystem system in particles)
+            {
+                if (system == null) continue;
+                var main = system.main;
+                main.startColor = tint.Value;
+            }
+        }
 
         if (spin != null && sprites != null && sprites.Length > 0 && sprites[0].sprite != null)
         {
@@ -89,6 +119,12 @@ public class GroundFx : MonoBehaviour
     {
         if (spin != null) spin.Rotate(0f, spinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
 
+        // The thing it follows is gone (or dying): finish instead of hanging in the air.
+        if (!_ending && (_follow == null && _hadFollow || _followEnemy != null && _followEnemy.IsDead()))
+        {
+            End();
+        }
+
         if (_follow != null)
         {
             Vector3 target = GroundPoint(_follow.position);
@@ -133,7 +169,7 @@ public class GroundFx : MonoBehaviour
             }
         }
 
-        if (found) return bestPoint + Vector3.up * groundOffset;
-        return new Vector3(around.x, _fixedPosition.y, around.z);
+        if (found) return bestPoint + Vector3.up * (groundOffset + _lift);
+        return new Vector3(around.x, _fixedPosition.y + _lift, around.z);
     }
 }

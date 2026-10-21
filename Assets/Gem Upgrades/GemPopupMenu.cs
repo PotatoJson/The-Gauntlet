@@ -243,24 +243,9 @@ public class GemPopupMenu : MonoBehaviour
 
         if (InventoryManager.Instance == null) { CloseMenu(); return; }
 
+        // The page changes instantly now. The switch ends by calling SetupNavigation and FocusTitle, which pull
+        // controller focus to the header, so placement starts after it (not before) to keep its own focus.
         InventoryManager.Instance.ToggleEquippedGauntletDisplay();
-        StartCoroutine(BeginPlacementAfterPageSwitch(gauntletParent));
-    }
-
-    /// <summary>
-    /// Waits for the page slide before entering placement mode.
-    ///
-    /// ToggleEquippedGauntletDisplay finishes by calling SetupNavigation and FocusTitle, which
-    /// yanks controller focus to the header. Starting placement before that lands left the gem
-    /// carried but the focus on the title bar, with no way to reach a slot.
-    /// </summary>
-    private IEnumerator BeginPlacementAfterPageSwitch(Transform gauntletParent)
-    {
-        while (InventoryManager.Instance != null && InventoryManager.Instance.IsTransitioning)
-        {
-            yield return null;
-        }
-
         BeginPlacement(gauntletParent);
     }
 

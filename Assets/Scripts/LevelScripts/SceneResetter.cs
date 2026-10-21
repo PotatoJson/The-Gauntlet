@@ -1,22 +1,6 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem; // Required for the New Input System
 
+/// <summary>Retired: the ` shortcut now lives in the debug menu (press 0). Kept so scenes don't lose the component.</summary>
 public class SceneResetter : MonoBehaviour
 {
-    void Update()
-    {
-        // Check if a keyboard is connected, then check if Tilde was pressed
-        if (Keyboard.current != null && Keyboard.current.backquoteKey.wasPressedThisFrame)
-        {
-            ResetCurrentScene();
-        }
-    }
-
-    private void ResetCurrentScene()
-    {
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.buildIndex);
-        Debug.Log($"Scene '{currentScene.name}' has been reset.");
-    }
 }

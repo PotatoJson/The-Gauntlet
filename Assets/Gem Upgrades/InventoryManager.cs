@@ -61,11 +61,6 @@ public Transform primaryGauntlet;
 [SerializeField] private TMP_Text detailDescriptionText;
     [SerializeField] private Image detailIcon;
 
-    [Header("Tween Settings")]
-    [SerializeField] private float slideDuration = 0.5f;
-    [SerializeField] private Ease slideEase = Ease.OutCubic;
-    [SerializeField] private float offscreenXOffset = 900f;
-
     [Header("Replace Gauntlet UI")]
     [SerializeField] private GameObject replaceGauntletPanel;
     [SerializeField] private Button replaceGauntletBtn;
@@ -82,25 +77,20 @@ public Transform primaryGauntlet;
 
     public bool IsReplaceUIPending => _isReplaceUIPending;
 
-    /// <summary>
-    /// True while the primary/secondary pages are sliding. The page tween grabs controller focus
-    /// for the header when it lands, so anything that wants focus afterwards has to wait this out.
-    /// </summary>
-    public bool IsTransitioning => _isTransitioning;
-
     /// <summary>True when the primary gauntlet is the page currently on screen.</summary>
     public bool IsDisplayingPrimary => _isDisplayingPrimary;
 
     private DraggableGem _lastSelectedGem;
     private bool _isWarningActive = false;
     private bool _isDisplayingPrimary = true;
-    private bool _isTransitioning = false;
     private DraggableGem _hoveredGem;
     private DraggableGem _focusedGem;
     private bool _gamepadHadControl;
 
     private void Awake()
     {
+        BuildGauntletSwitcher();
+
         if (warningPanel != null) warningPanel.SetActive(false);
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
         if (detailCanvasGroup != null) detailCanvasGroup.alpha = 0f;
@@ -546,74 +536,153 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
     // --- REFINED GAUNTLET ANIMATIONS ---
     private void ResetGauntletPositionsInstant()
     {
-        primaryGauntlet.GetComponent<RectTransform>().DOKill();
-        secondaryGauntlet.GetComponent<RectTransform>().DOKill();
-
-        primaryGauntlet.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        primaryGauntlet.gameObject.SetActive(true);
-
-        secondaryGauntlet.GetComponent<RectTransform>().anchoredPosition = new Vector2(-offscreenXOffset, 0f);
-        secondaryGauntlet.gameObject.SetActive(false);
-
         _isDisplayingPrimary = true;
-        _isTransitioning = false;
-        
+        ShowGauntletPage();
+
         // NEW: Clear any stale swap state when the inventory resets/opens normally
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
         _isReplaceUIPending = false;
+        PlaceDescriptionCard();
         _pendingGauntletPrefab = null;
-
-        if (gauntletTitleText != null) 
-            gauntletTitleText.text = gauntletPrimaryString.GetLocalizedString();
-
-        UpdateReplaceButtonText();
     }
 
-    public void ToggleEquippedGauntletDisplay()
-    {
-        if (_isTransitioning) return;
-        _isTransitioning = true;
+    /// <summary>Flips to the other gauntlet. There is no slide any more: the page changes on the spot.</summary>
+    public void ToggleEquippedGauntletDisplay() => ShowGauntlet(!_isDisplayingPrimary);
 
-        // Flip state immediately so UI logic (like the replace button) updates instantly
-        _isDisplayingPrimary = !_isDisplayingPrimary;
+    /// <summary>Shows the primary or the secondary gauntlet. Does nothing if that one is already on screen.</summary>
+    public void ShowGauntlet(bool primary)
+    {
+        if (primary == _isDisplayingPrimary) return;
+
+        _isDisplayingPrimary = primary;
+        ShowGauntletPage();
+
+        SetupNavigation();
+        FocusTitle();
+    }
+
+    // Puts the gauntlet page, title, replace button and switcher in line with _isDisplayingPrimary.
+    private void ShowGauntletPage()
+    {
+        primaryGauntlet.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        secondaryGauntlet.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        primaryGauntlet.gameObject.SetActive(_isDisplayingPrimary);
+        secondaryGauntlet.gameObject.SetActive(!_isDisplayingPrimary);
 
         if (gauntletTitleText != null)
             gauntletTitleText.text = _isDisplayingPrimary ? gauntletPrimaryString.GetLocalizedString() : gauntletSecondaryString.GetLocalizedString();
 
         UpdateReplaceButtonText();
-
-        RectTransform primaryRect = primaryGauntlet.GetComponent<RectTransform>();
-        RectTransform secondaryRect = secondaryGauntlet.GetComponent<RectTransform>();
-
-        if (!_isDisplayingPrimary) // Switched to Secondary
-        {
-            primaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => primaryGauntlet.gameObject.SetActive(false));
-
-            secondaryGauntlet.gameObject.SetActive(true);
-            secondaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
-            secondaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => { 
-                    _isTransitioning = false; 
-                    SetupNavigation();
-                    FocusTitle(); 
-                });
-        }
-        else // Switched to Primary
-        {
-            secondaryRect.DOAnchorPos(new Vector2(offscreenXOffset, 0f), slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => secondaryGauntlet.gameObject.SetActive(false));
-
-            primaryGauntlet.gameObject.SetActive(true);
-            primaryRect.anchoredPosition = new Vector2(-offscreenXOffset, 0f);
-            primaryRect.DOAnchorPos(Vector2.zero, slideDuration).SetEase(slideEase).SetUpdate(true)
-                .OnComplete(() => { 
-                    _isTransitioning = false; 
-                    SetupNavigation();
-                    FocusTitle(); 
-                });
-        }
+        RefreshGauntletSwitcher();
     }
+
+    #region Gauntlet switcher
+    // The old switcher was a blank cream bookmark in the corner: playtesters never noticed there was a second
+    // gauntlet. It is now a small plaque listing both ("1 Primary", "2 Secondary") with the one on screen
+    // lit up. Either row can be clicked. The plaque keeps the old button's object, so controller navigation
+    // (which treats it as the header's right-hand stop) is untouched; submitting it still flips the page.
+    private static readonly Color PlaqueColor = new Color(0.30f, 0.19f, 0.12f, 0.96f);
+    private static readonly Color RowIdleColor = new Color(0.93f, 0.87f, 0.72f, 0.9f);
+    private static readonly Color RowActiveColor = new Color(0.16f, 0.58f, 0.38f, 1f);
+    private static readonly Color TextIdleColor = new Color(0.36f, 0.23f, 0.13f, 1f);
+    private static readonly Color TextActiveColor = Color.white;
+
+    private bool _switcherBuilt;
+    private Image _primaryRowBg, _secondaryRowBg;
+    private TMP_Text _primaryRowText, _secondaryRowText;
+
+    private void BuildGauntletSwitcher()
+    {
+        if (_switcherBuilt || switchGauntletButton == null) return;
+        _switcherBuilt = true;
+
+        var root = (RectTransform)switchGauntletButton.transform;
+
+        // Retire the flag artwork.
+        var hover = root.GetComponent<UIHoverSpriteToggle>();
+        if (hover != null) hover.enabled = false;
+
+        var plaque = switchGauntletButton.GetComponent<Image>();
+        plaque.sprite = null;
+        plaque.color = PlaqueColor;
+        root.sizeDelta = new Vector2(176f, 112f);
+        root.anchoredPosition = new Vector2(508f, 372f);
+
+        // The controller's selection brackets were sized for the tall flag.
+        Transform brackets = root.Find("Selection_Brackets");
+        if (brackets != null) ((RectTransform)brackets).sizeDelta = root.sizeDelta + new Vector2(18f, 18f);
+
+        // Same switch for every language: row names come from the replace button's strings ("Primary" / "Secondary").
+        _primaryRowBg = BuildSwitcherRow(root, "Row_Primary", 27f, true, out _primaryRowText);
+        _secondaryRowBg = BuildSwitcherRow(root, "Row_Secondary", -27f, false, out _secondaryRowText);
+    }
+
+    private Image BuildSwitcherRow(RectTransform plaque, string name, float y, bool primary, out TMP_Text label)
+    {
+        var rowGo = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        var rect = (RectTransform)rowGo.transform;
+        rect.SetParent(plaque, false);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(160f, 46f);
+        rect.anchoredPosition = new Vector2(0f, y);
+
+        var bg = rowGo.GetComponent<Image>();
+        var button = rowGo.GetComponent<Button>();
+        button.targetGraphic = bg;
+        button.transition = Selectable.Transition.None;
+        button.navigation = new Navigation { mode = Navigation.Mode.None }; // the plaque itself is the controller stop
+        button.onClick.AddListener(() => ShowGauntlet(primary));
+
+        var textGo = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        var textRect = (RectTransform)textGo.transform;
+        textRect.SetParent(rect, false);
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(6f, 0f);
+        textRect.offsetMax = new Vector2(-6f, 0f);
+
+        var text = textGo.GetComponent<TextMeshProUGUI>();
+        if (detailNameText != null) text.font = detailNameText.font;
+        text.enableAutoSizing = true; // "2  Secondary" and its translations must fit the row
+        text.fontSizeMin = 12f;
+        text.fontSizeMax = 22f;
+        text.alignment = TextAlignmentOptions.Center;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.raycastTarget = false;
+
+        // Chinese and Japanese need their own font, like every other piece of UI text.
+        var font = textGo.AddComponent<LocalizedFontAsset>();
+        font.AssetReference = new LocalizedTmpFont { TableReference = "UIFonts", TableEntryReference = "MainFont" };
+
+        label = text;
+        return bg;
+    }
+
+    private void RefreshGauntletSwitcher()
+    {
+        if (_primaryRowBg == null) return;
+
+        _primaryRowText.text = "1  " + SwitcherWord(primaryKey, "Primary");
+        _secondaryRowText.text = "2  " + SwitcherWord(secondaryKey, "Secondary");
+
+        ColourRow(_primaryRowBg, _primaryRowText, _isDisplayingPrimary);
+        ColourRow(_secondaryRowBg, _secondaryRowText, !_isDisplayingPrimary);
+    }
+
+    private static string SwitcherWord(LocalizedString key, string fallback)
+    {
+        if (key == null || key.IsEmpty) return fallback;
+        string word = key.GetLocalizedString();
+        return string.IsNullOrEmpty(word) ? fallback : word;
+    }
+
+    private static void ColourRow(Image bg, TMP_Text text, bool active)
+    {
+        bg.color = active ? RowActiveColor : RowIdleColor;
+        text.color = active ? TextActiveColor : TextIdleColor;
+    }
+    #endregion
 
     public void AnimateGemArrivalDrops(List<GameObject> spawnedGems)
     {
@@ -1014,7 +1083,32 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         _pendingGauntletRarity = rarity;
         _isReplaceUIPending = true;
 
-        if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(true);
+        if (replaceGauntletPanel != null)
+        {
+            replaceGauntletPanel.SetActive(true);
+
+            // The notice used to sit on top of the gauntlet art. It goes into the right-hand column, just above
+            // the Replace and Discard buttons it explains.
+            Transform notice = replaceGauntletPanel.transform.Find("background");
+            if (notice != null)
+            {
+                var noticeRect = (RectTransform)notice;
+                noticeRect.sizeDelta = new Vector2(300f, 170f);
+                noticeRect.anchoredPosition = new Vector2(82f, -293f);
+
+                // The message was sized for the old, wider note: let it shrink to fit (longer in some languages).
+                TMP_Text noticeText = notice.GetComponentInChildren<TMP_Text>(true);
+                if (noticeText != null)
+                {
+                    ((RectTransform)noticeText.transform).sizeDelta = new Vector2(250f, 120f);
+                    noticeText.enableAutoSizing = true;
+                    noticeText.fontSizeMin = 12f;
+                    noticeText.fontSizeMax = 30f;
+                }
+            }
+        }
+
+        RefreshDescriptionPanel(); // moves the gem card out from under the buttons
 
         // --- THE FIX: Trap Controller Navigation to the Popup! ---
         if (replaceGauntletBtn != null && replaceDiscardBtn != null)
@@ -1124,6 +1218,7 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
     {
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
         _isReplaceUIPending = false;
+        PlaceDescriptionCard();
 
         ForceReplaceGauntlet(isPrimary, _pendingGauntletPrefab, _pendingGauntletRarity);
         _pendingGauntletPrefab = null;
@@ -1138,6 +1233,7 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         
         if (replaceGauntletPanel != null) replaceGauntletPanel.SetActive(false);
         _isReplaceUIPending = false;
+        PlaceDescriptionCard();
         _pendingGauntletPrefab = null;
 
         SetupNavigation(); // Restore header navigation
@@ -1367,6 +1463,48 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         RefreshDescriptionPanel();
     }
 
+    // Normally the gem card sits in the bottom-right corner. While a new gauntlet is waiting for the player to
+    // choose, that corner holds the Replace/Discard buttons and the card ended up underneath them, so for that
+    // moment it moves to the empty strip on the left of the gauntlet.
+    private bool _cardPositionSaved;
+    private Vector2 _cardAnchorMin, _cardAnchorMax, _cardOffsetMin, _cardOffsetMax, _cardPivot;
+
+    private void PlaceDescriptionCard()
+    {
+        if (descriptionBoxAnchor == null) return;
+
+        var card = (RectTransform)descriptionBoxAnchor.transform;
+        if (!_cardPositionSaved)
+        {
+            _cardPositionSaved = true;
+            _cardAnchorMin = card.anchorMin;
+            _cardAnchorMax = card.anchorMax;
+            _cardOffsetMin = card.offsetMin;
+            _cardOffsetMax = card.offsetMax;
+            _cardPivot = card.pivot;
+        }
+
+        if (_isReplaceUIPending)
+        {
+            Vector2 size = new Vector2(_cardAnchorMax.x - _cardAnchorMin.x, _cardAnchorMax.y - _cardAnchorMin.y);
+            Rect screen = ((RectTransform)transform).rect;
+            float width = screen.width * size.x + (_cardOffsetMax.x - _cardOffsetMin.x);
+            float height = screen.height * size.y + (_cardOffsetMax.y - _cardOffsetMin.y);
+
+            card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0.5f);
+            card.sizeDelta = new Vector2(width, height);
+            card.anchoredPosition = new Vector2(screen.xMin + width * 0.5f + 8f, -60f);
+        }
+        else
+        {
+            card.anchorMin = _cardAnchorMin;
+            card.anchorMax = _cardAnchorMax;
+            card.pivot = _cardPivot;
+            card.offsetMin = _cardOffsetMin;
+            card.offsetMax = _cardOffsetMax;
+        }
+    }
+
     public void RefreshDescriptionPanel()
     {
         // If the Gem Menu is open, freeze the panel so the description doesn't vanish!
@@ -1374,6 +1512,8 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
 
         // Prioritize mouse hover. If no mouse hover, fall back to controller focus.
         DraggableGem targetGem = _hoveredGem != null ? _hoveredGem : _focusedGem;
+
+        PlaceDescriptionCard();
 
         if (targetGem != null)
         {

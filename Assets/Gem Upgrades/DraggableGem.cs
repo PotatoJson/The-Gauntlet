@@ -177,20 +177,36 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
     }
 
+    /// <summary>
+    /// Where this gem goes when it leaves a socket. A gem remembers the first parent it ever had as its "home", but
+    /// a gem that was dropped straight into a socket (a skill gem auto-slotted on pickup, or anything restored from the
+    /// last level) has that socket as its home, so "return to the board" put it right back where it came from and the
+    /// player could never move it to the other gauntlet. A socket is never a home: such a gem goes to the board.
+    /// </summary>
+    private Transform FindBoard()
+    {
+        if (originalInventoryGrid != null && !GemSwapFx.IsGauntletSlot(originalInventoryGrid)) return originalInventoryGrid;
+
+        GameObject container = GameObject.Find("Reward_Gem_Container");
+        return container != null ? container.transform : null;
+    }
+
     public void ReturnToInventory()
     {
-        if (originalInventoryGrid != null)
+        Transform board = FindBoard();
+        if (board == null)
         {
-            parentAfterDrag = originalInventoryGrid;
-
-            transform.SetParent(originalInventoryGrid);
-            _rectTransform.sizeDelta = _originalSizeDelta;
+            // No board to land on. Never destroy a gem the player owns over that: it stays where it was.
+            if (parentAfterDrag != null) transform.SetParent(parentAfterDrag);
             AnimateToNewHome();
+            return;
         }
-        else
-        {
-            Destroy(gameObject);
-        }
+
+        originalInventoryGrid = board;
+        parentAfterDrag = board;
+
+        transform.SetParent(board);
+        AnimateToNewHome();
     }
 
     public bool IsEquipped()
@@ -224,6 +240,11 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void AnimateToNewHome()
     {
+        // Size follows the home: a socket's size when equipped, the gem's own size on the board. Resetting to the board
+        // size unconditionally left a gem that stayed in (or went back to) a socket smaller than its socket.
+        if (IsEquipped() && transform.parent is RectTransform slotRect) _rectTransform.sizeDelta = slotRect.rect.size;
+        else _rectTransform.sizeDelta = _originalSizeDelta;
+
         if (IsEquipped())
         {
             _rectTransform.DOLocalMove(Vector3.zero, 0.25f)

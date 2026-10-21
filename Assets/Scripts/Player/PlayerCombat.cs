@@ -83,7 +83,6 @@ public class PlayerCombat : MonoBehaviour
     private InputAction _heavyAttackAction;
     private InputAction _healAction;
 
-    private InputAction _debugTeleportAction;
     #endregion
 
     #region Setup
@@ -102,7 +101,6 @@ public class PlayerCombat : MonoBehaviour
         _lightAttackAction = _playerMap.FindAction("LightAttack");
         _heavyAttackAction = _playerMap.FindAction("HeavyAttack");
         _healAction = _playerMap.FindAction("Heal");
-        _debugTeleportAction = _playerMap.FindAction("DebugTeleport");
         
         _leftSkillAction = _playerMap.FindAction("LeftSkill"); 
         _rightSkillAction = _playerMap.FindAction("RightSkill");
@@ -118,7 +116,6 @@ public class PlayerCombat : MonoBehaviour
         _heavyAttackAction.started += OnHeavyAttackStart;
         _heavyAttackAction.canceled += OnHeavyAttackCancel;
         _healAction.started += OnHealInput;
-        _debugTeleportAction.started += OnDebugTeleportInput;
     }
     
     private void OnDisable() 
@@ -131,7 +128,6 @@ public class PlayerCombat : MonoBehaviour
         _heavyAttackAction.started -= OnHeavyAttackStart;
         _heavyAttackAction.canceled -= OnHeavyAttackCancel;
         _healAction.started -= OnHealInput;
-        _debugTeleportAction.started -= OnDebugTeleportInput;
     }
 
     // --- NEW: Input Action Wrappers ---
@@ -145,7 +141,6 @@ public class PlayerCombat : MonoBehaviour
     }
     private void OnHeavyAttackCancel(InputAction.CallbackContext ctx) => OnHeavyAttackReleased();
     private void OnHealInput(InputAction.CallbackContext ctx) => UsePotion();
-    private void OnDebugTeleportInput(InputAction.CallbackContext ctx) => _stateManager.DebugTeleport();
     #endregion
 
     // Update is called once per frame

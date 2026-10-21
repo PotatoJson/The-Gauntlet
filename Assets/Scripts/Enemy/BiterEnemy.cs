@@ -88,6 +88,12 @@ public class BiterEnemy : BaseEnemy
         }
     }
 
+    // The bite lands: snapping jaws at the mouth.
+    protected override void OnMeleeHitFx(bool heavy)
+    {
+        EnemyFx.Bite(transform.TransformPoint(lightAttackHitboxOffset) + Vector3.up * 0.2f);
+    }
+
     public void OnDieAnimationEnd()
     {
         Destroy(gameObject);

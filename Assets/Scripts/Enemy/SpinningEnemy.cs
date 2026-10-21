@@ -156,14 +156,36 @@ public class SpinningEnemy : BaseEnemy
         }
     }
 
+    // The spin attack: a fast-turning ring at axe height plus a dust ring on the floor, only while the axe can hurt.
+    private GroundFx _spinRing;
+    private GroundFx _spinDust;
+
+    private void BeginSpinFx()
+    {
+        EndSpinFx();
+        _spinRing = EnemyFx.Ring(transform, 2.2f, new Color(1f, 0.8f, 0.35f, 1f), 1.1f, 900f);
+        _spinDust = EnemyFx.Ring(transform, 2.5f, EnemyFx.Fire, 0f, 140f);
+        Invoke(nameof(EndSpinFx), 1.8f); // if a hit or stun cuts the animation short, the end event never comes
+    }
+
+    private void EndSpinFx()
+    {
+        CancelInvoke(nameof(EndSpinFx));
+        if (_spinRing != null) _spinRing.End();
+        if (_spinDust != null) _spinDust.End();
+        _spinRing = _spinDust = null;
+    }
+
     public void EnableAxeHitbox()
     {
         axeHitbox?.EnableHitbox(spinDamage);
+        BeginSpinFx();
     }
 
     public void DisableAxeHitbox()
     {
         axeHitbox?.DisableHitbox();
+        EndSpinFx();
     }
 
     public void OnSpinAttackEnd()

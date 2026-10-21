@@ -56,7 +56,20 @@ public class DemonBoss : BaseEnemy
         // Ensure Phase 2 swords are hidden during Phase 1
         if (leftSword != null) leftSword.SetActive(false);
         if (rightSword != null) rightSword.SetActive(false);
+
+        // A smouldering ring around his feet from the start, so he has presence before the fight begins.
+        EnemyFx.Ring(transform, 3.2f, EnemyFx.Rage, 0.05f, 18f);
     }
+
+    // The hit frame of a swing or smash: a slash across his front and a shockwave where the blow lands.
+    protected override void OnMeleeHitFx(bool heavy)
+    {
+        float reach = isPhase2 ? 3.2f : 2.6f;
+        EnemyFx.Slash(transform, reach, 0.9f, isPhase2 ? EnemyFx.Hell : EnemyFx.Rage, 160f, 0.3f);
+        EnemyFx.Impact(transform.TransformPoint(heavyAttackHitboxOffset), isPhase2 ? 2.8f : 2.2f, EnemyFx.Fire);
+    }
+
+    private GroundFx _rageRing;
 
     protected override void Update()
     {
@@ -241,6 +254,11 @@ public class DemonBoss : BaseEnemy
         navAgent.velocity = Vector3.zero;
 
         animator?.SetTrigger(AnimIntermission);
+
+        // Phase 2 begins: a blast and a fast, wide rage ring until he is done roaring.
+        EnemyFx.Impact(transform.position, 7f, EnemyFx.Rage);
+        _rageRing = EnemyFx.Ring(transform, 6f, EnemyFx.Rage, 0.05f, 70f);
+
         StartCoroutine(IntermissionTimer());
     }
 
@@ -277,6 +295,9 @@ public class DemonBoss : BaseEnemy
 
     public void OnIntermissionEnd()
     {
+        if (_rageRing != null) _rageRing.End();
+        _rageRing = null;
+
         isIntermission = false;
         isAttacking = false;
         if (player != null && !isStunned && !IsDead())
