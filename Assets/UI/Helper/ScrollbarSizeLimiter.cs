@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Scrollbar))]
+[DefaultExecutionOrder(1000)]
 public class ScrollbarSizeLimiter : MonoBehaviour
 {
     [SerializeField, Range(0f, 1f)] private float minSize = 0.1f;
@@ -25,8 +26,10 @@ public class ScrollbarSizeLimiter : MonoBehaviour
         }
     }
 
-    // The ScrollRect writes the scrollbar's size in its own LateUpdate, so a LateUpdate here can lose the race.
-    // willRenderCanvases runs after every LateUpdate, which makes this the last word.
+    // The ScrollRect writes the scrollbar's size in its LateUpdate while scrolling. Correct it straight after (hence
+    // the execution order), before the canvas rebuilds its graphics: willRenderCanvases alone is too late, the
+    // handle has already been meshed at the wrong size by then. It stays as the backstop for the size the
+    // ScrollRect writes during its layout rebuild.
     private void OnEnable()
     {
         Canvas.willRenderCanvases += Apply;
@@ -36,6 +39,11 @@ public class ScrollbarSizeLimiter : MonoBehaviour
     private void OnDisable()
     {
         Canvas.willRenderCanvases -= Apply;
+    }
+
+    private void LateUpdate()
+    {
+        Apply();
     }
 
     private void Apply()

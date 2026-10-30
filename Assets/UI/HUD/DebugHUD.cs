@@ -160,7 +160,7 @@ public class DebugHUD : MonoBehaviour
         {
             ("Full heal", DebugActions.FullHeal),
             ("Kill player", DebugActions.KillPlayer),
-            ("+25 EXP", () => DebugActions.AddExperience(25f)),
+            ("Level up", DebugActions.LevelUp),
             ("-25 EXP", () => DebugActions.AddExperience(-25f)),
             ("Boss room", DebugActions.TeleportToBossRoom),
             ("Next spot", DebugActions.TeleportNextSpot),
@@ -170,6 +170,11 @@ public class DebugHUD : MonoBehaviour
 
         // One button per gauntlet the game knows about.
         var gauntlets = new List<(string, UnityEngine.Events.UnityAction)>();
+        InventoryManager inventory = inventoryManager != null ? inventoryManager : InventoryManager.Instance;
+        if (inventory != null && inventory.DefaultGauntletPrefab != null)
+        {
+            gauntlets.Add(("Default", () => SpawnGauntlet(inventory.DefaultGauntletPrefab)));
+        }
         foreach (GameObject prefab in gauntletPrefabs)
         {
             if (prefab == null) continue;
@@ -366,6 +371,13 @@ public static class DebugActions
 
         if (amount >= 0f) bar.AddExperience(amount);
         else bar.RemoveExperience(-amount);
+    }
+
+    // Exactly what's left of the current level, so the bar lands at the start of the next one.
+    public static void LevelUp()
+    {
+        ProgressBarCircle bar = ProgressBarCircle.Instance;
+        if (bar != null) bar.AddExperience(bar.expToNextLevel - bar.currentExp);
     }
 
     public static void TeleportToBossRoom()

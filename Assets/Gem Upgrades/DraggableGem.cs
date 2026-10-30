@@ -88,6 +88,12 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         RefreshTierVisuals();
     }
 
+    // The gauntlet's sockets are tilted along the fingers. A gem always lines up with whatever holds it: tilted in a
+    // socket, straight once it is picked up or sitting on the board.
+    private void OnTransformParentChanged() => transform.localRotation = Quaternion.identity;
+
+    private void OnEnable() => transform.localRotation = Quaternion.identity; // parent changes aren't reported while inactive
+
     private void Start()
     {
         originalInventoryGrid = transform.parent;

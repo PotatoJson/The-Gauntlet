@@ -78,6 +78,9 @@ public class RewardMenuManager : MonoBehaviour
 
     public bool IsActiveRewardGem(DraggableGem gem) => _activeRewardGems.Contains(gem);
 
+    /// <summary>True once the player has taken a reward gem (slotted it or merged it). Returning it clears this again.</summary>
+    public bool RewardClaimed => _currentlySlottedGem != null;
+
     /// <summary>
     /// A reward was merged into a gem the player already owns instead of being slotted. That is the pick for
     /// this level-up: the other rewards lock, and the merged-into gem stands in for the "chosen" gem.
@@ -192,7 +195,7 @@ public class RewardMenuManager : MonoBehaviour
 
         if (lookAction != null) lookAction.action.Disable();
 
-        characterScreenRoot.SetActive(true);
+        GauntletScreenFx.Open(characterScreenRoot);
         if (expBarRoot != null) expBarRoot.SetActive(false);
         if (warningPanel != null) warningPanel.SetActive(false);
         if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;
@@ -631,7 +634,7 @@ public class RewardMenuManager : MonoBehaviour
     private void CloseRewardMenu()
     {
         _isCurrentlyRewardPhase = false;
-        characterScreenRoot.SetActive(false);
+        GauntletScreenFx.Close(characterScreenRoot);
         if (expBarRoot != null) expBarRoot.SetActive(true);
         if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;
 

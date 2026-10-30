@@ -355,7 +355,7 @@ public class GauntletMenu : MonoBehaviour
     // Inventory hotkey path: freezes the game but never shows the pause menu.
     private void OpenInventoryOnly()
     {
-        characterScreenRoot.SetActive(true);
+        GauntletScreenFx.Open(characterScreenRoot);
         Time.timeScale = 0f;
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
         else _playerMap.Disable();
@@ -365,7 +365,7 @@ public class GauntletMenu : MonoBehaviour
     // Counterpart of OpenInventoryOnly, also used when the inventory closes without the pause menu open.
     public void CloseInventoryOnly()
     {
-        if (characterScreenRoot != null) characterScreenRoot.SetActive(false);
+        GauntletScreenFx.Close(characterScreenRoot);
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
         else _playerMap.Enable();
 
@@ -376,7 +376,7 @@ public class GauntletMenu : MonoBehaviour
     // Call this from the Pause Menu's "Upgrade/Character" Button OnClick()
     public void OpenUpgradeMenu()
     {
-        characterScreenRoot.SetActive(true);
+        GauntletScreenFx.Open(characterScreenRoot);
         mainButtonsGroup.interactable = false;
         mainButtonsGroup.blocksRaycasts = false;
     }
@@ -385,7 +385,7 @@ public class GauntletMenu : MonoBehaviour
     {
         if (characterScreenRoot != null)
         {
-            characterScreenRoot.SetActive(false);
+            GauntletScreenFx.Close(characterScreenRoot);
         }
 
         if (mainButtonsGroup != null)

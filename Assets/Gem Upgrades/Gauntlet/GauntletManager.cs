@@ -97,6 +97,7 @@ public class GauntletManager : MonoBehaviour
         if (selectionBracket == null) return;
         _currentBracketTarget = target;
         selectionBracket.transform.position = target.position;
+        selectionBracket.transform.rotation = target.rotation;
         selectionBracket.transform.localScale = Vector3.one * selectionBracketScale;
         if (!selectionBracket.activeSelf) selectionBracket.SetActive(true);
     }
