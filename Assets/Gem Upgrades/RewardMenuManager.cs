@@ -55,6 +55,7 @@ public class RewardMenuManager : MonoBehaviour
     private DraggableGem _currentlySlottedGem;
     private bool _isOverflowMode = false;
     private bool _isCurrentlyRewardPhase = false;
+    private bool _isClosing = false;
 
     private List<DraggableGem> _activeRewardGems = new List<DraggableGem>();
 
@@ -468,7 +469,7 @@ public class RewardMenuManager : MonoBehaviour
     {
         if (!characterScreenRoot.activeSelf) return;
 
-        if (!_isCurrentlyRewardPhase) return;
+        if (!_isCurrentlyRewardPhase || _isClosing) return;
 
         if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
 
@@ -557,7 +558,15 @@ public class RewardMenuManager : MonoBehaviour
 
     public void ShowWarning()
     {
+        // With the reward already taken there is nothing to lose by leaving, so don't ask.
+        if (RewardClaimed && !_isOverflowMode)
+        {
+            ConfirmClose();
+            return;
+        }
+
         _isWarningActive = true;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/UI/UI_Error");
         warningPanel.SetActive(true);
 
         if (warningBodyText != null)
@@ -621,6 +630,9 @@ public class RewardMenuManager : MonoBehaviour
 
     public void ConfirmClose()
     {
+        // The confirm button is shared with the inventory's own warning, which closes the screen itself.
+        if (!_isCurrentlyRewardPhase) return;
+
         _isWarningActive = false;
         warningPanel.SetActive(false);
         PlayerStatsManager statsManager = FindFirstObjectByType<PlayerStatsManager>();
@@ -631,10 +643,30 @@ public class RewardMenuManager : MonoBehaviour
         CloseRewardMenu();
     }
 
+    // The hand drags the board off screen, and the game only resumes once it has gone.
     private void CloseRewardMenu()
     {
+        if (_isClosing) return;
+        _isClosing = true;
+
+        GauntletScreenFx.BlockInput(characterScreenRoot);
+
+        GauntletHandRig hand = characterScreenRoot.GetComponentInChildren<GauntletHandRig>(false);
+        if (hand != null && !GauntletScreenFx.ReduceMotion)
+        {
+            hand.PlayBoardSwipe((RectTransform)characterScreenRoot.transform, FinishCloseRewardMenu);
+        }
+        else
+        {
+            FinishCloseRewardMenu();
+        }
+    }
+
+    private void FinishCloseRewardMenu()
+    {
+        _isClosing = false;
         _isCurrentlyRewardPhase = false;
-        GauntletScreenFx.Close(characterScreenRoot);
+        GauntletScreenFx.CloseNow(characterScreenRoot);
         if (expBarRoot != null) expBarRoot.SetActive(true);
         if (descriptionPanelGroup != null) descriptionPanelGroup.alpha = 0f;
 

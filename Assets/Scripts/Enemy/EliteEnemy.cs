@@ -196,6 +196,8 @@ public class EliteEnemy : BaseEnemy
     /// <summary>
     /// Powerful sword slam - used standalone or as combo finisher
     /// </summary>
+    protected override string AttackEvent => "event:/Enemies/Elite_Attack";
+
     public void SwordSlam()
     {
         if (!CanPerformAction()) return;
@@ -205,6 +207,7 @@ public class EliteEnemy : BaseEnemy
         navAgent.isStopped = true;
 
         animator?.SetTrigger(AnimSwordSlam);
+        PlayAttackSound();
     }
 
     public override void LightAttack()
@@ -217,6 +220,7 @@ public class EliteEnemy : BaseEnemy
         navAgent.velocity = Vector3.zero;
 
         animator?.SetTrigger(AnimSwordSwing);
+        PlayAttackSound();
     }
     #endregion
 

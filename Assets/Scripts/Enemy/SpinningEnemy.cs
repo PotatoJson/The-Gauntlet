@@ -160,9 +160,33 @@ public class SpinningEnemy : BaseEnemy
     private GroundFx _spinRing;
     private GroundFx _spinDust;
 
+    private FMOD.Studio.EventInstance _whirl;
+    private bool _whirling;
+
+    private void StartWhirl()
+    {
+        StopWhirl();
+        _whirl = FMODUnity.RuntimeManager.CreateInstance("event:/Enemies/Spinner_Whirl");
+        FMODUnity.RuntimeManager.AttachInstanceToGameObject(_whirl, gameObject);
+        _whirl.start();
+        _whirling = true;
+    }
+
+    private void StopWhirl()
+    {
+        if (!_whirling) return;
+        _whirling = false;
+        _whirl.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+        _whirl.release();
+    }
+
+    // Dying switches this component off, and the whirl is a loop, so it can never be left running.
+    private void OnDisable() => StopWhirl();
+
     private void BeginSpinFx()
     {
         EndSpinFx();
+        StartWhirl();
         _spinRing = EnemyFx.Ring(transform, 2.2f, new Color(1f, 0.8f, 0.35f, 1f), 1.1f, 900f);
         _spinDust = EnemyFx.Ring(transform, 2.5f, EnemyFx.Fire, 0f, 140f);
         Invoke(nameof(EndSpinFx), 1.8f); // if a hit or stun cuts the animation short, the end event never comes
@@ -171,6 +195,7 @@ public class SpinningEnemy : BaseEnemy
     private void EndSpinFx()
     {
         CancelInvoke(nameof(EndSpinFx));
+        StopWhirl();
         if (_spinRing != null) _spinRing.End();
         if (_spinDust != null) _spinDust.End();
         _spinRing = _spinDust = null;

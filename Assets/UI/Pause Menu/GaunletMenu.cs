@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -87,15 +88,17 @@ public class GauntletMenu : MonoBehaviour
 
     private void Update()
     {
-        if (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame())
+        if (characterScreenRoot != null && characterScreenRoot.activeSelf)
+        {
+            if (InventoryKeyPressed() && InventoryManager.Instance != null) InventoryManager.Instance.CloseFromInventoryKey();
+        }
+        else if (inventoryToggleAction != null && inventoryToggleAction.action.WasPressedThisFrame())
         {
             // Block inventory toggle if we are choosing a gauntlet reward
             if (GauntletChoiceUI.Instance != null && GauntletChoiceUI.Instance.gameObject.activeInHierarchy) return;
             if (ShrineUpgradeUI.IsOpen) return;
 
-            // ONLY allow opening the menu if it's currently closed. 
-            // The user requested that this action NEVER closes the menu.
-            if (!_isPaused && characterScreenRoot != null && !characterScreenRoot.activeSelf)
+            if (!_isPaused && characterScreenRoot != null)
             {
                 OpenInventoryOnly();
             }
@@ -150,6 +153,20 @@ public class GauntletMenu : MonoBehaviour
                 }
             }
         }
+    }
+
+    // The Player map is off while the screen is up, so the action can't fire: read its bound keys directly, which
+    // follows rebinding. Keyboard only, because the controller's binding (D-pad up) navigates the screen.
+    private bool InventoryKeyPressed()
+    {
+        if (inventoryToggleAction == null) return false;
+
+        foreach (InputControl control in inventoryToggleAction.action.controls)
+        {
+            if (control.device is Keyboard && control is ButtonControl key && key.wasPressedThisFrame) return true;
+        }
+
+        return false;
     }
 
     private void ShowCursor()
@@ -208,6 +225,7 @@ public class GauntletMenu : MonoBehaviour
     public void PauseGame()
     {
         _isPaused = true;
+        UiSfxListener.PlayMenuSound("event:/UI/UI_Open");
         Time.timeScale = 0f;
         menuCanvas.SetActive(true);
 
@@ -245,6 +263,7 @@ public class GauntletMenu : MonoBehaviour
     public void ResumeGame()
     {
         _isPaused = false;
+        UiSfxListener.PlayMenuSound("event:/UI/UI_Close");
         //_uiMap.Disable();
 
         // Waits for the closing press to be released before gameplay input comes back.
@@ -333,6 +352,8 @@ public class GauntletMenu : MonoBehaviour
 
     public void CloseSettings()
     {
+        UiSfxListener.PlayMenuSound("event:/UI/UI_Back");
+
         settingsPanel.DOScale(Vector3.one * 0.8f, 0.3f)
             .SetEase(Ease.InBack)
             .SetUpdate(true)
@@ -356,6 +377,7 @@ public class GauntletMenu : MonoBehaviour
     private void OpenInventoryOnly()
     {
         GauntletScreenFx.Open(characterScreenRoot);
+        UiSfxListener.PlayMenuSound("event:/UI/UI_Open");
         Time.timeScale = 0f;
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
         else _playerMap.Disable();
@@ -366,6 +388,7 @@ public class GauntletMenu : MonoBehaviour
     public void CloseInventoryOnly()
     {
         GauntletScreenFx.Close(characterScreenRoot);
+        UiSfxListener.PlayMenuSound("event:/UI/UI_Close");
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
         else _playerMap.Enable();
 

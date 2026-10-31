@@ -311,6 +311,7 @@ public class PlayerCombat : MonoBehaviour
         if (prefabToSpawn != null && _currentSpawnPoint != null)
         {
             GameObject activeSkill = Instantiate(prefabToSpawn, _currentSpawnPoint.position, transform.rotation);
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Skills/Skill_" + currentElement, _currentSpawnPoint.position);
 
             BaseSkillProjectile projectileScript = activeSkill.GetComponent<BaseSkillProjectile>();
             if (projectileScript != null)

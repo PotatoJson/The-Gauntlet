@@ -83,6 +83,7 @@ public class ChamberRewardTrigger : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             _hasBeenTriggered = true;
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Chest_Open", transform.position);
 
             PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
             if (playerHealth != null && playerHealth.CurrentPotions < playerHealth.MaxPotions)
@@ -96,6 +97,7 @@ public class ChamberRewardTrigger : MonoBehaviour
 
             if (_isSkillGem)
             {
+                FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gem_Pickup");
                 GiveSkillGem();
                 
                 if (_spawnedGemVisual != null) Destroy(_spawnedGemVisual);

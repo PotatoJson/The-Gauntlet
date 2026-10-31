@@ -142,10 +142,12 @@ public class GauntletInteractable : MonoBehaviour
 
     private void OpenChoiceMenu()
     {
-        if (GauntletChoiceUI.Instance != null)
+        // The panel stays switched off until first use, so its Awake may not have run yet.
+        GauntletChoiceUI choiceUI = GauntletChoiceUI.Instance != null ? GauntletChoiceUI.Instance : FindFirstObjectByType<GauntletChoiceUI>(FindObjectsInactive.Include);
+        if (choiceUI != null)
         {
             // We pass this script directly into the UI so the UI can read its data
-            GauntletChoiceUI.Instance.OpenChoiceMenu(this);
+            choiceUI.OpenChoiceMenu(this);
         }
         else
         {
@@ -155,6 +157,7 @@ public class GauntletInteractable : MonoBehaviour
 
     public void CompleteInteraction()
     {
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gauntlet_Swap");
         if (InteractionPrompt != null) Destroy(InteractionPrompt);
         gameObject.SetActive(false);
     }

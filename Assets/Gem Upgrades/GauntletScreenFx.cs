@@ -56,6 +56,23 @@ public class GauntletScreenFx : MonoBehaviour
         Ensure(root).BeginClose();
     }
 
+    /// <summary>Stops the screen taking clicks while something else animates it away.</summary>
+    public static void BlockInput(GameObject root)
+    {
+        // Not "interactable": that would grey out every button on the board as it leaves.
+        Ensure(root)._group.blocksRaycasts = false;
+        if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    /// <summary>Switches the screen off with no fade, for a screen that has already animated out.</summary>
+    public static void CloseNow(GameObject root)
+    {
+        if (root == null || !root.activeSelf) return;
+        GauntletScreenFx fx = Ensure(root);
+        fx._tween?.Kill();
+        fx.Finish();
+    }
+
     private void Awake()
     {
         _group = GetComponent<CanvasGroup>();

@@ -187,6 +187,7 @@ public class ShieldEnemy : BaseEnemy
 
         FacePlayerImmediate();
         animator?.SetTrigger(AnimLightAttack);
+        PlayAttackSound();
     }
 
     private void BeginBlock()

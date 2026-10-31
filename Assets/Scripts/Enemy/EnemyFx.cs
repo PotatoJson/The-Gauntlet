@@ -8,6 +8,7 @@ using UnityEngine;
 ///   Impact  a flash, shockwave and embers where a heavy hit lands
 ///   Slash   a crescent swept in front of an enemy for a sword swing
 ///   Bite    snapping jaws for the Biter
+///   FireballCharge  an orb swelling in front of the Eyeball before it shoots
 /// Every call quietly does nothing when its prefab is missing, so a combat script never breaks over a visual.
 /// </summary>
 public static class EnemyFx
@@ -58,6 +59,17 @@ public static class EnemyFx
         if (prefab == null) return;
 
         Object.Instantiate(prefab, position, Quaternion.identity);
+    }
+
+    /// <summary>An orb swelling at this point over <paramref name="seconds"/>; end it with Release or Cancel.</summary>
+    public static EyeChargeFx FireballCharge(Vector3 position, float seconds)
+    {
+        GameObject prefab = Load("EyeChargeFx");
+        if (prefab == null) return null;
+
+        EyeChargeFx fx = Object.Instantiate(prefab, position, Quaternion.identity).GetComponent<EyeChargeFx>();
+        fx.Begin(seconds);
+        return fx;
     }
 
     // The floor below a point; characters standing there don't count as floor.

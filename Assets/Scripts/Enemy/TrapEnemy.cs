@@ -38,11 +38,13 @@ public class TrapEnemy : MonoBehaviour
         Debug.Log($"{gameObject.name} trap activated! for {trapDuration} seconds with {damageAmount} damage.");
         hasTriggered = true;
         animator?.SetTrigger(grabTriggerName);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Trap_Snap", transform.position);
     }
 
     public void EnableGrabHitbox()
     {
         grabHitbox?.EnableHitbox();
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Grabber_Grab", transform.position);
     }
 
     public void DisableGrabHitbox()

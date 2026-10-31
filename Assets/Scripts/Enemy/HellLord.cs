@@ -232,6 +232,9 @@ public class HellLord : BaseEnemy
         LightAttack();
     }
 
+    protected override string AttackEvent => "event:/Boss/Boss_Attack";
+    protected override string DeathEvent => "event:/Boss/Boss_Death";
+
     public override void LightAttack()
     {
         if (!CanPerformAction())
@@ -249,6 +252,8 @@ public class HellLord : BaseEnemy
         navAgent.velocity = Vector3.zero;
 
         skipBeamUntilMelee = false;
+
+        PlayAttackSound();
 
         int meleeIndex = GetNextMeleeIndex();
         float randomIndex = meleeIndex / 2f;
@@ -306,6 +311,7 @@ public class HellLord : BaseEnemy
         isBeamActive = true;
 
         // Charging the beam: a tight, fast ring and a flare at his feet.
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/HellLord_Beam", transform.position);
         EnemyFx.Impact(transform.position, 3f, EnemyFx.Fire);
         if (_beamRing != null) _beamRing.End();
         _beamRing = EnemyFx.Ring(transform, 2.6f, EnemyFx.Fire, 0.05f, 120f);
@@ -489,6 +495,7 @@ public class HellLord : BaseEnemy
         EnemyFx.Impact(transform.position, fireballSpawnRadius, EnemyFx.Hell);
         _castRing = EnemyFx.Ring(transform, fireballSpawnRadius, EnemyFx.Hell, 0.05f, 70f);
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/HellLord_Cast", transform.position);
         castRoutine = StartCoroutine(CastSequenceRoutine());
     }
 

@@ -125,6 +125,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         _canDrag = true;
         parentAfterDrag = transform.parent;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gem_Remove");
         transform.SetParent(transform.root);
         transform.SetAsLastSibling();
 
@@ -371,6 +372,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     /// <summary>A quick pop so the player sees which gem just levelled up.</summary>
     public void PlayMergeFeedback()
     {
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gem_Merge");
         transform.DOKill(true);
         transform.localScale = Vector3.one;
         transform.DOPunchScale(Vector3.one * 0.45f, 0.4f, 8, 0.8f).SetUpdate(true).SetLink(gameObject);

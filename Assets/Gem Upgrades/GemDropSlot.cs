@@ -131,6 +131,7 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         {
             if (incomingGem.LinkedGemData.gemType != GemType.Stat)
             {
+                FMODUnity.RuntimeManager.PlayOneShot("event:/UI/UI_Error");
                 Debug.Log("Invalid Gem: Only Stat Gems can be equipped in finger slots.");
                 return; // Stops the drop completely!
             }
@@ -158,6 +159,7 @@ public class GemDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             foreach (Transform child in transform) { Destroy(child.gameObject); }
 
             incomingGem.parentAfterDrag = transform;
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gem_Socket");
 
             RectTransform slotRect = GetComponent<RectTransform>();
             RectTransform gemRect = incomingGem.GetComponent<RectTransform>();

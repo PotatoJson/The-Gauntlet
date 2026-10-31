@@ -89,9 +89,12 @@ public class BiterEnemy : BaseEnemy
     }
 
     // The bite lands: snapping jaws at the mouth.
+    protected override string AttackEvent => null; // the bite sound lands with the bite, below
+
     protected override void OnMeleeHitFx(bool heavy)
     {
         EnemyFx.Bite(transform.TransformPoint(lightAttackHitboxOffset) + Vector3.up * 0.2f);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Biter_Bite", transform.position);
     }
 
     public void OnDieAnimationEnd()

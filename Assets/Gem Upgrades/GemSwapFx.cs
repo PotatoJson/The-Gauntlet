@@ -27,6 +27,8 @@ public static class GemSwapFx
     {
         if (a == null || b == null || slotA == null || slotB == null) return;
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gauntlet_Swap");
+
         Vector3 startA = a.transform.position;
         Vector3 startB = b.transform.position;
 

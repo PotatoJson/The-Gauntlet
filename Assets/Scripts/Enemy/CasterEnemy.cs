@@ -338,6 +338,7 @@ public class CasterEnemy : BaseEnemy
         if (player == null) return;
 
         // Fireballs fall inside the planted zone; without the zone effect they fall around the player as before.
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Caster_Cast", transform.position);
         Vector3 center = _aoeZone != null ? _zoneCenter : player.position;
 
         for (int i = 0; i < fireballsPerTick; i++)
@@ -419,6 +420,7 @@ public class CasterEnemy : BaseEnemy
             if (fireballImpactPrefab != null)
             {
                 Vector3 at = fireballInstance != null ? targetPosition : lastPosition;
+                FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Fireball_Explode", at);
                 ImpactFx impact = Instantiate(fireballImpactPrefab, at + Vector3.up * 0.05f, Quaternion.identity);
                 impact.Play(fireballImpactRadius);
             }

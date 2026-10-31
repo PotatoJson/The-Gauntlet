@@ -158,6 +158,7 @@ public class EnemySpawner : MonoBehaviour
 
             GameObject spawnedBoss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
             chamber.activeEnemies.Add(spawnedBoss);
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", bossSpawn.spawnPoint.position);
         }
     }
 
@@ -216,6 +217,11 @@ public class EnemySpawner : MonoBehaviour
         }
 
         // Open the associated doors
+        // One sound per chamber: some chambers open eight gates at once.
+        if (chamber.chamberDoorAnimators.Count > 0 && chamber.chamberDoorAnimators[0] != null)
+        {
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Gate_Open", chamber.chamberDoorAnimators[0].transform.position);
+        }
         foreach (Animator doorAnim in chamber.chamberDoorAnimators)
         {
             if (doorAnim != null)

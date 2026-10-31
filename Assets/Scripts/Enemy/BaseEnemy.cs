@@ -637,6 +637,15 @@ public abstract class BaseEnemy : MonoBehaviour
     }
 
     #region Combat Actions
+    // Sounds a kind of enemy can swap out. A null attack sound means that enemy plays its own at a better moment.
+    protected virtual string AttackEvent => "event:/Enemies/Enemy_Attack";
+    protected virtual string DeathEvent => "event:/Enemies/Enemy_Death";
+
+    protected void PlayAttackSound()
+    {
+        if (AttackEvent != null) FMODUnity.RuntimeManager.PlayOneShot(AttackEvent, transform.position);
+    }
+
     public virtual void LightAttack()
     {
         if (!CanPerformAction()) return;
@@ -646,6 +655,7 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.velocity = Vector3.zero;
         animator?.SetFloat(AnimLightRandom, Random.Range(0, 2));
         animator?.SetTrigger(AnimLightAttack);
+        PlayAttackSound();
     }
 
     public virtual void HeavyAttack()
@@ -656,6 +666,7 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         animator?.SetTrigger(AnimHeavyAttack);
+        PlayAttackSound();
     }
 
     public virtual void ChargeAttack()
@@ -750,6 +761,8 @@ public abstract class BaseEnemy : MonoBehaviour
 
         if (IsDotTick) return;
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Enemy_Hurt", transform.position);
+
         if (isHitImmune || isCharging && damage < 20f) return;
 
         isAttacking = false;
@@ -783,6 +796,7 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.velocity = Vector3.zero;
         navAgent.enabled = false;
         //enemy death event for gem event manager
+        FMODUnity.RuntimeManager.PlayOneShot(DeathEvent, transform.position);
         OnAnyEnemyDied?.Invoke(this);
 
         animator?.SetTrigger(AnimDie);

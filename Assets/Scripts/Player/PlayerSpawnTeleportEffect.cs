@@ -134,6 +134,7 @@ public class PlayerSpawnTeleportEffect : MonoBehaviour
         // 4. VFX
         if (teleportEffectPrefab != null)
         {
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Teleport", transform.position);
             GameObject effect = Instantiate(teleportEffectPrefab, transform.position + spawnOffset, Quaternion.identity);
             if (effect.TryGetComponent<ReverseVFX>(out var reverse))
             {

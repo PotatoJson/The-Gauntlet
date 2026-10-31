@@ -42,6 +42,7 @@ public class ShieldHealth : MonoBehaviour
             Destroy(vfx, 2f); // Clean up sparks after 2 seconds
         }
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Shield_Block", transform.position);
         RegisterShieldHit(hitbox);
         Debug.Log($"{gameObject.name}: Shield hit for {hitbox.CurrentDamage} damage by {other.name}.");
         ApplyDamage(hitbox.CurrentDamage);

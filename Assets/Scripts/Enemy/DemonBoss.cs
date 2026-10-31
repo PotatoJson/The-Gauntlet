@@ -62,8 +62,12 @@ public class DemonBoss : BaseEnemy
     }
 
     // The hit frame of a swing or smash: a slash across his front and a shockwave where the blow lands.
+    protected override string AttackEvent => "event:/Boss/Boss_Attack";
+    protected override string DeathEvent => "event:/Boss/Boss_Death";
+
     protected override void OnMeleeHitFx(bool heavy)
     {
+        if (heavy) FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Slam", transform.position);
         float reach = isPhase2 ? 3.2f : 2.6f;
         EnemyFx.Slash(transform, reach, 0.9f, isPhase2 ? EnemyFx.Hell : EnemyFx.Rage, 160f, 0.3f);
         EnemyFx.Impact(transform.TransformPoint(heavyAttackHitboxOffset), isPhase2 ? 2.8f : 2.2f, EnemyFx.Fire);
@@ -220,6 +224,8 @@ public class DemonBoss : BaseEnemy
         attackCooldownTimer = attackCooldown;
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
+
+        PlayAttackSound();
 
         if (!isPhase2)
         {

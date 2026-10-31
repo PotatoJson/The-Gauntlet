@@ -14,6 +14,7 @@ public abstract class BaseSkillProjectile : MonoBehaviour
     protected int _calculatedPoise;
     protected Transform _target;
     protected Rigidbody _rb;
+    private float _expiresAt;
     
     public virtual void Initialize(float playerDamage, float playerPoise, Transform target = null)
     {
@@ -53,6 +54,17 @@ public abstract class BaseSkillProjectile : MonoBehaviour
         }
 
         Destroy(gameObject, Lifetime);
+        _expiresAt = Time.time + Lifetime;
+    }
+
+    // Every projectile ends by destroying itself when it hits something, so this covers them all. Running out of
+    // lifetime in mid-air, or the level unloading, stays silent.
+    private void OnDestroy()
+    {
+        if (_expiresAt > 0f && Time.time < _expiresAt - 0.05f && gameObject.scene.isLoaded)
+        {
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Skills/Skill_Impact", transform.position);
+        }
     }
 
     protected abstract void OnTriggerEnter(Collider other);

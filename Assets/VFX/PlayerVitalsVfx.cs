@@ -94,6 +94,7 @@ public class PlayerVitalsVfx : MonoBehaviour
     private Texture2D _edgeTexture;
     private Texture2D _puffTexture;
     private float _breathTimer;
+    private float _heartbeatTimer;
     private float _windedRetryTimer;
 
     private PlayerHealth _health;
@@ -194,6 +195,13 @@ public class PlayerVitalsVfx : MonoBehaviour
         float pulse = Mathf.Lerp(1f - (healthPulseDepth * _healthStrength), 1f, phase);
 
         _vignette.intensity.value = _healthStrength * healthMaxIntensity * pulse;
+
+        _heartbeatTimer -= Time.deltaTime;
+        if (_heartbeatTimer <= 0f && _health != null && _health.CurrentHealth > 0f)
+        {
+            _heartbeatTimer = 1.1f;
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Heartbeat");
+        }
     }
 
     private void ApplyWinded()
@@ -221,6 +229,12 @@ public class PlayerVitalsVfx : MonoBehaviour
         _edge.color = edge;
 
         _breathTimer -= Time.deltaTime;
+        if (_breathTimer <= 0f && _health != null && _health.CurrentHealth > 0f)
+        {
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Winded");
+            if (still) _breathTimer = staminaBreathSeconds; // with Reduce Motion the puffs below never reset it
+        }
+
         if (!still && _breathTimer <= 0f)
         {
             _breathTimer = staminaBreathSeconds;

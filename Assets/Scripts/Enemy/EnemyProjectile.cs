@@ -78,6 +78,7 @@ public class EnemyProjectile : MonoBehaviour
 
         if (!spawnImpactOnHit || impactPrefab == null) return;
 
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Fireball_Explode", transform.position);
         ImpactFx fx = Instantiate(impactPrefab, transform.position, Quaternion.identity);
         fx.Play(impactRadius);
     }

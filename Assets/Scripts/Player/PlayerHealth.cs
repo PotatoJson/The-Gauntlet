@@ -272,6 +272,7 @@ public class PlayerHealth : MonoBehaviour
 
         TriggerHaptics(damageRumbleLow, damageRumbleHigh, damageRumbleDuration);
         TriggerHitFeedback(damage);
+        if (_currentHealth > 0f) FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Hurt");
 
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
         Debug.Log("TakeDamage Test " + _currentHealth);
@@ -391,6 +392,8 @@ public class PlayerHealth : MonoBehaviour
         // 0. The run is over, so the checkpoint save must go. Leaving it behind would let the
         //    player relaunch and resume from before they died.
         if (SaveManager.Instance != null) SaveManager.Instance.DeleteSave();
+
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Death");
 
         // 1. Turn off the Character Controller so the player is frozen in place where they died
         CharacterController cc = GetComponent<CharacterController>();

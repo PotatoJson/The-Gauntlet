@@ -11,6 +11,10 @@ public class EyeEnemy : BaseEnemy
     [SerializeField] private float preferredDistance = 10f;
     [SerializeField] private float fireballCooldown = 5f;
     [SerializeField] private float rangedAttackDuration = 0.6f;
+    [Tooltip("How long the fireball visibly builds up before it is shot. Hitting the eye in this time cancels the shot.")]
+    [SerializeField] private float fireballChargeSeconds = 0.9f;
+    [Tooltip("Where the fireball builds up, from the spawn point: in front of the pupil, so the body doesn't hide it.")]
+    [SerializeField] private Vector3 fireballChargeOffset = new Vector3(0f, 0.85f, 1.2f);
     [SerializeField] private float recoilDistance = 2f;
     [SerializeField] private float recoilDuration = 0.15f;
 
@@ -26,6 +30,9 @@ public class EyeEnemy : BaseEnemy
     private Coroutine recoilRoutine;
     private bool hasFiredThisAttack;
     private Coroutine deathRoutine;
+    private EyeChargeFx chargeFx;
+
+    private Vector3 FireballChargePoint => fireballSpawnPoint.position + transform.TransformDirection(fireballChargeOffset);
 
     // Animation hash for shooting (matching base class light attack if applicable, or custom)
     protected static readonly int AnimShoot = Animator.StringToHash("LightAttack");
@@ -143,6 +150,32 @@ public class EyeEnemy : BaseEnemy
         fireballTimer = fireballCooldown;
         if (navAgent != null) navAgent.isStopped = true;
 
+        StartCoroutine(ChargeThenShoot());
+    }
+
+    private System.Collections.IEnumerator ChargeThenShoot()
+    {
+        if (fireballSpawnPoint != null)
+        {
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Caster_Cast", fireballSpawnPoint.position);
+            chargeFx = EnemyFx.FireballCharge(FireballChargePoint, fireballChargeSeconds);
+        }
+
+        for (float elapsed = 0f; elapsed < fireballChargeSeconds; elapsed += Time.deltaTime)
+        {
+            // TakeDamage clears isAttacking, so a hit in the wind-up costs the Eyeball this shot.
+            if (!isAttacking || isStunned || isInHitStun)
+            {
+                CancelCharge();
+                if (isAttacking) OnAttackEnd();
+                yield break;
+            }
+
+            FacePlayer();
+            if (chargeFx != null) chargeFx.transform.position = FireballChargePoint;
+            yield return null;
+        }
+
         CancelInvoke(nameof(OnRangedAttackEnd));
         Invoke(nameof(OnRangedAttackEnd), Mathf.Max(0.05f, rangedAttackDuration));
 
@@ -158,6 +191,12 @@ public class EyeEnemy : BaseEnemy
         }
     }
 
+    private void CancelCharge()
+    {
+        if (chargeFx != null) chargeFx.Cancel();
+        chargeFx = null;
+    }
+
     /// <summary>
     /// Call this via an Animation Event roughly when the eye actually releases the fireball 
     /// so it syncs up properly with the visual animation.
@@ -169,8 +208,12 @@ public class EyeEnemy : BaseEnemy
 
         if (fireballPrefab != null && fireballSpawnPoint != null)
         {
+            if (chargeFx != null) chargeFx.Release();
+            chargeFx = null;
+
             // Calculate direction to player aiming slightly upwards or at center mass
-            Vector3 directionToPlayer = (player.position + Vector3.up * 1.5f) - fireballSpawnPoint.position;
+            Vector3 firePoint = FireballChargePoint;
+            Vector3 directionToPlayer = (player.position + Vector3.up * 1.5f) - firePoint;
             if (directionToPlayer.sqrMagnitude < 0.0001f)
             {
                 directionToPlayer = transform.forward;
@@ -178,7 +221,8 @@ public class EyeEnemy : BaseEnemy
 
             Quaternion rotationToPlayer = Quaternion.LookRotation(directionToPlayer);
 
-            GameObject fireballObject = Instantiate(fireballPrefab, fireballSpawnPoint.position, rotationToPlayer);
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Eye_Zap", firePoint);
+            GameObject fireballObject = Instantiate(fireballPrefab, firePoint, rotationToPlayer);
 
             EnemyProjectile projectile = fireballObject.GetComponent<EnemyProjectile>();
             if (projectile != null)
@@ -244,6 +288,7 @@ public class EyeEnemy : BaseEnemy
         if (deathRoutine != null) return;
 
         StopAllCoroutines();
+        CancelCharge();
         isAttacking = false;
         isCharging = false;
         isRecovering = false;
@@ -299,6 +344,7 @@ public class EyeEnemy : BaseEnemy
     /// </summary>
     public void OnRangedAttackEnd()
     {
+        CancelCharge(); // only still here if a hit cut the shoot animation before it released the fireball
         OnAttackEnd();
     }
 }

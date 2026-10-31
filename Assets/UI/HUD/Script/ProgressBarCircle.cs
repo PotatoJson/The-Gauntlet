@@ -104,6 +104,7 @@ public class ProgressBarCircle : MonoBehaviour, IPointerClickHandler, ISubmitHan
         currentLevel += levelsGained;
 
         _pendingLevelUps += levelsGained;
+        if (levelsGained > 0) FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Level_Up");
 
         if (_pendingLevelUps > 0 && indicator != null)
         {

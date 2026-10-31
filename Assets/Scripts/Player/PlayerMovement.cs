@@ -584,6 +584,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_controller.isGrounded) 
         {
+            if (_velocity.y < -6f) FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Land"); // still holds the falling speed on the first grounded frame
+
             _coyoteTimeCounter = coyoteTime; // Reset coyote time when on the ground
 
             if (_velocity.y <= 0) 
@@ -645,6 +647,7 @@ public class PlayerMovement : MonoBehaviour
 
             // Set counter to 0 so the player can't double jump in the air
             _coyoteTimeCounter = 0f;
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Jump");
 
             _stateManager.SetPlayerState(PlayerState.Airborne);
 

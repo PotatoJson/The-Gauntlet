@@ -9,7 +9,8 @@ using UnityEngine.UI;
 ///
 /// While a reward is waiting to be claimed the whole arm swings upright and the hand clenches into a fist, with energy
 /// gathering around it. Claiming a gem releases a pulse as the fist opens and the arm goes back to where it was.
-/// Returning the gem to the board starts the charge again.
+/// Returning the gem to the board starts the charge again. Leaving the reward menu has the hand reach out, grip the
+/// board's edge and drag the whole board off screen.
 ///
 /// Each digit is a pivot at its knuckle. Squashing the pivot along its length reads as the finger curling, because
 /// the digits are drawn behind the palm. The gems sit on the palm, so they ride along with the wrist but never move
@@ -23,7 +24,14 @@ public class GauntletHandRig : MonoBehaviour
     private const float ThumbClenchedLength = 0.82f;
     private const float ThumbClenchedBend = -32f;
 
-    private enum Pose { Idle, Charging, Releasing }
+    // The board swipe. The arm grows as it reaches, as if coming toward the camera, which also keeps its cut-off
+    // end off screen. The board has to travel far enough to clear the screen.
+    private const float SwipeReachAngle = 14f;
+    private const float SwipeReachScale = 1.7f;
+    private static readonly Vector2 SwipeReachOffset = new Vector2(-289f, 40f);
+    private static readonly Vector2 SwipeTravel = new Vector2(2100f, -160f);
+
+    private enum Pose { Idle, Charging, Releasing, Swiping }
 
     [Tooltip("Everything that turns at the wrist: digits, palm and sockets.")]
     [SerializeField] private RectTransform hand;
@@ -46,6 +54,8 @@ public class GauntletHandRig : MonoBehaviour
     private float _swing;
     private float _armAngle;
     private Vector2 _armOffset;
+    private float _armScale = 1f;
+    private Vector3 _restScale;
     private float _nextGesture;
     private Sequence _sequence;
     private Pose _pose = Pose.Idle;
@@ -65,6 +75,7 @@ public class GauntletHandRig : MonoBehaviour
         for (int i = 0; i < digits.Length; i++) _restAngle[i] = digits[i].localEulerAngles.z;
         _palm = (RectTransform)hand.Find("Palm");
         _glow = GlowColor();
+        _restScale = transform.localScale;
     }
 
     private void OnEnable()
@@ -87,6 +98,7 @@ public class GauntletHandRig : MonoBehaviour
         _swing = 0f;
         _armAngle = 0f;
         _armOffset = Vector2.zero;
+        _armScale = 1f;
         _fxStrength = 0f;
         ResetDigits();
     }
@@ -116,8 +128,11 @@ public class GauntletHandRig : MonoBehaviour
         RewardMenuManager reward = RewardMenuManager.Instance;
         bool rewardWaiting = reward != null && reward.IsRewardModeActive() && !reward.RewardClaimed;
 
-        if (rewardWaiting && _pose != Pose.Charging) BeginCharge();
-        else if (!rewardWaiting && _pose == Pose.Charging) BeginRelease();
+        if (_pose != Pose.Swiping)
+        {
+            if (rewardWaiting && _pose != Pose.Charging) BeginCharge();
+            else if (!rewardWaiting && _pose == Pose.Charging) BeginRelease();
+        }
 
         if (_pose == Pose.Idle && Time.unscaledTime >= _nextGesture && (_sequence == null || !_sequence.IsActive()))
         {
@@ -135,6 +150,7 @@ public class GauntletHandRig : MonoBehaviour
 
         transform.localRotation = Quaternion.Euler(0f, 0f, _armAngle);
         transform.localPosition = _armOffset;
+        transform.localScale = _restScale * _armScale;
 
         // A clenched fist strains a little as the energy builds.
         float strain = Mathf.Sin(t * 26f) * 0.5f * _fxStrength;
@@ -161,6 +177,7 @@ public class GauntletHandRig : MonoBehaviour
     {
         _sequence?.Kill();
         _pose = Pose.Charging;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Reward_Charge");
         _glow = GlowColor();
         BuildFx();
 
@@ -186,6 +203,7 @@ public class GauntletHandRig : MonoBehaviour
     {
         _sequence?.Kill();
         _pose = Pose.Releasing;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Reward_Release");
         ReleasePulse();
 
         _sequence = DOTween.Sequence();
@@ -203,6 +221,51 @@ public class GauntletHandRig : MonoBehaviour
         {
             _pose = Pose.Idle;
             ScheduleNextGesture();
+        });
+        _sequence.SetUpdate(true).SetLink(gameObject);
+    }
+
+    /// <summary>
+    /// Reach for the board's edge, grip it, and drag it away. The arm is a child of the board, so it travels with it.
+    /// The board is back where it started by the time <paramref name="onDone"/> returns, ready for the next open.
+    /// </summary>
+    public void PlayBoardSwipe(RectTransform board, System.Action onDone)
+    {
+        _sequence?.Kill();
+        _pose = Pose.Swiping;
+
+        // A gem landing can still be shaking the board. Finish that first, or this would save the shaken position.
+        board.DOKill(true);
+
+        Vector2 boardStart = board.anchoredPosition;
+        Quaternion boardRotation = board.localRotation;
+
+        _sequence = DOTween.Sequence();
+        _sequence.Insert(0f, FxTo(0f, 0.2f));
+        _sequence.Insert(0f, SwingTo(0f, 0.2f, Ease.OutQuad));
+        _sequence.Insert(0f, ArmTo(SwipeReachAngle, SwipeReachOffset, 0.4f, Ease.OutCubic));
+        _sequence.Insert(0f, DOTween.To(() => _armScale, v => _armScale = v, SwipeReachScale, 0.4f).SetEase(Ease.OutCubic));
+
+        for (int i = 0; i < digits.Length; i++)
+        {
+            _sequence.Insert(0f, LengthTo(i, 1f, 0.2f, Ease.OutQuad));
+            _sequence.Insert(0f, BendTo(i, 0f, 0.2f, Ease.OutQuad));
+            _sequence.Insert(0.36f, LengthTo(i, i == Thumb ? ThumbClenchedLength : ClenchedLength + 0.2f, 0.12f, Ease.InQuad));
+        }
+        _sequence.Insert(0.36f, BendTo(Thumb, ThumbClenchedBend, 0.12f, Ease.InQuad));
+
+        _sequence.InsertCallback(0.4f, () => FMODUnity.RuntimeManager.PlayOneShot("event:/Gems/Gauntlet_Swap"));
+        _sequence.InsertCallback(0.56f, () => FMODUnity.RuntimeManager.PlayOneShot("event:/UI/UI_Close"));
+
+        // Backs up a touch before it goes, as if taking the board's weight.
+        _sequence.Insert(0.52f, board.DOAnchorPos(boardStart + SwipeTravel, 0.46f).SetEase(Ease.InBack, 1.2f));
+        _sequence.Insert(0.52f, board.DOLocalRotate(new Vector3(0f, 0f, -5f), 0.46f).SetEase(Ease.InQuad));
+
+        _sequence.OnComplete(() =>
+        {
+            onDone();
+            board.anchoredPosition = boardStart;
+            board.localRotation = boardRotation;
         });
         _sequence.SetUpdate(true).SetLink(gameObject);
     }

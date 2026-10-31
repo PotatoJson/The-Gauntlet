@@ -11,8 +11,8 @@ using TMPro;
 /// and the old version only ever wired the main menu's: in the levels the volume sliders did nothing).
 /// Instead it finds the audio rows of whichever settings menu is loaded and binds them every time a scene loads.
 ///
-/// Volume goes to the Unity mixer (AudioSources) and, for Master, to the FMOD master bus (footsteps, attacks
-/// and impacts are FMOD events and never went through the mixer).
+/// Volume goes to the Unity mixer (AudioSources) and to the matching FMOD bus (footsteps, attacks and impacts
+/// are FMOD events and never went through the mixer). Ambience is FMOD only, so it has no mixer parameter.
 /// </summary>
 public class AudioSettingsManager : MonoBehaviour
 {
@@ -24,6 +24,7 @@ public class AudioSettingsManager : MonoBehaviour
     public const string MasterParam = "MasterVol";
     public const string MusicParam = "MusicVol";
     public const string SfxParam = "SFXVol";
+    public const string AmbienceParam = "AmbienceVol";
 
     private const float DefaultVolume = 0.75f;
 
@@ -33,6 +34,7 @@ public class AudioSettingsManager : MonoBehaviour
         { "Master Volume", MasterParam },
         { "Music Volume", MusicParam },
         { "SFX Volume", SfxParam },
+        { "Ambience Volume", AmbienceParam },
     };
 
     private void Awake()
@@ -103,14 +105,15 @@ public class AudioSettingsManager : MonoBehaviour
         ApplyVolume(MasterParam, GetSavedVolume(MasterParam));
         ApplyVolume(MusicParam, GetSavedVolume(MusicParam));
         ApplyVolume(SfxParam, GetSavedVolume(SfxParam));
+        ApplyVolume(AmbienceParam, GetSavedVolume(AmbienceParam));
     }
 
-    /// <summary>Sends a 0-1 volume to the mixer and, for the master volume, to the FMOD master bus.</summary>
+    /// <summary>Sends a 0-1 volume to the mixer and to the matching FMOD bus.</summary>
     public void ApplyVolume(string paramName, float value)
     {
         value = Mathf.Clamp01(value);
 
-        if (mainMixer != null)
+        if (mainMixer != null && paramName != AmbienceParam)
         {
             // Linear 0-1 to decibels (-80 to 0); the mixer maths breaks at exactly 0.
             _mixerDb[paramName] = Mathf.Log10(Mathf.Clamp(value, 0.0001f, 1f)) * 20f;
@@ -121,16 +124,17 @@ public class AudioSettingsManager : MonoBehaviour
             else _pendingMixer.Remove(paramName);
         }
 
-        if (paramName == MasterParam)
+        try
         {
-            try
-            {
-                FMODUnity.RuntimeManager.GetBus("bus:/").setVolume(value);
-            }
-            catch (System.Exception)
-            {
-                // FMOD isn't ready (banks still loading): the next scene load applies it again.
-            }
+            string bus = paramName == MusicParam ? "bus:/Music"
+                : paramName == SfxParam ? "bus:/SFX"
+                : paramName == AmbienceParam ? "bus:/Ambience"
+                : "bus:/";
+            FMODUnity.RuntimeManager.GetBus(bus).setVolume(value);
+        }
+        catch (System.Exception)
+        {
+            // FMOD isn't ready (banks still loading): the next scene load applies it again.
         }
     }
 

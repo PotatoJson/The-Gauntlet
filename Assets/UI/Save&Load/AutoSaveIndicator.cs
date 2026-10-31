@@ -83,6 +83,7 @@ public class AutoSaveIndicator : MonoBehaviour
     public void Show()
     {
         if (_group == null) return;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/UI/UI_Save");
 
         ApplyGameFont();
 

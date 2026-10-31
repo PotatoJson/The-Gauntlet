@@ -294,6 +294,7 @@ public class SettingsTabManager : MonoBehaviour
 
     public void CycleTab(int direction)
     {
+        FMODUnity.RuntimeManager.PlayOneShot("event:/UI/UI_Tab");
         int newIndex = _currentTabIndex + direction;
         if (newIndex >= allPanels.Count) newIndex = 0;
         if (newIndex < 0) newIndex = allPanels.Count - 1;

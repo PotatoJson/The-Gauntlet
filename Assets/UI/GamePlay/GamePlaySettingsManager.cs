@@ -12,8 +12,17 @@ public class GameplaySettingsManager : MonoBehaviour
     [SerializeField] private Slider controllerSlider;
     [SerializeField] private TextMeshProUGUI controllerValueText;
 
+    [Header("Motion")]
+    [SerializeField] private Toggle reduceMotionToggle;
+
     void Start()
     {
+        if (reduceMotionToggle != null)
+        {
+            reduceMotionToggle.SetIsOnWithoutNotify(GauntletScreenFx.ReduceMotion);
+            reduceMotionToggle.onValueChanged.AddListener(on => PlayerPrefs.SetInt("ReduceMotion", on ? 1 : 0));
+        }
+
         // 1. Load saved values (matching PlayerCamera defaults)
         float savedMouse = PlayerPrefs.GetFloat("MouseSensitivity", 1.0f); 
         float savedController = PlayerPrefs.GetFloat("ControllerSensitivity", 1f);

@@ -623,6 +623,17 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
     }
 
     // --- CLOSING & WARNINGS ---
+    /// <summary>The inventory key pressed again. Only closes the plain inventory, not a screen waiting on a decision.</summary>
+    public void CloseFromInventoryKey()
+    {
+        if (GauntletScreenFx.IsClosing(gameObject) || _isWarningActive || _isReplaceUIPending) return;
+        if (GemPopupMenu.Instance != null && GemPopupMenu.Instance.gameObject.activeInHierarchy) return;
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive()) return;
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed) return; // mid-drag: the gem is still in hand
+
+        TryCloseCharacterScreen();
+    }
+
     public void TryCloseCharacterScreen()
     {
         // NEW: If a swap is pending, you can't just 'exit'. You must deal with the gauntlet.
@@ -633,8 +644,14 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
             return;
         }
 
-        _isWarningActive = true;
-        warningPanel.SetActive(true);
+        // The reward menu decides for itself whether to ask, and owns the shared warning's buttons while it's open.
+        if (RewardMenuManager.Instance != null && RewardMenuManager.Instance.IsRewardModeActive())
+        {
+            warningConfirmBtn.onClick.RemoveAllListeners();
+            warningCancelBtn.onClick.RemoveAllListeners();
+            RewardMenuManager.Instance.ShowWarning();
+            return;
+        }
 
         bool hasUnequippedGems = false;
         foreach (DraggableGem gem in GetComponentsInChildren<DraggableGem>(false))
@@ -646,6 +663,17 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
                 break;
             }
         }
+
+        // Plain closing needs no confirmation. Gems left on the board still ask, because only socketed gems are
+        // carried to the next level.
+        if (!hasUnequippedGems)
+        {
+            ConfirmClose();
+            return;
+        }
+
+        _isWarningActive = true;
+        warningPanel.SetActive(true);
 
         if (warningBodyText != null)
         {

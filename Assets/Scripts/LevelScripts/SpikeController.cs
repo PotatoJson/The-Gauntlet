@@ -13,6 +13,7 @@ public class SpikeController : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             Debug.Log("Player hit spikes!");
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Spike_Trap", transform.position);
             other.GetComponent<PlayerHealth>().PlayerRespawnSpikes();
         }
     }
