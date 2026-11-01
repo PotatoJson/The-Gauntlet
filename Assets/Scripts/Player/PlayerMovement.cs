@@ -72,7 +72,8 @@ public class PlayerMovement : MonoBehaviour
     private float _targetSpeed;
     private Vector3 _horizontalVelocity;
     private PlayerStamina _playerStamina;
-    
+    private PlayerMotionFx _motionFx;
+
     // Roll Logic
     private bool _isRolling;
     public bool IsRolling => _isRolling;
@@ -98,7 +99,8 @@ public class PlayerMovement : MonoBehaviour
         _stateManager = GetComponent<PlayerManager>();
         _controller = GetComponent<CharacterController>();
         _playerStamina = GetComponent<PlayerStamina>();
-        
+        _motionFx = gameObject.AddComponent<PlayerMotionFx>();
+
         if (Camera.main != null) _cameraTransform = Camera.main.transform;
 
         _playerMap = inputAsset.FindActionMap("Player");
@@ -503,13 +505,15 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            _rollDirection = -transform.forward; 
+            _rollDirection = -transform.forward;
         }
 
         if (TryGetComponent<AnimationBridge>(out var animBridge))
         {
             animBridge.PlayRoll();
         }
+
+        _motionFx.PlayRoll(_rollDirection);
     }
 
     private void HandleRoll()

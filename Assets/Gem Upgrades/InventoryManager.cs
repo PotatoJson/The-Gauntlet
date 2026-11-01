@@ -1174,6 +1174,8 @@ private bool IsFocusedOnGemOrSlot(GameObject obj)
         else activeSecondaryPrefab = gauntletPrefab;
 
         Transform targetSlot = isPrimary ? primaryGauntlet : secondaryGauntlet;
+        if (rarity == GauntletRarity.UltraRare) SteamAchievements.Unlock(SteamAchievements.UltraRareGauntlet);
+
         DraggableGem savedSkillGem = null;
         List<DraggableGem> savedStatGems = new List<DraggableGem>();
 

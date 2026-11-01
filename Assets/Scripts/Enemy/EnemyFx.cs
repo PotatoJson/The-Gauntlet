@@ -9,6 +9,10 @@ using UnityEngine;
 ///   Slash   a crescent swept in front of an enemy for a sword swing
 ///   Bite    snapping jaws for the Biter
 ///   FireballCharge  an orb swelling in front of the Eyeball before it shoots
+///   Strike  a star of sparks where a punch or blade lands in the air
+///   GroundCrack  a patch of cracked floor where a blow hits the ground
+///   Fury    flames and embers rising around an enraged enemy
+///   BladeTrail  a glowing ribbon behind the tip of a sword
 /// Every call quietly does nothing when its prefab is missing, so a combat script never breaks over a visual.
 /// </summary>
 public static class EnemyFx
@@ -72,15 +76,66 @@ public static class EnemyFx
         return fx;
     }
 
+    /// <summary>A star of sparks at this point, turned to face the camera.</summary>
+    public static void Strike(Vector3 position, float radius, Color tint)
+    {
+        GameObject prefab = Load("StrikeFx");
+        if (prefab == null) return;
+
+        Camera main = Camera.main;
+        Quaternion facing = main != null ? Quaternion.LookRotation(position - main.transform.position) : Quaternion.identity;
+        Object.Instantiate(prefab, position, facing).GetComponent<ImpactFx>().Play(radius, tint);
+    }
+
+    /// <summary>Cracks the floor at (or under) this point, lying flat on whatever the floor is.</summary>
+    public static void GroundCrack(Vector3 position, float radius, Color? glow = null)
+    {
+        GameObject prefab = Load("GroundCrackFx");
+        if (prefab == null) return;
+
+        Vector3 floor = FloorUnder(position, out Vector3 normal);
+        Quaternion flat = Quaternion.FromToRotation(Vector3.forward, -normal) * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+        Object.Instantiate(prefab, floor, flat).GetComponent<GroundCrackFx>().Play(radius, glow);
+    }
+
+    /// <summary>Flames and embers rising around <paramref name="owner"/> until it dies or the effect is stopped.</summary>
+    public static ParticleSystem Fury(Transform owner, string prefabName = "FuryFx")
+    {
+        GameObject prefab = Load(prefabName);
+        if (prefab == null || owner == null) return null;
+
+        return Object.Instantiate(prefab, owner).GetComponent<ParticleSystem>();
+    }
+
+    /// <summary>A ribbon behind the tip of this sword. It draws only while its <c>emitting</c> is true.</summary>
+    public static TrailRenderer BladeTrail(GameObject sword)
+    {
+        GameObject prefab = Load("BladeTrailFx");
+        MeshFilter blade = sword != null ? sword.GetComponentInChildren<MeshFilter>(true) : null;
+        if (prefab == null || blade == null || blade.sharedMesh == null) return null;
+
+        // The blade runs along the mesh's longest axis, and the grip sits near the origin, so the tip is the far end.
+        Bounds bounds = blade.sharedMesh.bounds;
+        Vector3 size = bounds.size;
+        int axis = size.x > size.y && size.x > size.z ? 0 : size.y > size.z ? 1 : 2;
+        Vector3 tip = bounds.center;
+        tip[axis] += Mathf.Sign(bounds.center[axis]) * bounds.extents[axis];
+
+        return Object.Instantiate(prefab, blade.transform.TransformPoint(tip), Quaternion.identity, blade.transform).GetComponent<TrailRenderer>();
+    }
+
     // The floor below a point; characters standing there don't count as floor.
     private static readonly RaycastHit[] Hits = new RaycastHit[16];
 
-    private static Vector3 FloorUnder(Vector3 point)
+    public static Vector3 FloorUnder(Vector3 point) => FloorUnder(point, out _);
+
+    private static Vector3 FloorUnder(Vector3 point, out Vector3 normal)
     {
         int count = Physics.RaycastNonAlloc(point + Vector3.up * 1.5f, Vector3.down, Hits, 8f, ~0, QueryTriggerInteraction.Ignore);
 
         float best = float.MaxValue;
         Vector3 floor = point;
+        normal = Vector3.up;
         for (int i = 0; i < count; i++)
         {
             RaycastHit hit = Hits[i];
@@ -91,6 +146,7 @@ public static class EnemyFx
             {
                 best = hit.distance;
                 floor = hit.point;
+                normal = hit.normal;
             }
         }
 

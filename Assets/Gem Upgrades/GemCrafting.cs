@@ -36,6 +36,8 @@ public static class GemCrafting
 
         keep.Tier++;
 
+        SteamAchievements.Unlock(SteamAchievements.FirstMerge);
+
         // Taking the reward by merging counts as choosing it: the other rewards lock, like a normal pick.
         if (rewardMode)
         {
@@ -69,6 +71,7 @@ public static class GemCrafting
         if (!CanMerge(keep, consume)) return false;
 
         keep.Tier++;
+        SteamAchievements.Unlock(SteamAchievements.FirstMerge);
         Object.Destroy(consume.gameObject);
         return true;
     }

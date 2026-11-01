@@ -85,6 +85,9 @@ public class EnemyProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // The player has several colliders, and Destroy only takes effect at the end of the frame.
+        if (_burst) return;
+
         Debug.Log($"[EnemyProjectile] Trigger enter: {name} hit {other.name} (tag={other.tag}, isTrigger={other.isTrigger})");
 
         // Check if we hit the player (supports child colliders)

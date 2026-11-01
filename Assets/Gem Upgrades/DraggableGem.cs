@@ -51,6 +51,7 @@ public class DraggableGem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             _tier = Mathf.Clamp(value, 1, MaxTier);
             RefreshTierVisuals();
+            if (_tier == MaxTier) SteamAchievements.Unlock(SteamAchievements.MaxTierGem);
         }
     }
 

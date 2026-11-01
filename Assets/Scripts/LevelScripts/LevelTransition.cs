@@ -18,8 +18,17 @@ public class LevelTransition : MonoBehaviour
                 PersistentEquipment.Instance.SaveEquipment(InventoryManager.Instance);
             }
 
-            // Load the scene specified in the inspector
-            SceneManager.LoadScene(nextLevelName);
+            // Hell's exit leads back to the menu: that's the end of the game, if this run came through every level.
+            SaveManager save = SaveManager.Instance;
+            if (nextLevelName == "MainMenu" && save != null
+                && save.HasVisited("Dungeon Level") && save.HasVisited("Cave Level") && save.HasVisited("Hell Level"))
+            {
+                SteamAchievements.Unlock(SteamAchievements.RunComplete);
+            }
+
+            // Load the scene specified in the inspector: the next level behind the loading screen, or straight to the menu.
+            if (nextLevelName == "MainMenu") SceneManager.LoadScene(nextLevelName);
+            else LoadingScreen.LoadLevel(nextLevelName);
         }
     }
 }

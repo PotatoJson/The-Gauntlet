@@ -24,8 +24,9 @@ public class HellLord : BaseEnemy
     [SerializeField] private LayerMask beamHitMask = ~0;
 
     [Header("Hell Lord - Casting (Fireball Wave)")]
-    [SerializeField] private GameObject fireballWarningPrefab;
+    [SerializeField] private FireballWarningFx fireballWarningFxPrefab;
     [SerializeField] private GameObject fireballPrefab;
+    [SerializeField] private float fireballImpactRadius = 1.8f;
     [SerializeField] private float fireballSpawnRadius = 5f;
     [SerializeField] private int fireballsPerTick = 3;
     [SerializeField] private float castInterval = 0.5f;
@@ -34,12 +35,6 @@ public class HellLord : BaseEnemy
     [SerializeField] private float fireballSpawnHeight = 15f;
     [SerializeField] private float fireballSpeed = 8f;
     [SerializeField] private int castWavesPerSequence = 3;
-
-    [Header("Hell Lord - Casting Targeting")]
-    [SerializeField] private LayerMask groundMask = ~0;
-    [SerializeField] private float groundProbeHeight = 10f;
-    [SerializeField] private float groundProbeDistance = 30f;
-    [SerializeField] private float warningSurfaceOffset = 0.02f;
 
     [Header("Hell Lord - AI")]
     public LocalizedString bossNameString;
@@ -78,22 +73,38 @@ public class HellLord : BaseEnemy
         base.Start();
         hasOpenedWithCharge = true;
 
-        // A slow hellfire ring around his feet from the start, so he has presence before the fight begins.
-        EnemyFx.Ring(transform, 3.5f, EnemyFx.Hell, 0.05f, 15f);
+        if (swordHitbox != null) _bladeTrail = EnemyFx.BladeTrail(swordHitbox.gameObject);
     }
 
-    private GroundFx _castRing;
-    private GroundFx _beamRing;
+    private const string AuraPrefabName = "HellAuraFx";
+    private const float AuraFadeSeconds = 1.5f;
 
-    private void EndCastFx()
+    private TrailRenderer _bladeTrail;
+    private ParticleSystem _aura;
+    private bool _swordSwinging;
+
+    // Hellfire rises around him for as long as he is channelling a cast or the beam.
+    private void BeginAura()
     {
-        if (_castRing != null) _castRing.End();
-        _castRing = null;
+        EndAura();
+        _aura = EnemyFx.Fury(transform, AuraPrefabName);
+    }
+
+    private void EndAura()
+    {
+        if (_aura == null) return;
+
+        _aura.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        Destroy(_aura.gameObject, AuraFadeSeconds);
+        _aura = null;
     }
 
     protected override void Update()
     {
         base.Update();
+
+        // A hit can cut the swing before its animation switches the hitbox off.
+        if (_bladeTrail != null) _bladeTrail.emitting = _swordSwinging && isAttacking;
 
         if (enableDebugLogs)
         {
@@ -310,11 +321,10 @@ public class HellLord : BaseEnemy
 
         isBeamActive = true;
 
-        // Charging the beam: a tight, fast ring and a flare at his feet.
+        // Charging the beam: a flare at his feet and hellfire around him.
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/HellLord_Beam", transform.position);
-        EnemyFx.Impact(transform.position, 3f, EnemyFx.Fire);
-        if (_beamRing != null) _beamRing.End();
-        _beamRing = EnemyFx.Ring(transform, 2.6f, EnemyFx.Fire, 0.05f, 120f);
+        EnemyFx.Impact(transform.position, 3f, EnemyFx.Hell);
+        BeginAura();
 
         if (beamSpawnPoint != null && player != null)
         {
@@ -412,8 +422,7 @@ public class HellLord : BaseEnemy
             beamInstance = null;
         }
 
-        if (_beamRing != null) _beamRing.End();
-        _beamRing = null;
+        if (isBeamActive) EndAura(); // a hit also lands here while he is casting, which keeps its own aura
 
         isBeamActive = false;
     }
@@ -490,10 +499,9 @@ public class HellLord : BaseEnemy
             Debug.Log("[HellLord DEBUG] BeginCastSequence started.");
         }
 
-        // A summoning circle as wide as the fireball field and a burst as it opens.
-        EndCastFx();
+        // A burst as the summoning starts, then hellfire around him until it ends.
         EnemyFx.Impact(transform.position, fireballSpawnRadius, EnemyFx.Hell);
-        _castRing = EnemyFx.Ring(transform, fireballSpawnRadius, EnemyFx.Hell, 0.05f, 70f);
+        BeginAura();
 
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/HellLord_Cast", transform.position);
         castRoutine = StartCoroutine(CastSequenceRoutine());
@@ -531,7 +539,7 @@ public class HellLord : BaseEnemy
 
         isCasting = false;
         castRoutine = null;
-        EndCastFx();
+        EndAura();
         OnAttackEnd();
     }
 
@@ -551,23 +559,19 @@ public class HellLord : BaseEnemy
             Vector2 randomCirclePoint = Random.insideUnitCircle * fireballSpawnRadius;
             Vector3 basePosition = player.position + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
 
-            Vector3 targetPosition = basePosition;
-            if (TryGetGroundPosition(basePosition, out Vector3 groundPosition))
-            {
-                targetPosition = groundPosition;
-            }
-
-            StartCoroutine(FireballSequenceRoutine(targetPosition));
+            StartCoroutine(FireballSequenceRoutine(EnemyFx.FloorUnder(basePosition)));
         }
     }
 
     private IEnumerator FireballSequenceRoutine(Vector3 targetPosition)
     {
-        GameObject warningInstance = null;
+        // The sigil fills up until the moment the meteor lands: the delay plus the time it takes to fall.
+        FireballWarningFx warning = null;
 
-        if (fireballWarningPrefab != null)
+        if (fireballWarningFxPrefab != null)
         {
-            warningInstance = Instantiate(fireballWarningPrefab, targetPosition, Quaternion.Euler(90f, 0f, 0f));
+            warning = Instantiate(fireballWarningFxPrefab, targetPosition + Vector3.up * 0.04f, Quaternion.identity);
+            warning.Begin(fireballImpactRadius, impactDelay + fireballSpawnHeight / Mathf.Max(0.1f, fireballSpeed));
         }
 
         yield return new WaitForSeconds(impactDelay);
@@ -580,41 +584,44 @@ public class HellLord : BaseEnemy
             Quaternion downwardRotation = Quaternion.LookRotation(Vector3.down);
 
             fireballInstance = Instantiate(fireballPrefab, skySpawnPosition, downwardRotation);
-            fireballInstance.GetComponent<EnemyProjectile>()?.SetSpeed(fireballSpeed);
+            EnemyProjectile projectile = fireballInstance.GetComponent<EnemyProjectile>();
+            if (projectile != null)
+            {
+                projectile.SetSpeed(fireballSpeed);
+                projectile.spawnImpactOnHit = false; // the landing below plays the burst itself
+            }
         }
         else
         {
             Debug.LogWarning($"{gameObject.name}: Fireball Prefab is missing!");
         }
 
-        if (fireballInstance != null)
+        // It either reaches the ground, which cracks, or hits the player on the way down.
+        Vector3 impactPoint = targetPosition;
+        bool reachedGround = false;
+
+        while (fireballInstance != null)
         {
-            while (fireballInstance != null)
+            impactPoint = fireballInstance.transform.position;
+            if (impactPoint.y <= targetPosition.y + 0.3f)
             {
-                yield return null;
+                reachedGround = true;
+                impactPoint = targetPosition;
+                Destroy(fireballInstance);
+                break;
             }
+
+            yield return null;
         }
 
-        if (warningInstance != null)
+        if (warning != null) warning.End();
+
+        if (fireballPrefab != null)
         {
-            Destroy(warningInstance);
+            FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Fireball_Explode", impactPoint);
+            EnemyFx.Impact(impactPoint, fireballImpactRadius * 1.4f, EnemyFx.Hell);
+            if (reachedGround) EnemyFx.GroundCrack(impactPoint, fireballImpactRadius, EnemyFx.Hell);
         }
-    }
-
-    private bool TryGetGroundPosition(Vector3 position, out Vector3 groundPosition)
-    {
-        Vector3 rayOrigin = position + Vector3.up * groundProbeHeight;
-        float rayDistance = groundProbeHeight + groundProbeDistance;
-
-        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, groundMask, QueryTriggerInteraction.Ignore))
-        {
-            groundPosition = hit.point;
-            groundPosition.y += warningSurfaceOffset;
-            return true;
-        }
-
-        groundPosition = position;
-        return false;
     }
 
     public override void TakeDamage(float damage)
@@ -649,6 +656,7 @@ public class HellLord : BaseEnemy
 
     protected override void Die()
     {
+        SteamAchievements.Unlock(SteamAchievements.BossHellLord);
         StopCasting();
         EndBeamAttack();
 
@@ -661,7 +669,6 @@ public class HellLord : BaseEnemy
 
     private void StopCasting()
     {
-        EndCastFx();
         if (!isCasting) return;
 
         if (castRoutine != null)
@@ -670,6 +677,7 @@ public class HellLord : BaseEnemy
             castRoutine = null;
         }
 
+        EndAura();
         isCasting = false;
     }
 
@@ -682,14 +690,13 @@ public class HellLord : BaseEnemy
     public void EnableSwordSwingHitbox()
     {
         swordHitbox?.EnableHitbox(swordSwingDamage, heavyAttackPoiseDamage);
-
-        // The visible arc of the blade.
-        EnemyFx.Slash(transform, 3.4f, 0.9f, EnemyFx.Hell, 170f, 0.35f);
+        _swordSwinging = true; // the blade leaves a trail for as long as it can hurt
     }
 
     public void DisableSwordHitbox()
     {
         swordHitbox?.DisableHitbox();
+        _swordSwinging = false;
     }
     #endregion
 

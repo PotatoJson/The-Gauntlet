@@ -116,6 +116,11 @@ public class MetricsTracker : MonoBehaviour
         currentChamberTelemetry.diedInChamber = died;
         currentChamberTelemetry.killerEnemy = enemyName;
 
+        if (!died && currentChamberTelemetry.potionsUsed == 0 && exitHealth >= entryHealth)
+        {
+            SteamAchievements.Unlock(SteamAchievements.FlawlessChamber);
+        }
+
         // Fire and forget the web request
         StartCoroutine(SendToGoogleSheet(currentChamberTelemetry));
 

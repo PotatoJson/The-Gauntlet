@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
 
@@ -56,24 +57,80 @@ public class DemonBoss : BaseEnemy
         // Ensure Phase 2 swords are hidden during Phase 1
         if (leftSword != null) leftSword.SetActive(false);
         if (rightSword != null) rightSword.SetActive(false);
-
-        // A smouldering ring around his feet from the start, so he has presence before the fight begins.
-        EnemyFx.Ring(transform, 3.2f, EnemyFx.Rage, 0.05f, 18f);
     }
 
-    // The hit frame of a swing or smash: a slash across his front and a shockwave where the blow lands.
     protected override string AttackEvent => "event:/Boss/Boss_Attack";
     protected override string DeathEvent => "event:/Boss/Boss_Death";
 
+    // A fist or blade this close to the floor on its hit frame has struck the ground.
+    private const float FistGroundHeight = 1.5f;
+    private const float BladeGroundHeight = 0.5f;
+    private const float BladeGroundCheckSeconds = 0.12f;
+
+    private static readonly HumanBodyBones[] StrikingLimbs =
+    {
+        HumanBodyBones.LeftHand, HumanBodyBones.RightHand, HumanBodyBones.LeftFoot, HumanBodyBones.RightFoot
+    };
+
+    private readonly List<TrailRenderer> _bladeTrails = new List<TrailRenderer>();
+    private ParticleSystem _fury;
+
+    // The hit frame of a blow: sparks where it lands in the air, or a shockwave and cracks where it hits the ground.
     protected override void OnMeleeHitFx(bool heavy)
     {
         if (heavy) FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Slam", transform.position);
-        float reach = isPhase2 ? 3.2f : 2.6f;
-        EnemyFx.Slash(transform, reach, 0.9f, isPhase2 ? EnemyFx.Hell : EnemyFx.Rage, 160f, 0.3f);
-        EnemyFx.Impact(transform.TransformPoint(heavyAttackHitboxOffset), isPhase2 ? 2.8f : 2.2f, EnemyFx.Fire);
+
+        if (isPhase2) StartCoroutine(PlaySwordHitFx());
+        else PlayUnarmedHitFx();
     }
 
-    private GroundFx _rageRing;
+    private void PlayUnarmedHitFx()
+    {
+        // Whichever fist or foot is furthest forward is the one that was thrown.
+        Transform limb = null;
+        foreach (HumanBodyBones bone in StrikingLimbs)
+        {
+            Transform candidate = animator != null ? animator.GetBoneTransform(bone) : null;
+            if (candidate != null && (limb == null || Forwardness(candidate) > Forwardness(limb))) limb = candidate;
+        }
+        if (limb == null) return;
+
+        if (HeightAboveFeet(limb) < FistGroundHeight) PlayGroundHitFx(limb.position, 2.6f, EnemyFx.Fire);
+        else EnemyFx.Strike(limb.position, 1.6f, EnemyFx.Fire);
+    }
+
+    // The blades are still dropping fast on the hit frame, so follow them for a moment to see if they reach the floor.
+    private IEnumerator PlaySwordHitFx()
+    {
+        for (float elapsed = 0f; elapsed < BladeGroundCheckSeconds; elapsed += Time.deltaTime)
+        {
+            foreach (TrailRenderer trail in _bladeTrails)
+            {
+                if (HeightAboveFeet(trail.transform) < BladeGroundHeight)
+                {
+                    PlayGroundHitFx(trail.transform.position, 3.2f, EnemyFx.Hell);
+                    yield break;
+                }
+            }
+            yield return null;
+        }
+
+        Transform foremost = null;
+        foreach (TrailRenderer trail in _bladeTrails)
+        {
+            if (foremost == null || Forwardness(trail.transform) > Forwardness(foremost)) foremost = trail.transform;
+        }
+        if (foremost != null) EnemyFx.Strike(foremost.position, 1.6f, EnemyFx.Hell);
+    }
+
+    private static void PlayGroundHitFx(Vector3 point, float radius, Color tint)
+    {
+        EnemyFx.Impact(point, radius, tint);
+        EnemyFx.GroundCrack(point, radius);
+    }
+
+    private float Forwardness(Transform point) => Vector3.Dot(point.position - transform.position, transform.forward);
+    private float HeightAboveFeet(Transform point) => point.position.y - transform.position.y;
 
     protected override void Update()
     {
@@ -87,6 +144,8 @@ public class DemonBoss : BaseEnemy
         }
 
         base.Update();
+
+        foreach (TrailRenderer trail in _bladeTrails) trail.emitting = isAttacking;
     }
 
     // ============================================
@@ -246,6 +305,17 @@ public class DemonBoss : BaseEnemy
         StartCoroutine(AttackResetFailsafe(2.5f));
     }
 
+    protected override void Die()
+    {
+        SteamAchievements.Unlock(SteamAchievements.BossDemon);
+
+        foreach (TrailRenderer trail in _bladeTrails) trail.emitting = false;
+        _bladeTrails.Clear();
+        if (_fury != null) _fury.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        base.Die();
+    }
+
     private void StartIntermission()
     {
         isIntermission = true;
@@ -261,9 +331,15 @@ public class DemonBoss : BaseEnemy
 
         animator?.SetTrigger(AnimIntermission);
 
-        // Phase 2 begins: a blast and a fast, wide rage ring until he is done roaring.
+        // Phase 2 begins: a blast, then he burns with fury and his blades leave trails for the rest of the fight.
         EnemyFx.Impact(transform.position, 7f, EnemyFx.Rage);
-        _rageRing = EnemyFx.Ring(transform, 6f, EnemyFx.Rage, 0.05f, 70f);
+        _fury = EnemyFx.Fury(transform);
+
+        foreach (GameObject sword in new[] { leftSword, rightSword })
+        {
+            TrailRenderer trail = EnemyFx.BladeTrail(sword);
+            if (trail != null) _bladeTrails.Add(trail);
+        }
 
         StartCoroutine(IntermissionTimer());
     }
@@ -301,9 +377,6 @@ public class DemonBoss : BaseEnemy
 
     public void OnIntermissionEnd()
     {
-        if (_rageRing != null) _rageRing.End();
-        _rageRing = null;
-
         isIntermission = false;
         isAttacking = false;
         if (player != null && !isStunned && !IsDead())

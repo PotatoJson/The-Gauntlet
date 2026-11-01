@@ -34,6 +34,9 @@ public class SaveManager : MonoBehaviour
 
     public bool HasSave => SaveSystem.HasSave();
 
+    /// <summary>True if the player has set foot in this level during the current run.</summary>
+    public bool HasVisited(string levelName) => _visitedLevels.Contains(levelName);
+
     /// <summary>True while a save is being applied. Checkpoints are ignored during this.</summary>
     public bool IsRestoring => _isRestoring;
 

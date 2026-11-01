@@ -767,6 +767,9 @@ MonoBehaviour:
   animator: {fileID: 0}
   weight: 0.1
   hitVfxPrefab: {fileID: 4793842202653700343, guid: e0d6617ebeb124a49825f1135a908c24, type: 3}
+  circleSpeedFraction: 0.65
+  alertRadius: 14
+  searchLookSeconds: 3
   swordSwingDamage: 30
   attackDistance: 3
   swordHitbox: {fileID: 6563537279684099958}
@@ -779,8 +782,9 @@ MonoBehaviour:
   beamHitMask:
     serializedVersion: 2
     m_Bits: 64
-  fireballWarningPrefab: {fileID: 7185210630338874825, guid: 1a41e71411ff29b409be3f47e9c118c4, type: 3}
-  fireballPrefab: {fileID: 3694318570542452749, guid: dbddff1b971dc7a408567d4c8673385b, type: 3}
+  fireballWarningFxPrefab: {fileID: 7350119576354526761, guid: 5b44a353aceccef4f803f32bd8211eb2, type: 3}
+  fireballPrefab: {fileID: 5601474726287601713, guid: f3c90c8d1cda4a344a0f8342c2639be5, type: 3}
+  fireballImpactRadius: 1.1
   fireballSpawnRadius: 5
   fireballsPerTick: 3
   castInterval: 0.5
@@ -792,7 +796,7 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  groundProbeHeight: 10
+  groundProbeHeight: 2
   groundProbeDistance: 30
   warningSurfaceOffset: 0.02
   bossNameString:
