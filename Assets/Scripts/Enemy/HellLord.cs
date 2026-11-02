@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Localization;
 
 public class HellLord : BaseEnemy
@@ -22,6 +23,8 @@ public class HellLord : BaseEnemy
     [SerializeField] private float beamDamage = 12f;
     [SerializeField] private float beamRange = 20f;
     [SerializeField] private LayerMask beamHitMask = ~0;
+    [SerializeField, Tooltip("How long the player can stay out of sword reach before he fires the beam at them")]
+    private float beamChaseSeconds = 3f;
 
     [Header("Hell Lord - Casting (Fireball Wave)")]
     [SerializeField] private FireballWarningFx fireballWarningFxPrefab;
@@ -35,6 +38,12 @@ public class HellLord : BaseEnemy
     [SerializeField] private float fireballSpawnHeight = 15f;
     [SerializeField] private float fireballSpeed = 8f;
     [SerializeField] private int castWavesPerSequence = 3;
+    [SerializeField, Tooltip("He stands still for this part of the cast, then fights on while the rest of the meteors fall")]
+    private float castChannelSeconds = 3f;
+    [SerializeField, Tooltip("Damage to a player standing in the marked circle when a meteor lands")]
+    private float meteorLandingDamage = 15f;
+    [SerializeField, Tooltip("One meteor in every this many waves aims at where the player is heading")]
+    private int aimedWaveInterval = 2;
 
     [Header("Hell Lord - AI")]
     public LocalizedString bossNameString;
@@ -53,6 +62,9 @@ public class HellLord : BaseEnemy
     private bool isBeamActive;
     private int nextCastChunk = 2;
     private int lastMeleeIndex = -1;
+    private float _outOfReachSeconds;
+    private int _waveCount;
+    private Vector3 _lastWavePlayerPosition;
 
     private Coroutine beamRoutine;
     private Coroutine castRoutine;
@@ -212,6 +224,15 @@ public class HellLord : BaseEnemy
 
         float distance = GetDistanceToPlayer();
 
+        // Running from him doesn't work: stay out of sword reach too long and he fires the beam.
+        _outOfReachSeconds = distance > attackDistance ? _outOfReachSeconds + aiDecisionInterval : 0f;
+        if (_outOfReachSeconds >= beamChaseSeconds && distance <= beamRange && HasLineOfSightToPlayer())
+        {
+            _outOfReachSeconds = 0f;
+            BeamAttack();
+            return;
+        }
+
         if (skipBeamUntilMelee)
         {
             if (distance > attackDistance)
@@ -318,6 +339,7 @@ public class HellLord : BaseEnemy
     public void BeginBeamAttack()
     {
         if (isBeamActive) return;
+        if (!isAttacking) return; // a hit cancelled the attack during the wind-up, but its animation still played on
 
         isBeamActive = true;
 
@@ -429,7 +451,7 @@ public class HellLord : BaseEnemy
 
     private void CheckCastHealthThreshold()
     {
-        if (nextCastChunk <= 0 || isCasting) return;
+        if (nextCastChunk <= 0 || castRoutine != null) return;
 
         float healthPercent = currentHealth / maxHealth;
         float threshold = nextCastChunk / 3f;
@@ -504,7 +526,18 @@ public class HellLord : BaseEnemy
         BeginAura();
 
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/HellLord_Cast", transform.position);
+        _waveCount = 0;
+        if (player != null) _lastWavePlayerPosition = player.position;
         castRoutine = StartCoroutine(CastSequenceRoutine());
+    }
+
+    private void EndCastChannel()
+    {
+        if (!isCasting) return;
+
+        isCasting = false;
+        EndAura();
+        OnAttackEnd();
     }
 
     private IEnumerator CastSequenceRoutine()
@@ -517,6 +550,8 @@ public class HellLord : BaseEnemy
         {
             elapsed += Time.deltaTime;
             timer -= Time.deltaTime;
+
+            if (elapsed >= castChannelSeconds) EndCastChannel();
 
             if (timer <= 0f)
             {
@@ -537,10 +572,24 @@ public class HellLord : BaseEnemy
             Debug.Log("[HellLord DEBUG] CastSequenceRoutine complete. Ending cast.");
         }
 
-        isCasting = false;
         castRoutine = null;
-        EndAura();
-        OnAttackEnd();
+        EndCastChannel();
+    }
+
+    private float MeteorFlightSeconds => impactDelay + fireballSpawnHeight / Mathf.Max(0.1f, fireballSpeed);
+
+    // Where the player will be when a meteor lands if they keep going, stopping at the edge of the floor.
+    private Vector3 AheadOfPlayer(Vector3 playerVelocity)
+    {
+        Vector3 ahead = player.position + playerVelocity * MeteorFlightSeconds;
+
+        if (NavMesh.SamplePosition(player.position, out NavMeshHit start, 2f, NavMesh.AllAreas)
+            && NavMesh.Raycast(start.position, ahead, out NavMeshHit edge, NavMesh.AllAreas))
+        {
+            return edge.position;
+        }
+
+        return ahead;
     }
 
     private void CastFireballWave()
@@ -554,10 +603,16 @@ public class HellLord : BaseEnemy
             return;
         }
 
+        Vector3 playerVelocity = (player.position - _lastWavePlayerPosition) / Mathf.Max(0.05f, castInterval);
+        _lastWavePlayerPosition = player.position;
+        _waveCount++;
+
         for (int i = 0; i < fireballsPerTick; i++)
         {
             Vector2 randomCirclePoint = Random.insideUnitCircle * fireballSpawnRadius;
             Vector3 basePosition = player.position + new Vector3(randomCirclePoint.x, 0f, randomCirclePoint.y);
+
+            if (i == 0 && _waveCount % aimedWaveInterval == 0) basePosition = AheadOfPlayer(playerVelocity);
 
             StartCoroutine(FireballSequenceRoutine(EnemyFx.FloorUnder(basePosition)));
         }
@@ -571,7 +626,7 @@ public class HellLord : BaseEnemy
         if (fireballWarningFxPrefab != null)
         {
             warning = Instantiate(fireballWarningFxPrefab, targetPosition + Vector3.up * 0.04f, Quaternion.identity);
-            warning.Begin(fireballImpactRadius, impactDelay + fireballSpawnHeight / Mathf.Max(0.1f, fireballSpeed));
+            warning.Begin(fireballImpactRadius, MeteorFlightSeconds);
         }
 
         yield return new WaitForSeconds(impactDelay);
@@ -620,15 +675,23 @@ public class HellLord : BaseEnemy
         {
             FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Fireball_Explode", impactPoint);
             EnemyFx.Impact(impactPoint, fireballImpactRadius * 1.4f, EnemyFx.Hell);
-            if (reachedGround) EnemyFx.GroundCrack(impactPoint, fireballImpactRadius, EnemyFx.Hell);
+            if (reachedGround)
+            {
+                EnemyFx.GroundCrack(impactPoint, fireballImpactRadius, EnemyFx.Hell);
+
+                if (player != null && playerHealth != null && Vector3.Distance(player.position, impactPoint) <= fireballImpactRadius)
+                {
+                    playerHealth.TakeDamage(meteorLandingDamage, 0, gameObject);
+                }
+            }
         }
     }
 
     public override void TakeDamage(float damage)
     {
+        // A hit breaks the beam, but not a meteor cast: those only come twice a fight.
         if (!isHitImmune && !IsDotTick)
         {
-            StopCasting();
             EndBeamAttack();
         }
 
@@ -669,13 +732,12 @@ public class HellLord : BaseEnemy
 
     private void StopCasting()
     {
-        if (!isCasting) return;
+        if (castRoutine == null) return;
 
-        if (castRoutine != null)
-        {
-            StopCoroutine(castRoutine);
-            castRoutine = null;
-        }
+        StopCoroutine(castRoutine);
+        castRoutine = null;
+
+        if (isCasting) nextCastChunk++; // cut short while channelling, so he gets to cast it again once he recovers
 
         EndAura();
         isCasting = false;

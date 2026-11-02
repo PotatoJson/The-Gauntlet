@@ -9,6 +9,9 @@ public class BossSpawnPoint
 
     [Tooltip("Which boss prefab to spawn here. Drag one of the prefabs from the EnemySpawner's Global Enemy Prefabs > Boss Prefabs list.")]
     public GameObject bossPrefab;
+
+    // Set when this boss was placed ahead of time to wait for its intro cutscene.
+    [System.NonSerialized] public bool placedForIntro;
 }
 
 [System.Serializable]
@@ -82,6 +85,8 @@ public class EnemySpawner : MonoBehaviour
         {
             ChamberData chamber = chambers[i];
 
+            PlaceBossesWithIntros(chamber);
+
             if (chamber.spawnOnStart)
             {
                 // Spawn immediately without waiting for a trigger
@@ -154,11 +159,30 @@ public class EnemySpawner : MonoBehaviour
         // Each boss entry picks its own prefab, so a chamber can spawn several different bosses.
         foreach (BossSpawnPoint bossSpawn in chamber.bossSpawns)
         {
-            if (bossSpawn.bossPrefab == null || bossSpawn.spawnPoint == null) continue;
+            if (bossSpawn.bossPrefab == null || bossSpawn.spawnPoint == null || bossSpawn.placedForIntro) continue;
 
             GameObject spawnedBoss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
             chamber.activeEnemies.Add(spawnedBoss);
             FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", bossSpawn.spawnPoint.position);
+        }
+    }
+
+    // A boss with an intro cutscene is already standing there when the player arrives.
+    private void PlaceBossesWithIntros(ChamberData chamber)
+    {
+        if (chamber.isCleared) return;
+
+        foreach (BossSpawnPoint bossSpawn in chamber.bossSpawns)
+        {
+            if (bossSpawn.bossPrefab == null || bossSpawn.spawnPoint == null) continue;
+
+            BossIntroCutscene intro = bossSpawn.bossPrefab.GetComponent<BossIntroCutscene>();
+            if (intro == null || !intro.PlaysInThisScene) continue;
+
+            GameObject boss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
+            boss.GetComponent<BossIntroCutscene>().Arm(this, chamber);
+            chamber.activeEnemies.Add(boss);
+            bossSpawn.placedForIntro = true;
         }
     }
 

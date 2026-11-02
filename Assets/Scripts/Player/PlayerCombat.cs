@@ -156,10 +156,12 @@ public class PlayerCombat : MonoBehaviour
             ConsumeBuffer();
             _stateManager.RequestBufferClear = false;
         }
-        if(_stateManager.GetCurrentState() == PlayerState.Staggered)
+        if(IsStaggered)
         {
             ConsumeBuffer();
+            if(!_wasStaggered) CancelHeavyWindUp();
         }
+        _wasStaggered = IsStaggered;
         HandleInputBuffer();
         _stateManager.HasBufferedAttack = (BufferTimer > 0);
 
@@ -646,8 +648,22 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    // A hit cuts the swing off, but its clip keeps playing and firing events while the animator blends into
+    // the stagger, so those events must not restart the charge or lunge the player back through the knockback.
+    private bool IsStaggered => _stateManager.GetCurrentState() == PlayerState.Staggered;
+    private bool _wasStaggered;
+
+    private void CancelHeavyWindUp()
+    {
+        _isCharging = false;
+        _chargeTimer = 0f;
+        _animator.speed = 1f;
+    }
+
     public void AttemptHeavyChargePause()
     {
+        if (IsStaggered) return;
+
         if (_isHoldingHeavy)
         {
             _isCharging = true;
@@ -658,6 +674,8 @@ public class PlayerCombat : MonoBehaviour
 
     public void HeavyAttackWindUp()
     {
+        if (IsStaggered) return;
+
         if (!_isCharging)
         {
             AttackPassive passive = CurrentPassive;
@@ -668,6 +686,8 @@ public class PlayerCombat : MonoBehaviour
 
     public void HeavyAttackSwing()
     {
+        if (IsStaggered) return;
+
         _animator.speed = 1f;
 
         // Only a swing that was really charging goes off; the animation event also calls this on uncharged swings.
@@ -690,6 +710,8 @@ public class PlayerCombat : MonoBehaviour
 
     public void ApplyLungeForce()
     {
+        if (IsStaggered) return;
+
         _stateManager.CurrentLungeSpeed = _currentAttackNode.LungeForce;
     }
 #endregion

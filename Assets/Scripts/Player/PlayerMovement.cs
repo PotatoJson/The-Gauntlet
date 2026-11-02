@@ -266,11 +266,11 @@ public class PlayerMovement : MonoBehaviour
 
         if(_stateManager.GetCurrentState() == PlayerState.Staggered)
         {
+            _isRolling = false; // a hit ends the roll, otherwise the rest of it plays after the get up
             _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
             _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
-            ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
-            _controller.Move(_horizontalVelocity * Time.deltaTime);
+            _controller.Move(lastVelocity * Time.deltaTime);
             return;
         }
 
@@ -285,6 +285,17 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 finalVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
         _controller.Move(finalVelocity * Time.deltaTime);
+    }
+
+    /// <summary>Forgets any speed the player had, for when something else has been moving them (a cutscene).</summary>
+    public void ResetMotion()
+    {
+        _velocity = Vector3.zero;
+        _horizontalVelocity = Vector3.zero;
+        _smoothSpeed = 0f;
+        _isRolling = false;
+        _hasBufferedRoll = false;
+        _stateManager.CurrentLungeSpeed = 0f;
     }
 
     public void ApplyTrap(float duration)

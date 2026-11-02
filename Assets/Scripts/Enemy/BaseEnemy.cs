@@ -159,7 +159,7 @@ public abstract class BaseEnemy : MonoBehaviour
     protected static readonly int AnimSpeed = Animator.StringToHash("Speed");
     protected static readonly int AnimStunned = Animator.StringToHash("Stunned");
 
-    private PlayerHealth playerHealth;
+    protected PlayerHealth playerHealth;
     protected PlayerManager playerManager;
 
     //death event
@@ -490,7 +490,7 @@ public abstract class BaseEnemy : MonoBehaviour
 
     protected float GetDistanceToPlayer() => player != null ? Vector3.Distance(transform.position, player.position) : float.MaxValue;
 
-    private bool HasLineOfSightToPlayer()
+    protected bool HasLineOfSightToPlayer()
     {
         if (player == null) return false;
 
@@ -823,10 +823,13 @@ public abstract class BaseEnemy : MonoBehaviour
 
     // ============== UPDATED HITBOX LOGIC ==============
     public void OnLightAttackHit() { OnMeleeHitFx(false); TryDamagePlayerHitbox(lightAttackDamage, lightAttackPoiseDamage, lightAttackHitboxOffset, lightAttackHitboxSize); }
-    public void OnHeavyAttackHit() { OnMeleeHitFx(true); TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackPoiseDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize); }
+    public void OnHeavyAttackHit() { OnMeleeHitFx(true); DealHeavyHit(); }
 
     /// <summary>The swing animation reached its hit frame. Enemies override this to play their own effect.</summary>
     protected virtual void OnMeleeHitFx(bool heavy) { }
+
+    /// <summary>Damages whatever is in the heavy hitbox. Enemies whose reach changes per attack override this.</summary>
+    protected virtual void DealHeavyHit() => TryDamagePlayerHitbox(heavyAttackDamage, heavyAttackPoiseDamage, heavyAttackHitboxOffset, heavyAttackHitboxSize);
     public void OnChargeAttackHit() => TryDamagePlayerHitbox(chargeAttackDamage, chargeAttackPoiseDamage, chargeAttackHitboxOffset, chargeAttackHitboxSize);
 
     protected bool TryDamagePlayerHitbox(float damage, int poiseDamage, Vector3 localOffset, Vector3 boxSize)

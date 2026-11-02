@@ -280,17 +280,7 @@ public class PlayerHealth : MonoBehaviour
         HitFeel.PlayerHit(damage, attacker);
         if (_currentHealth <= 0)
         {
-            if (MetricsTracker.Instance != null)
-            {
-                // Fallback to "Unknown" if the attacker wasn't passed or was a trap
-                string killerName = attacker != null ? attacker.name : "Unknown/Environment";
-                
-                // Clean up clone tags in the name (e.g., "BasicEnemy(Clone)" -> "BasicEnemy")
-                killerName = killerName.Replace("(Clone)", "").Trim(); 
-
-                MetricsTracker.Instance.EndChamber(Mathf.RoundToInt(_currentHealth), true, killerName);
-            }
-            HandleDeath();
+            RecordDeathAndDie(attacker);
             return;
         }
 
@@ -298,6 +288,31 @@ public class PlayerHealth : MonoBehaviour
         {
             HandleStagger(poiseDamage, attacker);
         }
+    }
+
+    /// <summary>Instant death from a hazard: invincibility and roll frames don't save the player.</summary>
+    public void Kill(GameObject killer)
+    {
+        if (IsDead) return;
+
+        _currentHealth = 0f;
+        OnHealthChanged?.Invoke(_currentHealth, maxHealth);
+        RecordDeathAndDie(killer);
+    }
+
+    private void RecordDeathAndDie(GameObject attacker)
+    {
+        if (MetricsTracker.Instance != null)
+        {
+            // Fallback to "Unknown" if the attacker wasn't passed or was a trap
+            string killerName = attacker != null ? attacker.name : "Unknown/Environment";
+
+            // Clean up clone tags in the name (e.g., "BasicEnemy(Clone)" -> "BasicEnemy")
+            killerName = killerName.Replace("(Clone)", "").Trim();
+
+            MetricsTracker.Instance.EndChamber(Mathf.RoundToInt(_currentHealth), true, killerName);
+        }
+        HandleDeath();
     }
 
     #region Stagger Handling 
