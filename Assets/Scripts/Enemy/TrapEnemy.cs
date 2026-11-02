@@ -59,6 +59,8 @@ public class TrapEnemy : MonoBehaviour
         PlayerMovement playerMovement = other.GetComponentInParent<PlayerMovement>();
         if (playerMovement != null)
         {
+            if (playerMovement.IsInvincibleViaRoll) return; // rolled through it: no damage and no hold
+
             if (damageAmount > 0f)
             {
                 PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();

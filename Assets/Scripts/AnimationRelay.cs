@@ -51,7 +51,9 @@ public class AnimationEventRelay : MonoBehaviour
     public void ResetFromStagger()
     {
         Debug.Log("Resetting from stagger");
-        _stateManager.SetPlayerState(PlayerState.Idle);
+
+        // The player may have rolled out already, and this clip still fires its event during the blend into the roll.
+        if (_stateManager.GetCurrentState() == PlayerState.Staggered) _stateManager.SetPlayerState(PlayerState.Idle);
     }
 
     //used for when you shouldn't be able to move during anim but can still roll

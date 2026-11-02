@@ -250,14 +250,11 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
 
-        if (_stateManager.GetCurrentState() == PlayerState.Dodging)
+        PlayerMovement movement = GetComponent<PlayerMovement>();
+        if (movement != null && movement.IsInvincibleViaRoll)
         {
-            PlayerMovement movement = GetComponent<PlayerMovement>();
-            if (movement != null && movement.IsInvincibleViaRoll)
-            {
-                Debug.Log("Dodged the attack!");
-                return; // Completely ignore the damage!
-            }
+            Debug.Log("Dodged the attack!");
+            return; // Completely ignore the damage!
         }
 
         // ... Existing Parry/Block/Dodge logic would go here if uncommented ...

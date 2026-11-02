@@ -677,6 +677,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 02bc685d81e66e54fb630912ea70f902, type: 3}
       insertIndex: -1
       addedObject: {fileID: 743074301157448284}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 02bc685d81e66e54fb630912ea70f902, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5309765589572566912}
   m_SourcePrefab: {fileID: 100100000, guid: 02bc685d81e66e54fb630912ea70f902, type: 3}
 --- !u!1 &4735697497377127661 stripped
 GameObject:
@@ -782,6 +785,7 @@ MonoBehaviour:
   beamHitMask:
     serializedVersion: 2
     m_Bits: 64
+  beamChaseSeconds: 3
   fireballWarningFxPrefab: {fileID: 7350119576354526761, guid: 5b44a353aceccef4f803f32bd8211eb2, type: 3}
   fireballPrefab: {fileID: 5601474726287601713, guid: f3c90c8d1cda4a344a0f8342c2639be5, type: 3}
   fireballImpactRadius: 1.1
@@ -793,12 +797,9 @@ MonoBehaviour:
   fireballSpawnHeight: 15
   fireballSpeed: 8
   castWavesPerSequence: 3
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  groundProbeHeight: 2
-  groundProbeDistance: 30
-  warningSurfaceOffset: 0.02
+  castChannelSeconds: 3
+  meteorLandingDamage: 15
+  aimedWaveInterval: 2
   bossNameString:
     m_TableReference:
       m_TableCollectionName: GUID:5d7ca3a28bbfe9a43a4352222ee2bb3b
@@ -854,6 +855,24 @@ MonoBehaviour:
   dissolveDuration: 2
   dissolveDelay: 0.5
   destroyOnComplete: 1
+--- !u!114 &5309765589572566912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4735697497377127661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6058d87d50acec4caf8d120ca2b0fc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HellLordIntro
+  playsInScene: Cave Level
+  clayMaterial: {fileID: 2100000, guid: c30add5268852ba4d8a8aa96faf6d2fa, type: 2}
+  labelFont: {fileID: 11400000, guid: cbdeaa7306fa23040b93d7ed1fe808fb, type: 2}
+  maxLandingDistance: 20
+  fogMaterial: {fileID: 2100000, guid: 0876d35606787434ebba393f29cccf99, type: 2}
+  fogColor: {r: 0.42, g: 0.38, b: 0.46, a: 0.6}
 --- !u!4 &6483769818736048988 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1478025470497438432, guid: 02bc685d81e66e54fb630912ea70f902, type: 3}

@@ -70,6 +70,9 @@ public class HellLord : BaseEnemy
     private Coroutine castRoutine;
     private GameObject beamInstance;
 
+    public GameObject BeamPrefab => beamPrefab;
+    public Transform BeamSpawnPoint => beamSpawnPoint;
+
     private Vector3 beamDirection;
     private Quaternion beamRotation;
 
@@ -370,6 +373,8 @@ public class HellLord : BaseEnemy
 
     public void EndBeamAttack()
     {
+        if (!enabled) return; // his intro cutscene plays this same clip while he is still a statue
+
         if (beamRoutine != null)
         {
             StopCoroutine(beamRoutine);
