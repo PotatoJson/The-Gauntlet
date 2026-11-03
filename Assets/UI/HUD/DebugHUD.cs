@@ -41,6 +41,9 @@ public class DebugHUD : MonoBehaviour
     private void Start()
     {
         if (debugMenuPanel != null) debugMenuPanel.SetActive(false);
+
+        // Cheats are for the editor and development builds only; players never get the 0 key.
+        if (!Debug.isDebugBuild) enabled = false;
     }
 
     private void Update()

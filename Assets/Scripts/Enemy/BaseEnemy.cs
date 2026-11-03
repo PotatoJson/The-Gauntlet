@@ -410,7 +410,7 @@ public abstract class BaseEnemy : MonoBehaviour
         if (isAttacking || isInHitStun)
         {
             if (navAgent.updatePosition) navAgent.updatePosition = false;
-            transform.position += animator.deltaPosition;
+            transform.position += AdjustRootMotion(animator.deltaPosition);
             navAgent.nextPosition = transform.position;
         }
         else
@@ -422,6 +422,9 @@ public abstract class BaseEnemy : MonoBehaviour
             }
         }
     }
+
+    // Lets an attack stretch or shorten the distance its animation travels.
+    protected virtual Vector3 AdjustRootMotion(Vector3 delta) => delta;
 
     protected virtual void ContinueCombat()
     {

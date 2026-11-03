@@ -48,8 +48,9 @@ public class SteamAchievements : MonoBehaviour
     {
         try
         {
-#if !UNITY_EDITOR
-            // Started from the .exe rather than from Steam: hand over to Steam so overlay and achievements work.
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+            // Started from the .exe rather than from Steam: hand over to Steam so overlay and achievements work. Not in
+            // development builds, so that a local test build can be launched straight from its folder.
             if (SteamAPI.RestartAppIfNecessary(new AppId_t(AppId)))
             {
                 Application.Quit();

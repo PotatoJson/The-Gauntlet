@@ -78,6 +78,20 @@ public class PlayerHealth : MonoBehaviour
     public GameObject LastCheckPoint;
     public GameObject PlayerSpawn;
 
+    [Header("Death")]
+    [Tooltip("How fast time runs while a knockdown hit throws the player to their death.")]
+    [Range(0.05f, 1f)] [SerializeField] private float knockdownSlowMotion = 0.3f;
+    [Tooltip("How long that slow motion lasts, in real seconds.")]
+    [SerializeField] private float knockdownSlowSeconds = 1.1f;
+
+    private const string DeathState = "Death";
+    private const string KnockdownDeathState = "DeathKnockdown";
+    private const float KnockbackSpeed = -15f;
+    private const float DeathCameraYaw = 150f;  // from the player's facing: in front, a little to the side
+    private const float DeathCameraPitch = 25f; // looking down at the body
+    private const float DeathHoldTrim = 0.3f; // the last moment of each clip is just the body lying still
+    private Coroutine _dying;
+
     private void Awake()
     {
         _statsManager = GetComponent<PlayerStatsManager>();
@@ -91,8 +105,9 @@ public class PlayerHealth : MonoBehaviour
         {
             _statsManager.OnStatsCalculated += HandleMaxHealthChange;  
             _statsManager.OnStatsCalculated += HandleMaxPoiseChange;
-        } 
+        }
 
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDisable()
@@ -102,6 +117,8 @@ public class PlayerHealth : MonoBehaviour
             _statsManager.OnStatsCalculated -= HandleMaxHealthChange;
             _statsManager.OnStatsCalculated -= HandleMaxPoiseChange;
         }
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
 
         Gamepad gamepad = Gamepad.current;
         if (gamepad != null)
@@ -277,7 +294,7 @@ public class PlayerHealth : MonoBehaviour
         HitFeel.PlayerHit(damage, attacker);
         if (_currentHealth <= 0)
         {
-            RecordDeathAndDie(attacker);
+            RecordDeathAndDie(attacker, poiseDamage > 0 && IsKnockback(poiseDamage));
             return;
         }
 
@@ -294,10 +311,10 @@ public class PlayerHealth : MonoBehaviour
 
         _currentHealth = 0f;
         OnHealthChanged?.Invoke(_currentHealth, maxHealth);
-        RecordDeathAndDie(killer);
+        RecordDeathAndDie(killer, false);
     }
 
-    private void RecordDeathAndDie(GameObject attacker)
+    private void RecordDeathAndDie(GameObject attacker, bool knockedDown)
     {
         if (MetricsTracker.Instance != null)
         {
@@ -309,20 +326,24 @@ public class PlayerHealth : MonoBehaviour
 
             MetricsTracker.Instance.EndChamber(Mathf.RoundToInt(_currentHealth), true, killerName);
         }
-        HandleDeath();
+        HandleDeath(attacker, knockedDown);
     }
 
-    #region Stagger Handling 
+    #region Stagger Handling
+    // An Earth gauntlet's passive gem: basic attacks shrug off hits, heavy attacks are easier to break.
+    private int AdjustedPoiseDamage(int poiseDamage)
+    {
+        PlayerCombat combat = GetComponent<PlayerCombat>();
+        return combat != null ? Mathf.Max(1, Mathf.RoundToInt(poiseDamage * combat.IncomingPoiseMultiplier())) : poiseDamage;
+    }
+
+    // Whether a hit this strong throws the player down, rather than making them stumble or flinch.
+    private bool IsKnockback(int poiseDamage) => AdjustedPoiseDamage(poiseDamage) >= InstantKnockback;
+
     private void HandleStagger(int poiseDamage, GameObject attacker)
     {
         PoiseRecoveryTimer = PoiseRecoveryDelay;
-
-        // An Earth gauntlet's passive gem: basic attacks shrug off hits, heavy attacks are easier to break.
-        PlayerCombat combat = GetComponent<PlayerCombat>();
-        if (combat != null)
-        {
-            poiseDamage = Mathf.Max(1, Mathf.RoundToInt(poiseDamage * combat.IncomingPoiseMultiplier()));
-        }
+        poiseDamage = AdjustedPoiseDamage(poiseDamage);
 
         //see if player gets thrown from attack
         Debug.Log($"[POISE] Took {poiseDamage} poise damage! (Poise before hit: {CurrentPoise}/{_maxPoise})");
@@ -355,7 +376,15 @@ public class PlayerHealth : MonoBehaviour
     private void TriggerKnockback(GameObject attacker)
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        FaceAttacker(attacker);
 
+        _animator.Play("Null", 1); // clears a hit reaction still playing on the HitReactions layer
+        _animator.SetTrigger("KnockbackHit");
+        _stateManager.CurrentLungeSpeed = KnockbackSpeed;
+    }
+
+    private void FaceAttacker(GameObject attacker)
+    {
         if (attacker != null)
         {
             Vector3 directionToAttacker = attacker.transform.position - transform.position;
@@ -366,28 +395,14 @@ public class PlayerHealth : MonoBehaviour
                 transform.rotation = Quaternion.LookRotation(directionToAttacker.normalized);
             }
         }
-
-        _animator.Play("Empty", 1);
-        _animator.SetTrigger("KnockbackHit");
-        _stateManager.CurrentLungeSpeed = -15;
     }
 
     private void TriggerLargeStumble(GameObject attacker)
     {
         _stateManager.SetPlayerState(PlayerState.Staggered);
+        FaceAttacker(attacker);
 
-        if (attacker != null)
-        {
-            Vector3 directionToAttacker = attacker.transform.position - transform.position;
-            directionToAttacker.y = 0;
-            
-            if (directionToAttacker.sqrMagnitude > 0.01f)
-            {
-                transform.rotation = Quaternion.LookRotation(directionToAttacker.normalized);
-            }
-        }
-
-        _animator.Play("Empty", 1);
+        _animator.Play("Null", 1); // clears a hit reaction still playing on the HitReactions layer
         _animator.SetTrigger("LargeStumble");
         _stateManager.CurrentLungeSpeed = -4f;
     }
@@ -399,7 +414,7 @@ public class PlayerHealth : MonoBehaviour
 
     #endregion
 
-    private void HandleDeath()
+    private void HandleDeath(GameObject killer, bool knockedDown)
     {
         // 0. The run is over, so the checkpoint save must go. Leaving it behind would let the
         //    player relaunch and resume from before they died.
@@ -407,24 +422,85 @@ public class PlayerHealth : MonoBehaviour
 
         FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Death");
 
-        // 1. Turn off the Character Controller so the player is frozen in place where they died
+        // 1. No more input from here on: no moving, attacking or opening the pause menu over the death.
+        //    Loading a level (restart or main menu) gives it back.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.SuspendWhileRunning(this);
+        _stateManager.SetPlayerState(PlayerState.Staggered); // combat drops anything buffered or charging
+        OnPlayerDeath?.Invoke();
+
+        // 2. The death animation, then the screen falling apart and the Game Over menu.
+        if (_dying != null) StopCoroutine(_dying);
+        _dying = StartCoroutine(DeathSequence(killer, knockedDown));
+
+        Debug.Log("Player died. Awaiting Restart...");
+    }
+
+    private IEnumerator DeathSequence(GameObject killer, bool knockedDown)
+    {
+        _animator.speed = 1f;
+        _animator.Play("Null", 1); // clears a hit reaction still playing on the HitReactions layer
+
+        if (knockedDown)
+        {
+            // Thrown back off their feet. The fall plays in slow motion, then lands at normal speed.
+            FaceAttacker(killer);
+            _stateManager.CurrentLungeSpeed = KnockbackSpeed;
+            _animator.CrossFadeInFixedTime(KnockdownDeathState, 0.08f);
+
+            // The attacker is usually in front, so the fall lands under the camera. Swing it round
+            // in front of the player instead, looking back at them as they go down.
+            PlayerCamera cam = PlayerCamera.Instance;
+            if (cam != null) cam.ClearLockOnTarget();
+            float fromYaw = cam != null ? cam.transform.eulerAngles.y : 0f;
+            float toYaw = transform.eulerAngles.y + DeathCameraYaw;
+
+            for (float elapsed = 0f; elapsed < knockdownSlowSeconds; elapsed += Time.unscaledDeltaTime)
+            {
+                Time.timeScale = knockdownSlowMotion; // every frame: a hit-stop ending would put it back to 1
+                float e = Mathf.SmoothStep(0f, 1f, elapsed / knockdownSlowSeconds);
+                if (cam != null) cam.SetLookAngles(Mathf.LerpAngle(fromYaw, toYaw, e), DeathCameraPitch * e);
+                yield return null;
+            }
+            Time.timeScale = 1f;
+        }
+        else
+        {
+            _stateManager.CurrentLungeSpeed = 0f;
+            _animator.CrossFadeInFixedTime(DeathState, 0.15f);
+        }
+
+        // Let the clip play out on the floor before the screen breaks. The cross-fade can take a few
+        // frames to start (a hit-stop slows them to almost nothing), so wait until the clip is really playing.
+        string deathState = knockedDown ? KnockdownDeathState : DeathState;
+        while (!_animator.GetCurrentAnimatorStateInfo(0).IsName(deathState)) yield return null;
+        AnimatorStateInfo death = _animator.GetCurrentAnimatorStateInfo(0);
+        float remaining = death.length * (1f - death.normalizedTime);
+        yield return new WaitForSeconds(Mathf.Max(0f, remaining - DeathHoldTrim));
+
+        // Frozen where they fell.
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
 
-        // (Optional) If you have a death animation, trigger it here!
-        // _animator.SetTrigger("Die");
-
-
-        // 3. Trigger the screen falling apart and the Game Over menu!
+        _dying = null;
         DeathScreenShatter.Instance.TriggerDeathShatter();
+    }
 
-        Debug.Log("Player died. Awaiting Restart...");
+    // A restart reloads the level but keeps this player, so take them out of the death pose.
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (_dying != null)
+        {
+            StopCoroutine(_dying);
+            _dying = null;
+        }
 
-        //transform.position = PlayerSpawn.transform.position;
-        //if (cc != null) cc.enabled = true; // Re-enable the Character Controller so it can move again after respawn
-        //if (playerCamera != null) playerCamera.SnapToTarget();
-
-        // Notice we completely deleted the transform.position teleport code!
+        AnimatorStateInfo state = _animator.GetCurrentAnimatorStateInfo(0);
+        if (state.IsName(DeathState) || state.IsName(KnockdownDeathState))
+        {
+            _animator.Play("Locomotion", 0, 0f);
+            _stateManager.SetPlayerState(PlayerState.Idle);
+            _stateManager.CurrentLungeSpeed = 0f;
+        }
     }
 
     public void Heal(float amount)

@@ -18,7 +18,7 @@ using UnityEngine.UI;
 /// </summary>
 public abstract class BossIntroCutscene : MonoBehaviour
 {
-    private const float SkipHoldSeconds = 3f;
+    private const float SkipHoldSeconds = 2f;
     private const float BarHeight = 0.12f; // of the screen, top and bottom
     private const float FadeInSeconds = 0.7f;
     protected const float FadeOutSeconds = 0.6f;

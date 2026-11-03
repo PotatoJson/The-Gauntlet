@@ -14,14 +14,15 @@ public class VideoSettingsManager : MonoBehaviour
     [Header("FPS Display")]
     [SerializeField] private GameObject fpsDisplay;
 
-    private Resolution[] _resolutions;
+    private readonly List<Vector2Int> _resolutions = new List<Vector2Int>();
+    private Vector2Int _resolution;
+    private bool _fullscreen;
 
     void Start()
     {
         // Load saved Fullscreen preference (Default to true/1 if no save exists)
-        bool isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        fullscreenToggle.isOn = isFullscreen;
-        Screen.fullScreen = isFullscreen;
+        _fullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        fullscreenToggle.isOn = _fullscreen;
 
         // Load saved Show FPS preference (Default to false/0)
         bool showFps = PlayerPrefs.GetInt("ShowFPS", 0) == 1;
@@ -51,41 +52,38 @@ public class VideoSettingsManager : MonoBehaviour
 
     private void SetupResolution()
     {
-        _resolutions = Screen.resolutions;
-        resolutionDropdown.ClearOptions();
+        // Load saved resolution preferences (Default to Screen.width/height if no save exists)
+        _resolution = new Vector2Int(PlayerPrefs.GetInt("ResWidth", Screen.width), PlayerPrefs.GetInt("ResHeight", Screen.height));
+
+        // Screen.resolutions lists each size once per refresh rate; the menu only needs each size once.
+        _resolutions.Clear();
+        foreach (Resolution r in Screen.resolutions)
+        {
+            Vector2Int size = new Vector2Int(r.width, r.height);
+            if (!_resolutions.Contains(size)) _resolutions.Add(size);
+        }
+        if (!_resolutions.Contains(_resolution)) _resolutions.Add(_resolution);
+        _resolutions.Sort((a, b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y.CompareTo(b.y));
 
         List<string> options = new List<string>();
-        int currentResolutionIndex = 0;
+        foreach (Vector2Int size in _resolutions) options.Add(size.x + " x " + size.y);
 
-        // Load saved resolution preferences (Default to Screen.width/height if no save exists)
-        int savedWidth = PlayerPrefs.GetInt("ResWidth", Screen.width);
-        int savedHeight = PlayerPrefs.GetInt("ResHeight", Screen.height);
-
-        for (int i = 0; i < _resolutions.Length; i++)
-        {
-            string option = _resolutions[i].width + " x " + _resolutions[i].height;
-
-            if (!options.Contains(option))
-            {
-                options.Add(option);
-            }
-
-            // THE FIX: Check against the saved width/height (or the actual game window size), 
-            // NOT the monitor's native Screen.currentResolution!
-            if (_resolutions[i].width == savedWidth && _resolutions[i].height == savedHeight)
-            {
-                currentResolutionIndex = options.Count - 1;
-            }
-        }
-
+        resolutionDropdown.ClearOptions();
         resolutionDropdown.AddOptions(options);
-        resolutionDropdown.value = currentResolutionIndex;
+        resolutionDropdown.value = _resolutions.IndexOf(_resolution);
         resolutionDropdown.RefreshShownValue();
 
-        // Apply the loaded resolution just to be sure it matches the dropdown
-        Screen.SetResolution(savedWidth, savedHeight, Screen.fullScreen);
+        ApplyDisplay();
 
         resolutionDropdown.onValueChanged.AddListener(SetResolution);
+    }
+
+    // Resolution and fullscreen always go together: switching only Screen.fullScreen drops back to
+    // the desktop resolution, which is why a resolution picked in fullscreen didn't stick.
+    private void ApplyDisplay()
+    {
+        FullScreenMode mode = _fullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+        Screen.SetResolution(_resolution.x, _resolution.y, mode);
     }
 
     private void SetupFPS()
@@ -103,15 +101,12 @@ public class VideoSettingsManager : MonoBehaviour
 
     public void SetResolution(int resolutionIndex)
     {
-        string[] splitRes = resolutionDropdown.options[resolutionIndex].text.Split('x');
-        int width = int.Parse(splitRes[0].Trim());
-        int height = int.Parse(splitRes[1].Trim());
-
-        Screen.SetResolution(width, height, Screen.fullScreen);
+        _resolution = _resolutions[resolutionIndex];
+        ApplyDisplay();
 
         // Save the player's choice!
-        PlayerPrefs.SetInt("ResWidth", width);
-        PlayerPrefs.SetInt("ResHeight", height);
+        PlayerPrefs.SetInt("ResWidth", _resolution.x);
+        PlayerPrefs.SetInt("ResHeight", _resolution.y);
         PlayerPrefs.Save();
     }
 
@@ -132,7 +127,8 @@ public class VideoSettingsManager : MonoBehaviour
 
     public void SetFullscreen(bool isFullscreen)
     {
-        Screen.fullScreen = isFullscreen;
+        _fullscreen = isFullscreen;
+        ApplyDisplay();
 
         // Save the player's choice! (1 for true, 0 for false)
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);

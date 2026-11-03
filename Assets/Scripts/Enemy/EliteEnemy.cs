@@ -15,6 +15,13 @@ public class EliteEnemy : BaseEnemy
     [SerializeField] private float attackDistance = 3f;
     [SerializeField] private float chargeDistance = 10f;
     [SerializeField][Range(0f, 1f)] private float chargeChance = 0.5f;
+    [Header("Charge Leap")]
+    [Tooltip("How far in front of the elite the player should be when the blade comes down.")]
+    [SerializeField] private float leapStrikeDistance = 1.6f;
+    [Tooltip("How far the leap animation travels before the blade comes down.")]
+    [SerializeField] private float leapDistanceToStrike = 3.2f;
+    [Tooltip("The most the leap can be stretched to reach a player further away.")]
+    [SerializeField] private float maxLeapStretch = 1.75f;
     [Header("Tutorial Override")]
     public bool isTutorialDummy = false;
     [Header("Elite Buffing")]
@@ -35,6 +42,9 @@ public class EliteEnemy : BaseEnemy
     private float aiDecisionTimer;
     private float aiDecisionInterval = 0.4f;
     private float buffTimer;
+
+    private bool _leaping;
+    private float _leapTravelled; // how much of the animation's own travel has played
 
     protected override void Update()
     {
@@ -182,6 +192,8 @@ public class EliteEnemy : BaseEnemy
             // Elite uses SwordSlam as the charge finisher
             Debug.Log($"{gameObject.name}: Charge reached player, triggering SwordSlam!");
             animator?.SetTrigger(AnimChargeAttack);
+            _leaping = true;
+            _leapTravelled = 0f;
         }
         else
         {
@@ -189,6 +201,43 @@ public class EliteEnemy : BaseEnemy
             navAgent.isStopped = false;
             navAgent.SetDestination(player.position);
         }
+    }
+
+    // The leap is a fixed length in the animation, so a close player got barged out of the way before
+    // the blade came down. Stretch or shorten it, every frame, so the elite lands at striking distance.
+    protected override Vector3 AdjustRootMotion(Vector3 delta)
+    {
+        if (!_leaping || !isAttacking || isInHitStun || player == null) return delta;
+
+        Vector3 step = new Vector3(delta.x, 0f, delta.z);
+        float natural = step.magnitude;
+        if (natural < 0.0001f) return delta;
+
+        Vector3 toPlayer = player.position - transform.position;
+        toPlayer.y = 0f;
+        float gap = toPlayer.magnitude - leapStrikeDistance;
+        float remaining = leapDistanceToStrike - _leapTravelled;
+        _leapTravelled += natural;
+
+        float scale;
+        if (remaining > 0.05f)
+        {
+            // Track the player through the wind-up only, so a late roll to the side still dodges it.
+            if (remaining > 1f) FacePlayer();
+            scale = Mathf.Clamp(gap / remaining, 0f, maxLeapStretch);
+        }
+        else
+        {
+            scale = gap > 0f ? 1f : 0f; // after the strike: finish the step, but never walk into the player
+        }
+
+        return step * scale + Vector3.up * delta.y;
+    }
+
+    public override void OnAttackEnd()
+    {
+        _leaping = false;
+        base.OnAttackEnd();
     }
 
     #region Elite Attacks

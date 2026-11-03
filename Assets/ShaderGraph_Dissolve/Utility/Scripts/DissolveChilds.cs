@@ -23,7 +23,8 @@ namespace DissolveExample
         private void CollectMaterials()
         {
             materials.Clear();
-            var renderers = GetComponentsInChildren<Renderer>();
+            // Hidden parts too (a boss's second-phase swords), or they keep the dissolve value the asset was saved with.
+            var renderers = GetComponentsInChildren<Renderer>(true);
             foreach (var renderer in renderers)
             {
                 foreach (var mat in renderer.materials)
@@ -40,8 +41,8 @@ namespace DissolveExample
         {
             if (isDissolving) return;
 
-            if (materials.Count == 0)
-                CollectMaterials();
+            // Fresh every time: materials can be swapped after Start (a boss intro dresses the boss in clay first).
+            CollectMaterials();
 
             StartCoroutine(DissolveRoutine());
         }
