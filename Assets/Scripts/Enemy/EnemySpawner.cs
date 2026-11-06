@@ -78,6 +78,21 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Add and configure your individual chambers here.")]
     public List<ChamberData> chambers = new List<ChamberData>();
 
+    [Header("Difficulty")]
+    [Tooltip("Every enemy this level spawns (bosses too) gets this much health: 1 is the prefab's own. The player " +
+             "collects gems as the run goes on, so later levels need tougher enemies to stay a fight.")]
+    [SerializeField] private float enemyHealthMultiplier = 1f;
+    [Tooltip("...and its hits do this much damage: 1 is the prefab's own.")]
+    [SerializeField] private float enemyDamageMultiplier = 1f;
+
+    // Every enemy comes through here, so the level's difficulty reaches all of them.
+    private GameObject SpawnEnemy(GameObject prefab, Vector3 position, Quaternion rotation)
+    {
+        GameObject enemy = Instantiate(prefab, position, rotation);
+        if (enemy.TryGetComponent(out BaseEnemy stats)) stats.ScaleForLevel(enemyHealthMultiplier, enemyDamageMultiplier);
+        return enemy;
+    }
+
     private void Start()
     {
         // Setup triggers for each chamber or spawn initial ones immediately
@@ -161,7 +176,7 @@ public class EnemySpawner : MonoBehaviour
         {
             if (bossSpawn.bossPrefab == null || bossSpawn.spawnPoint == null || bossSpawn.placedForIntro) continue;
 
-            GameObject spawnedBoss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
+            GameObject spawnedBoss = SpawnEnemy(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
             chamber.activeEnemies.Add(spawnedBoss);
             FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", bossSpawn.spawnPoint.position);
         }
@@ -179,7 +194,7 @@ public class EnemySpawner : MonoBehaviour
             BossIntroCutscene intro = bossSpawn.bossPrefab.GetComponent<BossIntroCutscene>();
             if (intro == null || !intro.PlaysInThisScene) continue;
 
-            GameObject boss = Instantiate(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
+            GameObject boss = SpawnEnemy(bossSpawn.bossPrefab, bossSpawn.spawnPoint.position, bossSpawn.spawnPoint.rotation);
             boss.GetComponent<BossIntroCutscene>().Arm(this, chamber);
             chamber.activeEnemies.Add(boss);
             bossSpawn.placedForIntro = true;
@@ -194,7 +209,7 @@ public class EnemySpawner : MonoBehaviour
         // If the container has no children, use the container itself as a single spawn point
         if (container.childCount == 0)
         {
-            GameObject spawnedEnemy = Instantiate(prefab, container.position, container.rotation);
+            GameObject spawnedEnemy = SpawnEnemy(prefab, container.position, container.rotation);
             enemyList.Add(spawnedEnemy);
         }
         else
@@ -202,7 +217,7 @@ public class EnemySpawner : MonoBehaviour
             // If it has children, iterate through them and spawn at each child's location
             foreach (Transform spawnPoint in container)
             {
-                GameObject spawnedEnemy = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+                GameObject spawnedEnemy = SpawnEnemy(prefab, spawnPoint.position, spawnPoint.rotation);
                 enemyList.Add(spawnedEnemy);
             }
         }
@@ -225,6 +240,12 @@ public class EnemySpawner : MonoBehaviour
     {
         Debug.Log($"<color=green>Chamber Cleared: {chamber.chamberName}</color>");
         StoryDialogue.ChamberCleared();
+
+        // Every cleared room refills one potion. It used to come from the reward pickup, and the later levels have
+        // few of those, so the hardest fights were the ones with no healing left. Before the save, so it keeps it.
+        PlayerHealth player = FindFirstObjectByType<PlayerHealth>();
+        if (player != null) player.AddPotion();
+        InteractableHighlight.ShowNear(player != null ? player.transform.position : transform.position);
 
         // Clearing a room IS the checkpoint. This is the only place the game saves.
         if (SaveManager.Instance != null)

@@ -275,6 +275,12 @@ public class PlayerHealth : MonoBehaviour
         }
 
         // ... Existing Parry/Block/Dodge logic would go here if uncommented ...
+
+        // Enemies in later levels hit harder (the level's EnemySpawner sets it). Done here because every enemy
+        // attack lands here, whatever its own damage field: swords, fireballs, beams, boss slams.
+        BaseEnemy source = attacker != null ? attacker.GetComponentInParent<BaseEnemy>() : null;
+        if (source != null) damage *= source.DamageScale;
+
         _currentHealth -= damage;
         _currentHealth = Mathf.Max(_currentHealth, 0);
 

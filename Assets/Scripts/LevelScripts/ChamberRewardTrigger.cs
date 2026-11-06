@@ -85,12 +85,7 @@ public class ChamberRewardTrigger : MonoBehaviour
             _hasBeenTriggered = true;
             FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Chest_Open", transform.position);
 
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null && playerHealth.CurrentPotions < playerHealth.MaxPotions)
-            {
-                playerHealth.CurrentPotions++;
-                Debug.Log($"[Reward Trigger] Potion refilled. Total: {playerHealth.CurrentPotions}");
-            }
+            // The potion refill moved to the room clear (EnemySpawner.OnChamberCleared), so every room gives one.
 
             if (glowingVisual != null) glowingVisual.SetActive(false);
             if (collectVFX != null) Instantiate(collectVFX, transform.position, Quaternion.identity);

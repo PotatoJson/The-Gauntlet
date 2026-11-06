@@ -826,6 +826,17 @@ public abstract class BaseEnemy : MonoBehaviour
         if (ProgressBarCircle.Instance != null) ProgressBarCircle.Instance.AddExperience(xpValue);
     }
 
+    /// <summary>How much harder this enemy hits than its prefab: the level's difficulty. PlayerHealth applies it.</summary>
+    public float DamageScale { get; private set; } = 1f;
+
+    /// <summary>Called by the level's EnemySpawner as it spawns the enemy, before Start fills its health.</summary>
+    public void ScaleForLevel(float healthMultiplier, float damageMultiplier)
+    {
+        maxHealth *= healthMultiplier;
+        currentHealth = maxHealth;
+        DamageScale = damageMultiplier;
+    }
+
     public bool IsDead() => currentHealth <= 0;
 
     // ============== UPDATED HITBOX LOGIC ==============
