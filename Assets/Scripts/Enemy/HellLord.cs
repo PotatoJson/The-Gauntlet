@@ -725,6 +725,8 @@ public class HellLord : BaseEnemy
     protected override void Die()
     {
         SteamAchievements.Unlock(SteamAchievements.BossHellLord);
+        StoryDialogue.Say("Story_A2_Win_01", Speaker.Pergius);
+        StoryDialogue.Say("Story_A2_Win_02", Speaker.Pergius);
         StopCasting();
         EndBeamAttack();
 

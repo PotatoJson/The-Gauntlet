@@ -49,14 +49,15 @@ public class DeathScreenShatter : MonoBehaviour
         }
     }
 
-    public void TriggerDeathShatter()
+    /// <param name="killer">Picks the Narrator's line over the death screen (a boss has its own).</param>
+    public void TriggerDeathShatter(GameObject killer = null)
     {
         Debug.Log("DEATH TRIGGERED: Starting Shatter Coroutine!");
         shatterCanvasGroup.blocksRaycasts = true;
-        StartCoroutine(CaptureAndShatter());
+        StartCoroutine(CaptureAndShatter(killer));
     }
 
-    private IEnumerator CaptureAndShatter()
+    private IEnumerator CaptureAndShatter(GameObject killer)
     {
         if (playerMovement != null) playerMovement.enabled = false;
 
@@ -100,6 +101,7 @@ public class DeathScreenShatter : MonoBehaviour
 
         shatterCanvasGroup.alpha = 1f;
         Time.timeScale = 0f;
+        StoryDialogue.SayDeathLine(killer); // after the screenshot, so the line isn't broken up with the screen
 
         yield return new WaitForSecondsRealtime(freezeTimeBeforeFall);
 

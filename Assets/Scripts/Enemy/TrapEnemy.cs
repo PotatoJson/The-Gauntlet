@@ -71,6 +71,7 @@ public class TrapEnemy : MonoBehaviour
             }
 
             playerMovement.ApplyTrap(trapDuration);
+            if (gameObject.scene.name == "Hell Level") StoryDialogue.SayOnce("Story_A3_Grab_01");
             return;
         }
 

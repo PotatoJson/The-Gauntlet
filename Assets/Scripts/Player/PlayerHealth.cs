@@ -482,7 +482,7 @@ public class PlayerHealth : MonoBehaviour
         if (cc != null) cc.enabled = false;
 
         _dying = null;
-        DeathScreenShatter.Instance.TriggerDeathShatter();
+        DeathScreenShatter.Instance.TriggerDeathShatter(killer);
     }
 
     // A restart reloads the level but keeps this player, so take them out of the death pose.

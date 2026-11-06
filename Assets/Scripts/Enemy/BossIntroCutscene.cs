@@ -328,6 +328,7 @@ public abstract class BossIntroCutscene : MonoBehaviour
 
     private IEnumerator Skip()
     {
+        StoryDialogue.ClearLines();
         yield return Fade(_fade.color.a, 1f, 0.3f);
         yield return HandBack();
     }

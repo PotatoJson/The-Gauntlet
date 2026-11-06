@@ -228,6 +228,7 @@ public class DemonBossIntro : BossIntroCutscene
         Vector3 closeUp = _landing + _toBoss * 3f + _side * 1.1f + Vector3.up * 0.5f;
         StartCoroutine(LookAround(LookAroundSeconds));
         StartCoroutine(LightsOut(LightsOutSeconds));
+        StoryDialogue.Say("Story_A1_Boss_01");
         yield return Shot(closeUp, closeUp + _toBoss * -0.6f, playerHead, playerHead, LookAroundSeconds);
         yield return new WaitForSecondsRealtime(DarkSeconds);
 
@@ -259,6 +260,7 @@ public class DemonBossIntro : BossIntroCutscene
         Vector3 fullBody = _bossHome - _toBoss * 11f + _side * 4f + Vector3.up * 2.4f;
         _cameraShake = 0f;
         StartCoroutine(Paint(PaintSeconds));
+        StoryDialogue.Say("Story_A1_Boss_02", Speaker.Brutus, 0.9f);
         yield return Shot(faceShot, fullBody, face, body, PaintSeconds);
 
         // Zoom out to the two of them.
@@ -266,6 +268,7 @@ public class DemonBossIntro : BossIntroCutscene
         Func<Vector3> both = () => middle + Vector3.up * 2.5f;
         Vector3 wideStart = middle + _side * 13f + Vector3.up * 3.5f;
         Vector3 wideEnd = middle + _side * 19f + Vector3.up * 6.5f;
+        StoryDialogue.Say("Story_A1_Boss_03", Speaker.Brutus, 1.4f);
         yield return Shot(fullBody, wideStart, body, both, 0.9f);
         yield return Shot(wideStart, wideEnd, both, both, WideSeconds - 0.9f);
 

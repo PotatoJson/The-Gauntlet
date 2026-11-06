@@ -255,8 +255,7 @@ public class EliteEnemy : BaseEnemy
         attackCooldownTimer = attackCooldown * 2f;
         navAgent.isStopped = true;
 
-        animator?.SetTrigger(AnimSwordSlam);
-        PlayAttackSound();
+        animator?.SetTrigger(AnimSwordSlam); // the sound plays with the swing (EnableSwordSlamHitbox)
     }
 
     public override void LightAttack()
@@ -268,8 +267,7 @@ public class EliteEnemy : BaseEnemy
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
 
-        animator?.SetTrigger(AnimSwordSwing);
-        PlayAttackSound();
+        animator?.SetTrigger(AnimSwordSwing); // the sound plays with the swing (EnableSwordSwingHitbox)
     }
     #endregion
 
@@ -278,14 +276,18 @@ public class EliteEnemy : BaseEnemy
     // Use EnableSwordSwingHitbox / EnableSwordSlamHitbox
     // at the start of the active frames, and DisableSwordHitbox at the end.
 
+    // The attack sound plays here, as the blade actually swings, not when the wind-up starts. The charge leap's
+    // slam comes through here too.
     public void EnableSwordSwingHitbox()
     {
         swordHitbox?.EnableHitbox(swordSwingDamage, lightAttackPoiseDamage);
+        PlayAttackSound();
     }
 
     public void EnableSwordSlamHitbox()
     {
         swordHitbox?.EnableHitbox(swordSlamDamage, heavyAttackPoiseDamage);
+        PlayAttackSound();
     }
 
     public void DisableSwordHitbox()

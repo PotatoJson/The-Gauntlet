@@ -24,6 +24,10 @@ public class LevelTransition : MonoBehaviour
                 && save.HasVisited("Dungeon Level") && save.HasVisited("Cave Level") && save.HasVisited("Hell Level"))
             {
                 SteamAchievements.Unlock(SteamAchievements.RunComplete);
+
+                // ponytail: the ending plays at Hell's exit until the final boss exists.
+                StoryDialogue.TellEnding(() => SceneManager.LoadScene(nextLevelName));
+                return;
             }
 
             // Load the scene specified in the inspector: the next level behind the loading screen, or straight to the menu.

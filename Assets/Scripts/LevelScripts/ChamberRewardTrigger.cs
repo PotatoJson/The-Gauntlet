@@ -142,7 +142,7 @@ public class ChamberRewardTrigger : MonoBehaviour
         if (success)
         {
             Debug.Log($"[Reward] Skill Gem slotted into Gauntlet UI successfully.");
-            
+
             if (TutorialNotificationManager.Instance != null)
             {
                 TutorialNotificationManager.Instance.ShowTutorial(true, "Skill Gem");

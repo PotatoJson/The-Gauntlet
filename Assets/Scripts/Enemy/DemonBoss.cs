@@ -392,6 +392,9 @@ public class DemonBoss : BaseEnemy
     protected override void Die()
     {
         SteamAchievements.Unlock(SteamAchievements.BossDemon);
+        StoryDialogue.ClearLines(); // his phase 2 shout, if he went down fast
+        StoryDialogue.Say("Story_A1_Win_01", Speaker.Brutus);
+        StoryDialogue.Say("Story_A1_Win_02");
 
         foreach (TrailRenderer trail in _bladeTrails) trail.emitting = false;
         _bladeTrails.Clear();
@@ -418,6 +421,7 @@ public class DemonBoss : BaseEnemy
         navAgent.velocity = Vector3.zero;
 
         animator?.SetTrigger(AnimIntermission);
+        StoryDialogue.Say("Story_A1_P2_01", Speaker.Brutus, 1.2f);
 
         // Phase 2 begins: a blast, then he burns with fury and his blades leave trails for the rest of the fight.
         EnemyFx.Impact(transform.position, 7f, EnemyFx.Rage);

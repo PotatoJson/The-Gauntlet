@@ -245,7 +245,7 @@ public class PlayerMovement : MonoBehaviour
             
             ApplyGravity();
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
-            _controller.Move(lastVelocity * Time.deltaTime);
+            MoveAndSnap(lastVelocity);
             return;
         }
 
@@ -270,7 +270,7 @@ public class PlayerMovement : MonoBehaviour
             _stateManager.CurrentLungeSpeed = Mathf.Lerp(_stateManager.CurrentLungeSpeed, 0f , 2f * Time.deltaTime);
             _horizontalVelocity = transform.forward * _stateManager.CurrentLungeSpeed;
             Vector3 lastVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
-            _controller.Move(lastVelocity * Time.deltaTime);
+            MoveAndSnap(lastVelocity);
             return;
         }
 
@@ -284,7 +284,26 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector3 finalVelocity = _horizontalVelocity + new Vector3(0, _velocity.y, 0);
-        _controller.Move(finalVelocity * Time.deltaTime);
+        MoveAndSnap(finalVelocity);
+    }
+
+    // Moves, then keeps the player on the ground going down stairs and slopes. Without this, walking off each step
+    // counted as a fall: the landing thud played on every step and the player turned "airborne" for a moment.
+    // A jump (moving up) or a real ledge (no ground within reach) still leaves the ground as before.
+    private void MoveAndSnap(Vector3 velocity)
+    {
+        bool wasGrounded = _controller.isGrounded;
+        _controller.Move(velocity * Time.deltaTime);
+        if (!wasGrounded || _controller.isGrounded || _velocity.y > 0f) return;
+
+        float reach = _controller.stepOffset + 0.2f;
+        float toBottom = _controller.height * 0.5f - _controller.radius;
+        Vector3 centre = transform.TransformPoint(_controller.center);
+        if (Physics.SphereCast(centre, _controller.radius * 0.9f, Vector3.down, out _, toBottom + reach,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        {
+            _controller.Move(Vector3.down * reach); // stops on the step
+        }
     }
 
     /// <summary>Forgets any speed the player had, for when something else has been moving them (a cutscene).</summary>
@@ -506,11 +525,12 @@ public class PlayerMovement : MonoBehaviour
 
         if(isCombatCancel) _stateManager.RequestBufferClear = true;
 
-        if (_moveInput.magnitude > 0.1f)
+        bool backward = _moveInput.magnitude <= 0.1f;
+        if (!backward)
         {
             Vector3 camForward = _cameraTransform.forward;
             Vector3 camRight = _cameraTransform.right;
-            camForward.y = 0; 
+            camForward.y = 0;
             camRight.y = 0;
             _rollDirection = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
         }
@@ -521,7 +541,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (TryGetComponent<AnimationBridge>(out var animBridge))
         {
-            animBridge.PlayRoll();
+            animBridge.PlayRoll(backward);
         }
 
         _motionFx.PlayRoll(_rollDirection);

@@ -263,6 +263,7 @@ public class GauntletMenu : MonoBehaviour
     public void ResumeGame()
     {
         _isPaused = false;
+        _inventoryOnlyOpen = false;
         UiSfxListener.PlayMenuSound("event:/UI/UI_Close");
         //_uiMap.Disable();
 
@@ -373,9 +374,14 @@ public class GauntletMenu : MonoBehaviour
 
     public bool IsPaused => _isPaused;
 
+    /// <summary>The player has stopped the game: the pause menu, or the inventory opened with its hotkey.</summary>
+    public bool IsMenuOpen => _isPaused || _inventoryOnlyOpen;
+    private bool _inventoryOnlyOpen;
+
     // Inventory hotkey path: freezes the game but never shows the pause menu.
     private void OpenInventoryOnly()
     {
+        _inventoryOnlyOpen = true;
         GauntletScreenFx.Open(characterScreenRoot);
         UiSfxListener.PlayMenuSound("event:/UI/UI_Open");
         Time.timeScale = 0f;
@@ -387,6 +393,7 @@ public class GauntletMenu : MonoBehaviour
     // Counterpart of OpenInventoryOnly, also used when the inventory closes without the pause menu open.
     public void CloseInventoryOnly()
     {
+        _inventoryOnlyOpen = false;
         GauntletScreenFx.Close(characterScreenRoot);
         UiSfxListener.PlayMenuSound("event:/UI/UI_Close");
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);

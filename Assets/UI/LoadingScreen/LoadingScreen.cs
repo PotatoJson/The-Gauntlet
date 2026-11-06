@@ -55,6 +55,7 @@ public class LoadingScreen : MonoBehaviour
 
         LoadingScreen screen = Instantiate(prefab).GetComponent<LoadingScreen>();
         screen.StartCoroutine(screen.Load(sceneName));
+        StoryDialogue.SayLoadingLine();
     }
 
     private void Awake()

@@ -12,9 +12,11 @@ public class MainMenuManager : MonoBehaviour
     public GameObject settingsPanel;
 
     [Header("Checkpoint Resuming")]
-    [Tooltip("Optional. Hook this button's OnClick to OnNewRunClicked. It is hidden automatically " +
-             "when there is no checkpoint, because Play already starts a fresh run in that case.")]
+    [Tooltip("New Game: hook its OnClick to OnNewRunClicked. Always shown; it plays the prologue.")]
     public Button newRunButton;
+
+    [Tooltip("Continue: hook its OnClick to OnPlayClicked. Greyed out when there is no checkpoint to resume.")]
+    public Button continueButton;
 
     [Tooltip("Optional label showing which level the saved run is in.")]
     public TMPro.TMP_Text saveSummaryText;
@@ -120,7 +122,7 @@ public class MainMenuManager : MonoBehaviour
             Debug.LogWarning("[MainMenu] The checkpoint could not be resumed. Starting a fresh run.");
         }
 
-        StartFreshRun();
+        StartFreshRun(false); // only New Game tells the prologue
     }
 
     /// <summary>
@@ -129,7 +131,7 @@ public class MainMenuManager : MonoBehaviour
     /// </summary>
     public void OnNewRunClicked()
     {
-        FadeThen(StartFreshRun);
+        FadeThen(() => StartFreshRun(true));
     }
 
     // Fades the screen to black, then runs the action that loads the next scene.
@@ -147,7 +149,7 @@ public class MainMenuManager : MonoBehaviour
         fadeOverlay.DOFade(1f, fadeDuration).SetEase(Ease.InOutSine).SetUpdate(true).OnComplete(() => load());
     }
 
-    private void StartFreshRun()
+    private void StartFreshRun(bool withPrologue)
     {
         if (MetricsTracker.Instance != null)
         {
@@ -168,18 +170,47 @@ public class MainMenuManager : MonoBehaviour
         }
 
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Dungeon Level");
+        StoryDialogue.NewRun();
+
+        if (!withPrologue)
+        {
+            SceneManager.LoadScene("Dungeon Level");
+            return;
+        }
+
+        // The prologue, over the faded-out menu: the night Hell took the knight's family and his sword shattered.
+        // It ends by falling into the pit, straight into the Dungeon.
+        StoryDialogue.Tell(() => SceneManager.LoadScene("Dungeon Level"), "Story_Pro_03", new Vector2(0.5f, 0.33f),
+            ("Story_Pro_01", Speaker.Narrator),
+            ("Story_Pro_02", Speaker.Narrator),
+            ("Story_Pro_03", Speaker.Narrator),
+            ("Story_Pro_04", Speaker.Narrator),
+            ("Story_Pro_05", Speaker.Narrator),
+            ("Story_Pro_06", Speaker.Narrator),
+            ("Story_Pro_07", Speaker.Narrator));
     }
 
     /// <summary>
-    /// Hides the New Run button when there is no checkpoint, since Play already starts
-    /// a fresh run in that case and two buttons doing the same thing is just confusing.
+    /// Greys out Continue when there is no checkpoint: there is nothing to continue, and New Game is the way in.
+    /// Greyed rather than hidden, so the buttons don't leave a gap. A gamepad skips it.
     /// </summary>
     public void RefreshCheckpointUI()
     {
         bool hasSave = SaveManager.Instance != null && SaveManager.Instance.HasSave;
 
-        if (newRunButton != null) newRunButton.gameObject.SetActive(hasSave);
+        if (continueButton != null)
+        {
+            continueButton.interactable = hasSave;
+
+            // The menu's buttons show their frame only on hover; disabled would show it half-faded.
+            ColorBlock colors = continueButton.colors;
+            colors.disabledColor = colors.normalColor;
+            continueButton.colors = colors;
+
+            CanvasGroup look = continueButton.GetComponent<CanvasGroup>();
+            if (look == null) look = continueButton.gameObject.AddComponent<CanvasGroup>();
+            look.alpha = hasSave ? 1f : 0.35f;
+        }
 
         if (saveSummaryText != null)
         {

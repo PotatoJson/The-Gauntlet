@@ -301,6 +301,7 @@ public class EyeEnemy : BaseEnemy
             navAgent.velocity = Vector3.zero;
             navAgent.enabled = false;
         }
+        ReportDeath(); // XP, death sound, on-kill gems: this Die doesn't go through the base one
 
         animator?.SetTrigger(AnimDie);
         SpawnDeathBlackHole();

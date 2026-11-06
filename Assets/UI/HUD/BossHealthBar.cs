@@ -65,6 +65,9 @@ public class BossHealthBar : MonoBehaviour
     private readonly List<Bar> _pool = new List<Bar>();
     private readonly List<Entry> _entries = new List<Entry>();
 
+    /// <summary>True while any boss bar is on screen (the story's lines move up out of its way).</summary>
+    public bool IsShowing => _entries.Count > 0;
+
     // Child paths inside the template, used to find the same parts inside a clone.
     private string _fillPath;
     private string _labelPath;

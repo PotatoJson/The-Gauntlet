@@ -55,8 +55,9 @@ public class AnimationBridge : MonoBehaviour
         _animator.CrossFadeInFixedTime(moveName, 0.15f);
     }
     
-    public void PlayRoll() {
-        _animator.CrossFadeInFixedTime("Roll", 0.1f);
+    /// <param name="backward">A roll with no direction held goes backward: the forward roll played in reverse.</param>
+    public void PlayRoll(bool backward = false) {
+        _animator.CrossFadeInFixedTime(backward ? "RollBackward" : "Roll", 0.1f);
     }
 
     public void PlayBlock(float animPoint){

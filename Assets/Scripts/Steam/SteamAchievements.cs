@@ -46,6 +46,12 @@ public class SteamAchievements : MonoBehaviour
 
     private void Awake()
     {
+#if UNITY_EDITOR && !STEAM_IN_EDITOR
+        // Once connected, Steam shows "playing" (and counts playtime) until the editor itself closes.
+        // Add STEAM_IN_EDITOR to Scripting Define Symbols to test achievements in the editor.
+        Debug.Log("[Steam] Skipped in the editor.");
+        return;
+#endif
         try
         {
 #if !UNITY_EDITOR && !DEVELOPMENT_BUILD

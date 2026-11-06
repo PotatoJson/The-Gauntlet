@@ -643,7 +643,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EyeEnemy
   maxHealth: 100
   currentHealth: 0
-  xpValue: 0
+  xpValue: 10
   chaseSpeed: 4
   attackRange: 2
   chargeSpeed: 5
@@ -697,6 +697,8 @@ MonoBehaviour:
   preferredDistance: 10
   fireballCooldown: 5
   rangedAttackDuration: 0.6
+  fireballChargeSeconds: 0.9
+  fireballChargeOffset: {x: 0, y: 0.85, z: 1.2}
   recoilDistance: 2
   recoilDuration: 0.15
   fireballPrefab: {fileID: 3694318570542452749, guid: dbddff1b971dc7a408567d4c8673385b, type: 3}

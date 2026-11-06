@@ -150,7 +150,8 @@ public class TutorialManager : MonoBehaviour
 
         string[] introLines = new string[]
         {
-            "Welcome to the dungeon! Let's begin with the basics.",
+            StoryDialogue.Text("Story_Tut_Intro_01"),
+            StoryDialogue.Text("Story_Tut_Intro_02"),
             $"Use {Key("Move")} to move.\n{Key("Roll")} to roll, Hold {Key("Roll")} to sprint.",
             $"And the important part: {Key("Jump")} to Jump!",
             "Those controls are all remappable in the settings menu."
@@ -184,6 +185,7 @@ public class TutorialManager : MonoBehaviour
         string[] punchingLines = new string[]
         {
             "Nice job!",
+            StoryDialogue.Text("Story_Tut_Punch_01"),
             "Now let's practice combat. I have spawned an enemy.",
             $"Use {Key("LightAttack")} for Light Attack combos!",
             $"Hold {Key("HeavyAttack")} to charge a Heavy Attack, and let go to swing.",
@@ -218,7 +220,8 @@ public class TutorialManager : MonoBehaviour
         {
             "Great work defeating that enemy!",
             "It looks like you took some damage in that fight, though.",
-            $"Press {Key("Heal")} to drink a Health Potion and recover your HP!"
+            $"Press {Key("Heal")} to drink a Health Potion and recover your HP!",
+            StoryDialogue.Text("Story_Tut_Potion_01")
         };
 
         StartDialogueSequence(potionLines);
@@ -260,6 +263,7 @@ public class TutorialManager : MonoBehaviour
         string[] rewardLines = new string[]
         {
             "Excellent! You have fully recovered your health.",
+            StoryDialogue.Text("Story_Tut_Reward_01"),
             "Notice your Experience Bar just filled up? You leveled up!",
             "For every level up, you will earn one Gem to upgrade your Gauntlets.",
             "Click the Level Up button to pick your first reward!",
@@ -279,6 +283,7 @@ public class TutorialManager : MonoBehaviour
         string[] mergeLines = new string[]
         {
             "Your first gem is equipped. Your Gauntlet just got stronger!",
+            StoryDialogue.Text("Story_Tut_Merge_01"),
             "Here's a trick: two identical gems of the same tier can be merged into one stronger gem.",
             "I've given you another level. This time the reward has two matching gems.",
             "Drag one gem on top of the other to merge them into a Tier II gem, then equip the result.",
@@ -302,6 +307,7 @@ public class TutorialManager : MonoBehaviour
         {
             "Well done! A Tier II gem is much stronger than a plain one.",
             "Gems can be upgraded even further at shrines. One has appeared ahead of you.",
+            StoryDialogue.Text("Story_Tut_Shrine_01"),
             $"Walk up to the shrine and press {Key("Interact")}, then choose one of your gems to raise its tier.",
             "Each shrine can only be used once, so choose wisely!"
         };
@@ -379,9 +385,10 @@ public class TutorialManager : MonoBehaviour
     private IEnumerator TypeDialogueCoroutine(string textToType)
     {
         WaitForSecondsRealtime waitTime = new WaitForSecondsRealtime(textSpeed);
-        foreach (char letter in textToType)
+        for (int i = 0; i < textToType.Length; i++)
         {
-            dialogueText.text += letter;
+            dialogueText.text += textToType[i];
+            StoryDialogue.Blip(Speaker.Narrator, textToType, i);
             yield return waitTime;
         }
         FinishTyping();
@@ -678,6 +685,7 @@ public class TutorialManager : MonoBehaviour
             }
 
             ShowObjective("Tutorial Complete! Enter the portal.");
+            StoryDialogue.Say("Story_Tut_End_01");
             tutorialPanel.DOFade(0f, 0.5f).SetDelay(5f);
         });
     }

@@ -985,7 +985,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   stunDuration: 2
-  attackCooldown: 0
+  attackCooldown: 1.2
   maxHitStunDuration: 5
   hitStunResetTime: 1
   hitImmunityDuration: 5
@@ -996,11 +996,17 @@ MonoBehaviour:
   animator: {fileID: 0}
   weight: 0.8
   hitVfxPrefab: {fileID: 982966250709117466, guid: a6411fcc75c2ae04298bd2d791ac6824, type: 3}
+  circleSpeedFraction: 0.65
+  alertRadius: 14
+  searchLookSeconds: 3
   swordSwingDamage: 15
   swordSlamDamage: 25
   attackDistance: 3
   chargeDistance: 10
   chargeChance: 1
+  leapStrikeDistance: 1.6
+  leapDistanceToStrike: 3.2
+  maxLeapStretch: 1.75
   isTutorialDummy: 0
   buffRadius: 10
   maxBuffTargets: 2

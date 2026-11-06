@@ -1160,7 +1160,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpinningEnemy
   maxHealth: 100
   currentHealth: 0
-  xpValue: 0
+  xpValue: 15
   chaseSpeed: 4
   attackRange: 2
   chargeSpeed: 5
@@ -1208,6 +1208,9 @@ MonoBehaviour:
   animator: {fileID: 0}
   weight: 0.8
   hitVfxPrefab: {fileID: 4793842202653700343, guid: e0d6617ebeb124a49825f1135a908c24, type: 3}
+  circleSpeedFraction: 0.65
+  alertRadius: 14
+  searchLookSeconds: 3
   spinDamage: 10
   spinAgroRange: 2
   axePrefab: {fileID: 4028502702684482803, guid: 84e9be8e11ebf1c418088f4e24a55ddb, type: 3}

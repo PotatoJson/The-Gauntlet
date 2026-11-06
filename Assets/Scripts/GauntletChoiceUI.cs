@@ -148,6 +148,7 @@ public class GauntletChoiceUI : MonoBehaviour
     {
         _activeInteractable = interactable;
         _isOpening = true;
+        StoryDialogue.SayOnce("Story_Chest_01");
         _isWarningActive = false; // Reset warning state
         if (WarningPanel != null) WarningPanel.SetActive(false);
 

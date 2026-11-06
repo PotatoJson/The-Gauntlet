@@ -789,7 +789,6 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual void Die()
     {
         StopAllCoroutines();
-        CombatDirector.Current?.Unregister(this); // hands its attack token on
         isAttacking = false;
         isCharging = false;
         isRecovering = false;
@@ -798,9 +797,7 @@ public abstract class BaseEnemy : MonoBehaviour
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         navAgent.enabled = false;
-        //enemy death event for gem event manager
-        FMODUnity.RuntimeManager.PlayOneShot(DeathEvent, transform.position);
-        OnAnyEnemyDied?.Invoke(this);
+        ReportDeath();
 
         animator?.SetTrigger(AnimDie);
         gameObject.layer = LayerMask.NameToLayer("Default");
@@ -810,16 +807,23 @@ public abstract class BaseEnemy : MonoBehaviour
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
         if (healthBar != null) healthBar.gameObject.SetActive(false);
 
-        if(ProgressBarCircle.Instance != null)
-        {
-            ProgressBarCircle.Instance.AddExperience(xpValue);
-        }
-
         var dissolve = GetComponent<DissolveExample.DissolveChilds>();
         if (dissolve != null) dissolve.StartDissolve();
         else Destroy(gameObject, 3f);
 
         enabled = false;
+    }
+
+    /// <summary>
+    /// What every death owes the rest of the game, whatever the enemy's own death looks like: the attack token back,
+    /// the death sound, the on-kill gem effects, and the player's XP. An enemy that replaces Die must call this.
+    /// </summary>
+    protected void ReportDeath()
+    {
+        CombatDirector.Current?.Unregister(this); // hands its attack token on
+        FMODUnity.RuntimeManager.PlayOneShot(DeathEvent, transform.position);
+        OnAnyEnemyDied?.Invoke(this); // for the gem effects manager
+        if (ProgressBarCircle.Instance != null) ProgressBarCircle.Instance.AddExperience(xpValue);
     }
 
     public bool IsDead() => currentHealth <= 0;

@@ -224,6 +224,7 @@ public class EnemySpawner : MonoBehaviour
     private void OnChamberCleared(ChamberData chamber)
     {
         Debug.Log($"<color=green>Chamber Cleared: {chamber.chamberName}</color>");
+        StoryDialogue.ChamberCleared();
 
         // Clearing a room IS the checkpoint. This is the only place the game saves.
         if (SaveManager.Instance != null)

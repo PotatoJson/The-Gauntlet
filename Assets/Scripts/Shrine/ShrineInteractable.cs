@@ -125,6 +125,7 @@ public class ShrineInteractable : MonoBehaviour
     {
         if (PersistentEquipment.Instance != null) PersistentEquipment.Instance.MarkShrineUsed(Key);
         SetSpent();
+        StoryDialogue.SayOnce("Story_Shrine_01", Speaker.Shrine);
     }
 
     private void SetSpent()

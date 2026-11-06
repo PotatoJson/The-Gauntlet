@@ -82,6 +82,7 @@ public class HellLordIntro : BossIntroCutscene
         float cloudSeconds = FogHoldSeconds + FogClearSeconds;
         Coroutine drift = StartCoroutine(Shot(behind, forward, body, body, cloudSeconds));
         yield return Fade(1f, 0f, FadeFromBlackSeconds);
+        StoryDialogue.Say("Story_A2_Boss_01");
         yield return new WaitForSecondsRealtime(FogHoldSeconds - FadeFromBlackSeconds);
 
         StartCoroutine(ClearFog(FogClearSeconds));
@@ -93,6 +94,7 @@ public class HellLordIntro : BossIntroCutscene
         Vector3 full = _bossHome - _toBoss * height * 2.2f + _side * 3.5f + Vector3.up * height * 0.45f;
         _bossAnimator.speed = 1f;
         StartCoroutine(Paint(PaintSeconds));
+        StoryDialogue.Say("Story_A2_Boss_02", Speaker.Pergius, 1f);
         yield return Shot(close, full, face, body, PaintSeconds - RoarLeadSeconds);
 
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", _bossHome);
@@ -106,6 +108,7 @@ public class HellLordIntro : BossIntroCutscene
         Func<Vector3> beamView = () => aim;
         float beamSeconds = SlowMoStartTime + (SlowMoEndTime - SlowMoStartTime) / SlowMoScale + (BeamEndTime - SlowMoEndTime);
         drift = StartCoroutine(Shot(overShoulder, overShoulder + _toBoss * 0.8f, beamView, beamView, beamSeconds + 0.4f));
+        StoryDialogue.Say("Story_A2_Boss_03", Speaker.Pergius, 1f);
         yield return BeamAndDodge(dodge);
         yield return new WaitForSecondsRealtime(0.4f);
         StopCoroutine(drift);
