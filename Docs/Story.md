@@ -1,6 +1,6 @@
 # Hellbent: Story Bible
 
-> **Status:** draft 4, the revenge story. Layer 1 is in the game (see section 10), except the final boss and the ending at the bottom of Hell, which aren't built yet. The team's decisions are in section 11.
+> **Status:** draft 5, the revenge story. Layer 1 is in the game (see section 10), the final boss included. The team's decisions are in section 11.
 > **Scope:** Layer 1 is the launch story. Layer 2 (the twist) is a free update after launch. Layer 1 plants hints for it, but every hint also makes sense without the twist.
 
 ---
@@ -39,7 +39,7 @@
 | **The family** | The knight's family, taken by Hell in the prologue. Never named or shown | Heard only as whispers in the levels ("...is that you?"). As the knight goes deeper, they ask him to stop |
 | **Brutus, the Demon King** | Led the raid and broke the knight's sword. Boss 1, Dungeon (Demon Boss) | Proud and loud. Doesn't even remember the family's faces |
 | **Pergius, Lord of Ruin** | Boss 2, Caves (Hell Lord) | Calm and ancient. Speaks as if he's read ahead |
-| **The final boss** | Hell. Whoever sent the demons. A new boss, not designed yet | Its paint reveal should stop partway (see 5.4) |
+| **The Unfinished Knight** | The final boss, at the bottom of Hell. Whoever sent the demons turns out to wear the knight's own face: his reflection, stepped out of a mirror as a shadow of ink | The Narrator's shadow: the storyteller's grief, written as the villain. Never fully painted (see 5.4) |
 | **The Shrine Spirit** | Voice of the Shrine of Upgrade | One line. Knows more than it says |
 | **The Fallen Knights** | Others who swore revenge on Hell. Their swords stand around the pit; their gauntlets are the player's | In Layer 2, earlier tellings of the same story |
 
@@ -195,9 +195,27 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 |---|---|---|
 | Family (whisper) | It won't bring us back. You know that, don't you? | `[Story_A3_Echo_01]` |
 
-**Final boss: a new boss** *(not designed or built yet)*: whoever sent the demons. It should use `BossIntroCutscene` like the others. Lines to write once the boss exists. One suggestion to keep:
+**Final boss: the Unfinished Knight** (`InkShadow`, the Narrator's shadow made of ink). At the bottom of Hell there's no throne, only a tall mirror. The knight walks up to it and sees himself. He tilts his head and the reflection doesn't; it drains to black ink, white eyes open in its helmet, it walks up to the glass and cracks it, and the glass bursts. The knight rolls back, and the shadow rises out of the ink in front of the empty frame, twice his size, carrying the sword he lost. **Mode:** cutscene (`InkShadowIntro`), then fight lines
 
-> Its paint reveal **stops at about 80%**: part of it stays clay-grey for the whole fight. In Layer 1 that's just a striking design. In Layer 2 it's the story running out of ink.
+| Who | Line | Key |
+|---|---|---|
+| Narrator | At the bottom of Hell there was no throne, and no army. Only a mirror. | `[Story_A3_Boss_01]` |
+| Narrator | And in it, the knight saw the one he had come so far to find. | `[Story_A3_Boss_02]` |
+| Shadow | Did you think it would have a different face? | `[Story_A3_Boss_03]` |
+| Shadow | Every knight who comes for revenge finds me. I always look like them. | `[Story_A3_Boss_04]` |
+| Shadow | Come, then. Let's finish the story. | `[Story_A3_Boss_05]` |
+| Shadow *(half health: the ink spills)* | You can't kill ink. You can only spill it. | `[Story_A3_P2_01]` |
+| Shadow *(defeated)* | ...There. Now the story can end. | `[Story_A3_Win_01]` |
+| Narrator *(defeated)* | And the shadow ran out, like the last of the ink in a pen. | `[Story_A3_Win_02]` |
+| Narrator *(death, killed by it)* | The knight fell, and the shadow wore his face a little better. | `[Story_Death_Shadow]` |
+
+> **Layer 2 hints:** "I always look like them" is every earlier telling, each with the knight's face. "Let's finish the story" and "now the story can end" are the Narrator's own wish.
+
+**The fight** (`InkShadow`, Hell's boss chamber, alone, no adds):
+- **Phase 1:** a sword fight. In reach: a **rising cut** (it sinks low with the blade trailing behind it, then lunges in and brings it up from the floor: roll to the side) and a **horizontal cut** (the blade drawn back at its waist, then swept round in front: roll back), and now and then a heavy slam that splashes ink and cracks the floor. Against a player who keeps their distance it **throws its sword**, point first, curving after them (it turns only so fast, so a roll bends its path). The shadow bursts into ink as it lets go, then appears in the air to catch the sword as it closes on them, and hangs there for half a second in the stance of its next cut: the moment to read it and roll the right way. Then it drops into the cut. It reads the player like a mirror: a charged heavy attack let go in its reach has a 40% chance to make it hop back out of it.
+- **Phase 2 (half health, "the ink spills"):** it sinks into the floor as a pool. The pool hunts the player, then stops: the moment to roll clear. It bursts up out of it straight into a rising cut. From then on it dives every few seconds, and moves faster.
+- **Numbers:** 1400 health (2100 in Hell); rising cut 34, horizontal cut 30, slam 40, thrown sword 26, dive 36, before Hell's ×1.3. In reach it slams 20% of the time, otherwise one of the cuts, half and half. All on the prefab (`Assets/Prefabs/Enemies/Ink-Shadow.prefab`).
+- **Model:** low-poly (about 700 triangles), built and rigged in Blender to match the knight's blocky look: `Docs/Art/InkShadow.blend`, exported to `Assets/Models/InkShadow/`. Its colours are a 4×4 palette texture, so it reads on the unlit enemy shader. Humanoid rig. Its idle, walk, death (it kneels on its planted sword), sword throw and both cuts are its own, keyed in the same file (actions `Shadow_*`, exported as `InkShadow@*.fbx`); the slam and the hop back reuse the Elite's clips.
 
 ### 5.5 Ending, Layer 1 (launch)
 
@@ -284,7 +302,7 @@ A restart then gets a restart line instead of the level's arrival lines: "Once, 
 | The family's voices ask the knight to stop | ✅ echoes | His own guilt | The storyteller arguing with themself |
 | Gauntlets and swords of earlier knights | ✅ prologue, lore | Fallen avengers | Earlier tellings of the same story |
 | "...Is that it?" / "...Again?" | ✅ ending | Revenge is hollow | Someone keeps restarting the story |
-| The final boss is never fully painted | 📝 final boss | Striking design | The ink ran out |
+| The final boss is the knight's own reflection | ✅ `InkMirror` | Revenge makes you what you hunt | The story's villain is the one telling it |
 
 ---
 
@@ -307,7 +325,7 @@ A restart then gets a restart line instead of the level's arrival lines: "Once, 
 
 ### 8.2 True ending
 
-1. The final boss falls. This time, its unpainted part spreads across the arena as everything turns to grey clay.
+1. The final boss falls. This time, grey clay spreads out from where it fell, across the arena, until everything is clay.
 2. The knight climbs out of the pit and walks home. The door of the cottage opens, and **the house is empty**: a blank white grid inside, the same as the tutorial.
 3. Dialogue (pages):
 
@@ -358,6 +376,7 @@ Everything goes through `Assets/Scripts/Story/StoryDialogue.cs`, which creates i
 | Family echoes | `EnemySpawner.OnChamberCleared` (second chamber of a level) |
 | Boss intro subtitles | `DemonBossIntro`, `HellLordIntro`; a skip clears them |
 | Brutus phase 2, boss defeats | `DemonBoss.StartIntermission`, `DemonBoss.Die`, `HellLord.Die` |
+| Final boss: mirror cutscene, phase 2, defeat | `InkShadowIntro.Timeline`, `InkShadow.StartPhaseTwo`, `InkShadow.Die` |
 | Chest, shrine, first grab in Hell | `GauntletChoiceUI.OpenChoiceMenu`, `ShrineInteractable.CompleteUse`, `TrapEnemy.TryApplyTrap` |
 | Death lines | `DeathScreenShatter` (the killer picks a boss line) |
 | Loading screen line | `LoadingScreen.LoadLevel` |
@@ -367,7 +386,7 @@ Everything goes through `Assets/Scripts/Story/StoryDialogue.cs`, which creates i
 
 **Adding or changing a picture:** edit `Docs/Art/prologue.aseprite` (192×108, one frame per page) and export the frame as a PNG named after the line's key into `Assets/Resources/Story/`. Import settings: Point filter, no compression, no mipmaps, Non-Power-of-2 set to None. Pictures work for the ending pages too.
 
-**Not built yet:** the final boss and its lines, the true ending, and everything in Layer 2.
+**Not built yet:** the true ending, and everything in Layer 2. The launch ending still plays at Hell's exit rather than the moment the final boss falls.
 
 ---
 
@@ -379,7 +398,7 @@ Everything goes through `Assets/Scripts/Story/StoryDialogue.cs`, which creates i
 | 2 | The knight's weapon | A sword, shattered against the Demon King in the prologue |
 | 3 | Knight's name | Unnamed, always "the knight" |
 | 4 | The family | Kept vague: never named, shown or counted. Heard only as whispers |
-| 5 | Final boss | A new boss (whoever sent the demons), designed later |
+| 5 | Final boss | The Narrator's shadow, made of ink: the knight's reflection steps out of a mirror (replaces Brutus and Pergius in Hell) |
 | 6 | Death lines | Every death, from a shuffled deck |
 | 7 | Narrator voice | Voice blips for now |
 | 8 | Prologue art | Pixel-art pages drawn in Aseprite |

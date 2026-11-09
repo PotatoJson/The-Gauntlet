@@ -13,6 +13,7 @@ Shader "Hellbent/BossPaintReveal"
         _EdgeWidth ("Edge Width", Float) = 0.35
         _NoiseScale ("Brush Noise Scale", Float) = 2.2
         _NoiseAmount ("Brush Noise Amount", Float) = 0.9
+        _Dissolve ("Dissolve", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -38,6 +39,7 @@ Shader "Hellbent/BossPaintReveal"
             float _EdgeWidth;
             float _NoiseScale;
             float _NoiseAmount;
+            float _Dissolve;
 
             float Hash(float3 p)
             {
@@ -73,8 +75,13 @@ Shader "Hellbent/BossPaintReveal"
                 float brush = Noise(i.world * _NoiseScale) * 0.65 + Noise(i.world * _NoiseScale * 2.7) * 0.35;
                 float ahead = _RevealRadius - distance(i.world, _RevealCenter.xyz) - brush * _NoiseAmount;
 
+                // A boss left unfinished wears this through the fight, so it has to burn away on death too.
+                float burn = Noise(i.world * 3.1) - _Dissolve * 1.05;
+                clip(burn);
+
                 half3 color = ahead > 0 ? painted : clay;
                 if (ahead > 0 && ahead < _EdgeWidth) color = lerp(_EdgeColor.rgb, painted, ahead / _EdgeWidth);
+                if (_Dissolve > 0 && burn < 0.06) color = _EdgeColor.rgb;
                 return half4(color, 1);
             }
             ENDCG

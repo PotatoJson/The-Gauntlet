@@ -1,9 +1,6 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
-using UnityEngine.UI;
 
 /// <summary>
 /// When a room is cleared, the gauntlet chests and shrines near it that can still be used start to glow, and a short
@@ -19,7 +16,6 @@ public class InteractableHighlight : MonoBehaviour
     private static readonly Color ShrineColor = new Color(0.4f, 1f, 0.88f);
 
     private static Material _glow;
-    private static NoticeBanner _banner;
 
     private ShrineInteractable _shrine;
 
@@ -46,8 +42,7 @@ public class InteractableHighlight : MonoBehaviour
         string key = chests > 0 && shrines > 0 ? "Notice_ChestAndShrine" : chests > 0 ? "Notice_Chest" : shrines > 0 ? "Notice_Shrine" : null;
         if (key == null) return;
 
-        if (_banner == null) _banner = NoticeBanner.Create();
-        _banner.Show(LocalizationSettings.StringDatabase.GetLocalizedString("UIStrings", key), NoticeSeconds);
+        NoticeBanner.Show(LocalizationSettings.StringDatabase.GetLocalizedString("UIStrings", key), NoticeSeconds);
     }
 
     private static bool Near(Transform thing, Vector3 point) => (thing.position - point).sqrMagnitude <= Radius * Radius;
@@ -98,63 +93,4 @@ public class InteractableHighlight : MonoBehaviour
         Destroy(this);
     }
 
-    /// <summary>A line of text at the top of the screen that fades in, waits and fades out.</summary>
-    private class NoticeBanner : MonoBehaviour
-    {
-        private TMP_Text _text;
-        private CanvasGroup _group;
-        private Coroutine _showing;
-        private LocalizedTmpFont _font;
-
-        public static NoticeBanner Create()
-        {
-            GameObject host = new GameObject("[InteractableNotice]");
-            DontDestroyOnLoad(host);
-            Canvas canvas = host.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 31500; // over the HUD, under the story pages and the loading screen
-            CanvasScaler scaler = host.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-
-            NoticeBanner banner = host.AddComponent<NoticeBanner>();
-            banner._group = host.AddComponent<CanvasGroup>();
-            banner._group.alpha = 0f;
-            banner._group.blocksRaycasts = false;
-
-            TextMeshProUGUI text = new GameObject("Text", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
-            text.transform.SetParent(host.transform, false);
-            RectTransform rect = text.rectTransform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            rect.sizeDelta = new Vector2(1200f, 80f);
-            rect.anchoredPosition = new Vector2(0f, -150f);
-            text.alignment = TextAlignmentOptions.Center;
-            text.fontSize = 34f;
-            text.color = new Color(1f, 0.93f, 0.78f);
-            text.raycastTarget = false;
-            banner._text = text;
-
-            banner._font = new LocalizedTmpFont { TableReference = "UIFonts", TableEntryReference = "MainFont" };
-            banner._font.AssetChanged += font => { if (font != null) text.font = font; };
-            return banner;
-        }
-
-        public void Show(string message, float seconds)
-        {
-            _text.text = $"<mark=#000000A0 padding=\"20,20,10,10\">{message}</mark>";
-            if (_showing != null) StopCoroutine(_showing);
-            _showing = StartCoroutine(ShowRoutine(seconds));
-        }
-
-        private IEnumerator ShowRoutine(float seconds)
-        {
-            for (float t = _group.alpha * 0.25f; t < 0.25f; t += Time.unscaledDeltaTime) { _group.alpha = t / 0.25f; yield return null; }
-            _group.alpha = 1f;
-            yield return new WaitForSecondsRealtime(seconds);
-            for (float t = 0f; t < 0.5f; t += Time.unscaledDeltaTime) { _group.alpha = 1f - t / 0.5f; yield return null; }
-            _group.alpha = 0f;
-        }
-    }
 }

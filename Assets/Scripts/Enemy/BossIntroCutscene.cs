@@ -86,6 +86,9 @@ public abstract class BossIntroCutscene : MonoBehaviour
     /// <summary>Called on a black screen, at the normal end or after a skip: undo anything the timeline left behind.</summary>
     protected virtual void RestoreScene() { }
 
+    /// <summary>Called once the boss has become the waiting statue, as the level starts.</summary>
+    protected virtual void OnArmed() { }
+
     /// <summary>Turns the freshly spawned boss into the statue, and starts waiting for the player.</summary>
     public void Arm(EnemySpawner spawner, ChamberData chamber)
     {
@@ -109,6 +112,7 @@ public abstract class BossIntroCutscene : MonoBehaviour
         _bossAnimator.speed = 0f;
 
         WearClay();
+        OnArmed();
     }
 
     // The statue looks out over the platform, towards where the player will come in.
@@ -147,7 +151,19 @@ public abstract class BossIntroCutscene : MonoBehaviour
         }
 
         SetPaintRadius(PaintStartRadius);
+
+        // While it waits it's scenery, not an enemy to find: the last-enemies hint draws everything on the Enemy layer
+        // through walls, which showed the statue's outline from rooms away. Wake puts the layers back.
+        _rendererLayers = new int[_bossRenderers.Length];
+        int scenery = LayerMask.NameToLayer("Default");
+        for (int i = 0; i < _bossRenderers.Length; i++)
+        {
+            _rendererLayers[i] = _bossRenderers[i].gameObject.layer;
+            _bossRenderers[i].gameObject.layer = scenery;
+        }
     }
+
+    private int[] _rendererLayers;
 
     private void Update()
     {
@@ -382,6 +398,10 @@ public abstract class BossIntroCutscene : MonoBehaviour
         _bossAgent.enabled = true;
         if (_bossCollider != null) _bossCollider.enabled = true;
         _boss.enabled = true;
+        for (int i = 0; i < _bossRenderers.Length; i++)
+        {
+            if (_bossRenderers[i] != null) _bossRenderers[i].gameObject.layer = _rendererLayers[i];
+        }
 
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
 

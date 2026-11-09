@@ -169,6 +169,8 @@ public class DebugHUD : MonoBehaviour
             ("Next spot", DebugActions.TeleportNextSpot),
             ("Test skill gem", ForceEquipTestGems),
             ("Enemy outline", LastEnemiesHint.DebugToggle),
+            ("Kill room enemies", DebugActions.KillRoomEnemies),
+            ("Fly: off", ToggleFly),
         });
 
         // One button per gauntlet the game knows about.
@@ -293,6 +295,25 @@ public class DebugHUD : MonoBehaviour
         inventoryManager.TryEquipNewGauntlet(gauntletPrefab, rarity);
     }
 
+    // The button shows whether flying is on. It's named after its first label ("Fly: off").
+    private void ToggleFly()
+    {
+        bool on = DebugFly.Toggle();
+        Transform button = _body != null ? FindDeep(_body, "Fly: off") : null;
+        if (button != null) button.GetComponentInChildren<TMP_Text>().text = on ? "Fly: ON" : "Fly: off";
+    }
+
+    private static Transform FindDeep(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child;
+            Transform found = FindDeep(child, name);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
     private void ForceEquipTestGems()
     {
         if (statsManager == null) statsManager = FindFirstObjectByType<PlayerStatsManager>();
@@ -381,6 +402,34 @@ public static class DebugActions
     {
         ProgressBarCircle bar = ProgressBarCircle.Instance;
         if (bar != null) bar.AddExperience(bar.expToNextLevel - bar.currentExp);
+    }
+
+    /// <summary>
+    /// Kills every enemy in the rooms that have started and aren't cleared yet, the normal way (TakeDamage), so the
+    /// room still clears, opens its doors, gives its reward and XP.
+    /// </summary>
+    public static void KillRoomEnemies()
+    {
+        EnemySpawner spawner = Object.FindFirstObjectByType<EnemySpawner>();
+        int killed = 0;
+
+        if (spawner != null)
+        {
+            foreach (ChamberData chamber in spawner.chambers)
+            {
+                if (!chamber.hasSpawned || chamber.isCleared) continue;
+
+                foreach (GameObject enemy in chamber.activeEnemies)
+                {
+                    if (enemy == null || !enemy.TryGetComponent(out BaseEnemy stats) || stats.IsDead()) continue;
+                    if (enemy.GetComponent<BossIntroCutscene>() != null) continue; // still a statue waiting for its intro
+                    stats.TakeDamage(999999f);
+                    killed++;
+                }
+            }
+        }
+
+        Debug.Log(killed > 0 ? $"[DebugMenu] Killed {killed} enemies." : "[DebugMenu] No room is fighting right now.");
     }
 
     public static void TeleportToBossRoom()

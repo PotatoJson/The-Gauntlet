@@ -12,8 +12,8 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>Who says a line. Echo is the whispering voices of the knight's family.</summary>
-public enum Speaker { Narrator, Knight, Echo, Brutus, Pergius, Shrine }
+/// <summary>Who says a line. Echo is the whispering voices of the knight's family; Shadow is the final boss.</summary>
+public enum Speaker { Narrator, Knight, Echo, Brutus, Pergius, Shrine, Shadow }
 
 /// <summary>
 /// The story's voice (see Docs/Story.md). Two ways to show a line:
@@ -113,6 +113,7 @@ public class StoryDialogue : MonoBehaviour
         string key;
         if (killer != null && killer.GetComponentInParent<DemonBoss>() != null) key = "Story_Death_Brutus";
         else if (killer != null && killer.GetComponentInParent<HellLord>() != null) key = "Story_Death_Pergius";
+        else if (killer != null && killer.GetComponentInParent<InkShadow>() != null) key = "Story_Death_Shadow";
         else key = DrawDeathCard();
 
         ClearLines();
@@ -278,6 +279,7 @@ public class StoryDialogue : MonoBehaviour
         Speaker.Brutus => 0.55f,
         Speaker.Pergius => 0.68f,
         Speaker.Shrine => 1.2f,
+        Speaker.Shadow => 0.72f, // the knight's voice, a little deeper
         _ => 1f
     };
 
@@ -288,6 +290,7 @@ public class StoryDialogue : MonoBehaviour
         Speaker.Brutus => new Color(1f, 0.5f, 0.35f),
         Speaker.Pergius => new Color(0.78f, 0.58f, 1f),
         Speaker.Shrine => new Color(0.5f, 1f, 0.88f),
+        Speaker.Shadow => new Color(0.82f, 0.8f, 1f), // paper-white with an ink-violet cast
         _ => new Color(1f, 0.93f, 0.78f) // parchment
     };
 

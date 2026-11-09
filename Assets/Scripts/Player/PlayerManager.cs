@@ -65,13 +65,34 @@ public class PlayerManager : MonoBehaviour
         _currentState = newState;
     }
 
-    //boss teleport for testing
+    // Boss teleport for testing: to the level's own spot if it has one, otherwise a few metres above the floor of the
+    // boss chamber, so the player drops in the way they would arrive (and a boss intro sees them coming).
     public void DebugTeleport()
     {
-        if(_bossRoomSpawn == null) return;
+        Vector3? target = _bossRoomSpawn != null ? _bossRoomSpawn.position : BossChamberDrop();
+        if (target == null)
+        {
+            Debug.LogWarning("[DebugMenu] This level has no boss room.");
+            return;
+        }
         if (_characterController != null) _characterController.enabled = false;
-        transform.position = _bossRoomSpawn.position;
+        transform.position = target.Value;
         if (_characterController != null) _characterController.enabled = true;
+    }
+
+    private static Vector3? BossChamberDrop()
+    {
+        EnemySpawner spawner = FindFirstObjectByType<EnemySpawner>();
+        if (spawner == null) return null;
+
+        foreach (ChamberData chamber in spawner.chambers)
+        {
+            if (chamber.bossSpawns.Count == 0 || chamber.chamberTriggers.Count == 0 || chamber.chamberTriggers[0] == null) continue;
+
+            Bounds floor = chamber.chamberTriggers[0].bounds; // a boss chamber's first trigger is the plate over its floor
+            return new Vector3(floor.center.x, floor.max.y + 3f, floor.center.z);
+        }
+        return null;
     }
     
     // Call this from anywhere to refresh the combat timer

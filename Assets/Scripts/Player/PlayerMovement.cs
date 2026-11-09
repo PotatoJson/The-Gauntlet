@@ -203,6 +203,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        Velocity = Vector3.zero; // until this frame's move sets it
+
         if (_stateManager.GetCurrentState() == PlayerState.Trapped)
         {
             HandleTrappedState();
@@ -292,19 +294,29 @@ public class PlayerMovement : MonoBehaviour
     // A jump (moving up) or a real ledge (no ground within reach) still leaves the ground as before.
     private void MoveAndSnap(Vector3 velocity)
     {
+        Vector3 start = transform.position;
         bool wasGrounded = _controller.isGrounded;
         _controller.Move(velocity * Time.deltaTime);
-        if (!wasGrounded || _controller.isGrounded || _velocity.y > 0f) return;
 
-        float reach = _controller.stepOffset + 0.2f;
-        float toBottom = _controller.height * 0.5f - _controller.radius;
-        Vector3 centre = transform.TransformPoint(_controller.center);
-        if (Physics.SphereCast(centre, _controller.radius * 0.9f, Vector3.down, out _, toBottom + reach,
-                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        if (wasGrounded && !_controller.isGrounded && _velocity.y <= 0f)
         {
-            _controller.Move(Vector3.down * reach); // stops on the step
+            float reach = _controller.stepOffset + 0.2f;
+            float toBottom = _controller.height * 0.5f - _controller.radius;
+            Vector3 centre = transform.TransformPoint(_controller.center);
+            if (Physics.SphereCast(centre, _controller.radius * 0.9f, Vector3.down, out _, toBottom + reach,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            {
+                _controller.Move(Vector3.down * reach); // stops on the step
+            }
         }
+
+        // The controller's own velocity only covers its last Move, which after a snap is just the step down, so the
+        // walk animation stopped on stairs. This is the whole frame's movement.
+        Velocity = (transform.position - start) / Mathf.Max(Time.deltaTime, 0.0001f);
     }
+
+    /// <summary>How fast the player actually moved this frame, stair snapping included. Read by AnimationBridge.</summary>
+    public Vector3 Velocity { get; private set; }
 
     /// <summary>Forgets any speed the player had, for when something else has been moving them (a cutscene).</summary>
     public void ResetMotion()
