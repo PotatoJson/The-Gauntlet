@@ -293,7 +293,8 @@ public class PlayerVitalsVfx : MonoBehaviour
         RawImage gameImage = null;
         foreach (RawImage raw in FindObjectsByType<RawImage>(FindObjectsSortMode.None))
         {
-            if (raw.texture != null && raw.texture.name == GameImageTexture) gameImage = raw;
+            // A prefix, not the whole name: LowResScreen swaps in a copy sized to the window, "LowResFilter (fitted)".
+            if (raw.texture != null && raw.texture.name.StartsWith(GameImageTexture)) gameImage = raw;
         }
         if (gameImage == null) return false;
 

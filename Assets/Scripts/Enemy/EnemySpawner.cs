@@ -93,6 +93,18 @@ public class EnemySpawner : MonoBehaviour
         return enemy;
     }
 
+    /// <summary>
+    /// An enemy called up mid-fight by another (a boss's summons): scaled for this level like the rest, and counted
+    /// in the summoner's chamber, so the room isn't clear until it's dead too.
+    /// </summary>
+    public GameObject Summon(GameObject prefab, Vector3 position, Quaternion rotation, GameObject summoner)
+    {
+        GameObject enemy = SpawnEnemy(prefab, position, rotation);
+        ChamberData chamber = chambers.Find(c => c.activeEnemies.Contains(summoner));
+        if (chamber != null) chamber.activeEnemies.Add(enemy);
+        return enemy;
+    }
+
     private void Start()
     {
         // Setup triggers for each chamber or spawn initial ones immediately

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Localization;
 
-public class HellLord : BaseEnemy
+public partial class HellLord : BaseEnemy
 {
     // Bosses fight on their own terms: no attack tokens, and no one else's alarm wakes them.
     protected override bool UsesAttackTokens => false;
@@ -116,6 +116,8 @@ public class HellLord : BaseEnemy
 
     protected override void Update()
     {
+        if (_hiding) return; // in the fog: Hide runs everything until he comes out
+
         base.Update();
 
         // A hit can cut the swing before its animation switches the hitbox off.
@@ -139,6 +141,8 @@ public class HellLord : BaseEnemy
         }
 
         if (IsDead() || isStunned || isInHitStun) return;
+
+        if (isEngaged && TryHide()) return;
 
         if (isEngaged)
         {
@@ -694,6 +698,8 @@ public class HellLord : BaseEnemy
 
     public override void TakeDamage(float damage)
     {
+        if (_hiding) return; // nothing to hit: he isn't there
+
         // A hit breaks the beam, but not a meteor cast: those only come twice a fight.
         if (!isHitImmune && !IsDotTick)
         {
@@ -727,6 +733,7 @@ public class HellLord : BaseEnemy
         SteamAchievements.Unlock(SteamAchievements.BossHellLord);
         StoryDialogue.Say("Story_A2_Win_01", Speaker.Pergius);
         StoryDialogue.Say("Story_A2_Win_02", Speaker.Pergius);
+        EndHiding();
         StopCasting();
         EndBeamAttack();
 

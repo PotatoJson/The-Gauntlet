@@ -1014,6 +1014,20 @@ public abstract class BaseEnemy : MonoBehaviour
         Gizmos.DrawWireCube(offset, size);
     }
 
+    /// <summary>
+    /// The share of its health at which this enemy enters its second phase; 0 if it has none, or is in it already.
+    /// </summary>
+    public virtual float PhaseTwoAt => 0f;
+
+    /// <summary>Debug menu: takes it down to its second phase the normal way, through TakeDamage.</summary>
+    public bool DebugForcePhaseTwo()
+    {
+        if (PhaseTwoAt <= 0f || IsDead()) return false;
+
+        TakeDamage(Mathf.Max(1f, currentHealth - maxHealth * PhaseTwoAt + 1f));
+        return true;
+    }
+
     public float GetHealthPercentage()
     {
         if (maxHealth <= 0f)

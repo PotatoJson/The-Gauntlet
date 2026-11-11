@@ -95,7 +95,13 @@ public class ShrineInteractable : MonoBehaviour
 
     private string BuildPrompt()
     {
-        // Show the key for whichever device the player is actually using.
+        promptString.Arguments = new object[] { InteractKey(_interactAction) };
+        return promptString.GetLocalizedString();
+    }
+
+    /// <summary>What to call the Interact key in a prompt, for whichever device the player is actually using.</summary>
+    public static string InteractKey(InputAction _interactAction)
+    {
         bool gamepad = Gamepad.current != null && (Keyboard.current == null || Gamepad.current.lastUpdateTime > Keyboard.current.lastUpdateTime);
         string key = "E";
 
@@ -116,8 +122,7 @@ public class ShrineInteractable : MonoBehaviour
             }
         }
 
-        promptString.Arguments = new object[] { key };
-        return promptString.GetLocalizedString();
+        return key;
     }
 
     /// <summary>Called by the upgrade screen once the player has used the shrine.</summary>

@@ -112,8 +112,12 @@ public class PlayerStamina : MonoBehaviour
         return _currentStamina > 0f;
     }
 
+    /// <summary>Debug menu: nothing costs stamina while this is on.</summary>
+    public static bool DebugInfinite;
+
     public void ConsumeStamina(float amount)
     {
+        if (DebugInfinite) return;
         _currentStamina -= amount;
         // Metrics: Check if stamina just bottomed out
         if (_currentStamina <= 0 && MetricsTracker.Instance != null)

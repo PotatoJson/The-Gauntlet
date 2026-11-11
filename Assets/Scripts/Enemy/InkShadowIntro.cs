@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// The final boss's entrance. There is no boss at the bottom of Hell, only a tall mirror (<see cref="InkMirror"/>).
-/// The knight walks up to it and sees himself. He tilts his head and the reflection doesn't; it turns to ink, walks
+/// The knight looks into it (the Interact key) and the scene begins: he walks up to it and sees himself. He tilts his head and the reflection doesn't; it turns to ink, walks
 /// up to the glass and cracks it, and the glass bursts. The knight rolls back from it, and the shadow rises out of
 /// the ink in front of the empty frame, many times his size.
 /// </summary>
@@ -12,6 +12,7 @@ public class InkShadowIntro : BossIntroCutscene
 {
     private const float MirrorBehindBoss = 1.6f;  // the boss rises just in front of the glass
     private const float StandBack = 2.6f;         // how far from the glass the knight stops
+    private const float WalkUpDistance = 9f;      // how far out from where the boss rises his walk up to it starts
     private const float WalkSpeedScale = 0.8f;    // of the knight's walk speed
     private const float RollBackDistance = 3.4f;
     private const float RollSeconds = 0.75f;
@@ -31,6 +32,9 @@ public class InkShadowIntro : BossIntroCutscene
     private float _headTilt;
     private Vector3 _tiltAxis;
 
+    // The mirror starts it, when the player looks into it; dropping into the arena doesn't.
+    protected override bool BeginsOnItsOwn => false;
+
     // As the level starts: no boss to see, only the mirror it will come out of.
     protected override void OnArmed()
     {
@@ -40,6 +44,7 @@ public class InkShadowIntro : BossIntroCutscene
 
         Vector3 at = transform.position - transform.forward * MirrorBehindBoss;
         _mirror = Instantiate(mirrorPrefab, EnemyFx.FloorUnder(at) - Vector3.up * 0.05f, transform.rotation).GetComponent<InkMirror>();
+        _mirror.LookedInto += Begin;
     }
 
     protected override void OnBegin()
@@ -55,12 +60,13 @@ public class InkShadowIntro : BossIntroCutscene
         // Its lines are timed to the pictures, so nothing still waiting to be said may hold them up.
         StoryDialogue.ClearLines();
 
-        // The player has only just arrived: black covers the jump to standing on the floor.
-        SetFade(1f);
-        SetBars(1f);
-        _player.position = _landing;
-        _player.rotation = Quaternion.LookRotation(_toBoss);
-        _playerAnimator.CrossFadeInFixedTime("Locomotion", 0f);
+        // He looked into it from wherever he stood. The scene has him walk up to it from straight in front, so that
+        // is where it puts him (under black, at the start of the timeline) and where a skip leaves him.
+        Vector3 outFromGlass = Flat(_mirror.transform.forward).normalized;
+        _toBoss = -outFromGlass;
+        _side = Vector3.Cross(Vector3.up, outFromGlass);
+        _landing = StandingAt(_bossHome + outFromGlass * WalkUpDistance);
+        transform.rotation = Quaternion.LookRotation(outFromGlass);
     }
 
     protected override void RestoreScene()
@@ -89,6 +95,13 @@ public class InkShadowIntro : BossIntroCutscene
         Vector3 glass = _mirror.GlassCentre;
         Vector3 stand = StandingAt(_mirror.transform.position - toMirror * StandBack);
         Func<Vector3> reflection = () => _mirror != null ? _mirror.ReflectionFace : glass;
+
+        // Black covers the jump from where he looked into it to the start of his walk.
+        yield return Fade(0f, 1f, 0.35f);
+        SetBars(1f);
+        _player.position = _landing;
+        _player.rotation = Quaternion.LookRotation(_toBoss);
+        _playerAnimator.CrossFadeInFixedTime("Locomotion", 0f);
 
         // A wide shot from the side: the knight, and the mirror standing alone across the floor.
         Vector3 wide = _landing - toMirror * 3f + right * 8f + Vector3.up * 3f;

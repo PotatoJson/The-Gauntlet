@@ -16,6 +16,18 @@ public class DebugFly : MonoBehaviour
     private CharacterController _controller;
     private PlayerMovement _movement;
 
+    // A death or a restart reloads the level with a fresh player, so the setting is kept here and put back on it.
+    private static bool _wanted;
+
+    [RuntimeInitializeOnLoadMethod]
+    private static void KeepAcrossLoads() => UnityEngine.SceneManagement.SceneManager.sceneLoaded += (_, _) =>
+    {
+        PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+        if (_wanted && player != null && player.GetComponent<DebugFly>() == null) player.gameObject.AddComponent<DebugFly>();
+    };
+
+    public static bool IsOn { get { PlayerMovement p = FindFirstObjectByType<PlayerMovement>(); return p != null && p.GetComponent<DebugFly>() != null; } }
+
     /// <summary>Turns flying on or off for the player. Returns whether it's now on.</summary>
     public static bool Toggle()
     {
@@ -26,10 +38,12 @@ public class DebugFly : MonoBehaviour
         if (fly != null)
         {
             Destroy(fly);
+            _wanted = false;
             return false;
         }
 
         player.gameObject.AddComponent<DebugFly>();
+        _wanted = true;
         return true;
     }
 
@@ -50,6 +64,10 @@ public class DebugFly : MonoBehaviour
 
     private void Update()
     {
+        // Respawning and level loads switch these back on under us; flying keeps them off.
+        _movement.enabled = false;
+        _controller.enabled = false;
+
         // The debug menu (or any other menu) has the input while it's open.
         if (GameplayInputGate.Instance != null && GameplayInputGate.Instance.IsSuspended) return;
 

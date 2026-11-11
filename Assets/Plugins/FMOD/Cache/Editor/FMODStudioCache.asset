@@ -270,6 +270,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 399
+--- !u!114 &-7222037833420059544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Pergius_Growl
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Pergius_Growl
+  Guid:
+    Data1: -453705496
+    Data2: 1137699490
+    Data3: 371566981
+    Data4: 889030307
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 1
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2200
 --- !u!114 &-6321682917440360419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -938,6 +965,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 491
+--- !u!114 &-805535996291987688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Ward_Crack
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Ward_Crack
+  Guid:
+    Data1: 2070734325
+    Data2: 1304430420
+    Data3: -330856558
+    Data4: -1975556129
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1200
 --- !u!114 &-138316862465081677
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1056,13 +1110,19 @@ MonoBehaviour:
   - {fileID: 8854611694193632358}
   - {fileID: -6321682917440360419}
   - {fileID: -3530134842968985577}
+  - {fileID: 2221899566300002375}
+  - {fileID: 274256312649714189}
+  - {fileID: 6495808883956000088}
+  - {fileID: 5982806932081259626}
+  - {fileID: -805535996291987688}
+  - {fileID: -7222037833420059544}
   EditorParameters: []
   MasterBanks:
   - {fileID: 2066265338496270884}
   StringsBanks:
   - {fileID: 1943974540647462933}
   cacheVersion: 131861
-  cacheTime: 639290928100980533
+  cacheTime: 639300131518297445
   SerializableEventsDict:
   - key: event:/Environment/Vase_Break
     index: 0
@@ -1212,6 +1272,45 @@ MonoBehaviour:
     index: 72
   - key: event:/Ambience/Amb_Cave
     index: 73
+  - key: event:/Boss/Brutus_Rush
+    index: 74
+  - key: event:/Boss/Glass_Shatter
+    index: 75
+  - key: event:/Boss/Pergius_Laser
+    index: 76
+  - key: event:/Boss/Pergius_Vanish
+    index: 77
+  - key: event:/Boss/Ward_Crack
+    index: 78
+  - key: event:/Boss/Pergius_Growl
+    index: 79
+--- !u!114 &274256312649714189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Glass_Shatter
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Glass_Shatter
+  Guid:
+    Data1: 1136402316
+    Data2: 1109063738
+    Data3: -99983468
+    Data4: -154669881
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 2000
 --- !u!114 &284737586575122379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1470,10 +1569,10 @@ MonoBehaviour:
   Path: HellBent-FMOD/Build/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639290928100980533
+  lastModified: 639300131518297445
   FileSizes:
   - Name: Desktop
-    Value: 4410
+    Value: 4678
   Exists: 1
 --- !u!114 &2066265338496270884
 MonoBehaviour:
@@ -1490,10 +1589,10 @@ MonoBehaviour:
   Path: HellBent-FMOD/Build/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639290928100950046
+  lastModified: 639300131518259287
   FileSizes:
   - Name: Desktop
-    Value: 726368
+    Value: 821440
   Exists: 1
 --- !u!114 &2122556550182375229
 MonoBehaviour:
@@ -1549,6 +1648,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 20015
+--- !u!114 &2221899566300002375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Brutus_Rush
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Brutus_Rush
+  Guid:
+    Data1: 958019463
+    Data2: 1129452880
+    Data3: 1427469448
+    Data4: -207510635
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1800
 --- !u!114 &2408245987646760660
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1927,6 +2053,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 471
+--- !u!114 &5982806932081259626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Pergius_Vanish
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Pergius_Vanish
+  Guid:
+    Data1: -649156144
+    Data2: 1171093029
+    Data3: -162956911
+    Data4: 485956573
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1800
 --- !u!114 &6325234705279132820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1981,6 +2134,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 1412
+--- !u!114 &6495808883956000088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Boss/Pergius_Laser
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Boss/Pergius_Laser
+  Guid:
+    Data1: 745861546
+    Data2: 1268683572
+    Data3: -1157812817
+    Data4: 1647604360
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1500
 --- !u!114 &6887592887910571762
 MonoBehaviour:
   m_ObjectHideFlags: 0

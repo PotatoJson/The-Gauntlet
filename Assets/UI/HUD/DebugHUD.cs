@@ -170,7 +170,10 @@ public class DebugHUD : MonoBehaviour
             ("Test skill gem", ForceEquipTestGems),
             ("Enemy outline", LastEnemiesHint.DebugToggle),
             ("Kill room enemies", DebugActions.KillRoomEnemies),
+            ("Boss phase 2", DebugActions.ForceBossPhaseTwo),
             ("Fly: off", ToggleFly),
+            ("Invincible: off", ToggleInvincible),
+            ("Stamina: normal", ToggleInfiniteStamina),
         });
 
         // One button per gauntlet the game knows about.
@@ -187,6 +190,7 @@ public class DebugHUD : MonoBehaviour
             gauntlets.Add((prefab.name.Replace("Gauntlet", "").Replace("(Clone)", "").Trim(), () => SpawnGauntlet(captured)));
         }
         if (gauntlets.Count > 0) BuildSection("Spawn gauntlet", gauntlets);
+        RefreshToggles();
 
         rootGo.SetActive(false);
     }
@@ -298,9 +302,34 @@ public class DebugHUD : MonoBehaviour
     // The button shows whether flying is on. It's named after its first label ("Fly: off").
     private void ToggleFly()
     {
-        bool on = DebugFly.Toggle();
-        Transform button = _body != null ? FindDeep(_body, "Fly: off") : null;
-        if (button != null) button.GetComponentInChildren<TMP_Text>().text = on ? "Fly: ON" : "Fly: off";
+        DebugFly.Toggle();
+        RefreshToggles();
+    }
+
+    private void ToggleInvincible()
+    {
+        PlayerHealth.DebugInvincible = !PlayerHealth.DebugInvincible;
+        RefreshToggles();
+    }
+
+    private void ToggleInfiniteStamina()
+    {
+        PlayerStamina.DebugInfinite = !PlayerStamina.DebugInfinite;
+        RefreshToggles();
+    }
+
+    // The settings outlive the menu (a death or restart rebuilds it), so the labels are read back from them.
+    private void RefreshToggles()
+    {
+        SetLabel("Fly: off", DebugFly.IsOn ? "Fly: ON" : "Fly: off");
+        SetLabel("Invincible: off", PlayerHealth.DebugInvincible ? "Invincible: ON" : "Invincible: off");
+        SetLabel("Stamina: normal", PlayerStamina.DebugInfinite ? "Stamina: INFINITE" : "Stamina: normal");
+    }
+
+    private void SetLabel(string button, string text)
+    {
+        Transform found = _body != null ? FindDeep(_body, button) : null;
+        if (found != null) found.GetComponentInChildren<TMP_Text>().text = text;
     }
 
     private static Transform FindDeep(Transform parent, string name)
@@ -379,7 +408,13 @@ public static class DebugActions
     public static void KillPlayer()
     {
         PlayerHealth health = Object.FindFirstObjectByType<PlayerHealth>();
-        if (health != null && !health.IsDead) health.TakeDamage(9999f);
+        if (health == null || health.IsDead) return;
+
+        // Asked for outright, so it goes through invincibility.
+        bool invincible = PlayerHealth.DebugInvincible;
+        PlayerHealth.DebugInvincible = false;
+        health.TakeDamage(9999f);
+        PlayerHealth.DebugInvincible = invincible;
     }
 
     public static void FullHeal()
@@ -430,6 +465,21 @@ public static class DebugActions
         }
 
         Debug.Log(killed > 0 ? $"[DebugMenu] Killed {killed} enemies." : "[DebugMenu] No room is fighting right now.");
+    }
+
+    /// <summary>
+    /// Sends every fighting boss that has a second phase into it, by damaging it down to where the phase starts.
+    /// A boss that can't be hurt right now (mid-roar, under the floor) ignores it: press again.
+    /// </summary>
+    public static void ForceBossPhaseTwo()
+    {
+        int forced = 0;
+        foreach (BaseEnemy enemy in Object.FindObjectsByType<BaseEnemy>(FindObjectsSortMode.None))
+        {
+            if (enemy.enabled && enemy.DebugForcePhaseTwo()) forced++; // not enabled: a statue still waiting for its intro
+        }
+
+        Debug.Log(forced > 0 ? $"[DebugMenu] Sent {forced} boss(es) to phase 2." : "[DebugMenu] No fighting boss has a second phase to enter.");
     }
 
     public static void TeleportToBossRoom()

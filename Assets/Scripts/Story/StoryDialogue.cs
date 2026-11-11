@@ -56,6 +56,7 @@ public class StoryDialogue : MonoBehaviour
     private Coroutine _lines;
     private bool _telling;
     private bool _sticky;
+    private bool _carryOver; // the line on screen is the loading screen's, and finishes in the scene it loads
     private int _chambersCleared;
 
     private TMP_Text _line;
@@ -181,6 +182,8 @@ public class StoryDialogue : MonoBehaviour
     /// <summary>A loading screen's line of flavour.</summary>
     public static void SayLoadingLine()
     {
+        ClearLines(); // whatever the level was still saying stays behind
+        if (_instance != null) _instance._carryOver = true;
         string[] lines = { "Story_Load_01", "Story_Load_02", "Story_Load_03" };
         Say(lines[UnityEngine.Random.Range(0, lines.Length)]);
     }
@@ -213,7 +216,10 @@ public class StoryDialogue : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (_sticky) RestartLines(); // the death line; other lines (the loading screen's) finish in the new scene
+        // Lines belong to the scene they were said in: a level's lines, or the death line, don't follow the player to
+        // the next one or back to the main menu. Only the loading screen's line finishes in the level it loads.
+        if (!_carryOver || scene.name == "MainMenu") RestartLines();
+        _carryOver = false;
         _chambersCleared = 0;
         _menuFound = false; // each level has its own pause menu
         StartCoroutine(SceneLines(scene.name));
@@ -434,7 +440,7 @@ public class StoryDialogue : MonoBehaviour
         float timeScale = Time.timeScale;
         Time.timeScale = 0f;
 
-        _skipLabel.text = new LocalizedString("UIStrings", "HoldToSkip").GetLocalizedString();
+        _skipLabel.text = new LocalizedString("UIStrings", "HoldEscToSkip").GetLocalizedString();
         _skipBar.localScale = new Vector3(0f, 1f, 1f);
         _pageText.text = "";
         _pageArrow.SetActive(false);
@@ -520,7 +526,16 @@ public class StoryDialogue : MonoBehaviour
             }
         }
 
-        if (!skipped && fallInto.HasValue && _picture.texture != null) yield return FallInto(fallInto.Value);
+        if (skipped && fallInto.HasValue)
+        {
+            // Skipped: straight to the last picture, so the fall still happens, just sooner.
+            _pageText.text = "";
+            _pageArrow.SetActive(false);
+            Texture2D last = null;
+            foreach (Texture2D picture in pictures) if (picture != null) last = picture;
+            if (last != null && _picture.texture != last) yield return ShowPicture(last);
+        }
+        if (fallInto.HasValue && _picture.texture != null) yield return FallInto(fallInto.Value);
 
         // Everything after the pages loads a scene or carries on under the black, so the page fades on its own time.
         Time.timeScale = timeScale;

@@ -423,7 +423,7 @@ MonoBehaviour:
   engagementRange: 35
   lineOfSightObstructionMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 0
   lineOfSightHeight: 1.6
   lightAttackDamage: 10
   heavyAttackDamage: 25
@@ -460,6 +460,38 @@ MonoBehaviour:
   circleSpeedFraction: 0.65
   alertRadius: 14
   searchLookSeconds: 3
+  strafeChance: 0.45
+  strafeSpeed: 1.75
+  strafeRange: 9
+  strafeSeconds: {x: 1.4, y: 2.4}
+  lungeDamage: 30
+  lungeCooldown: 6
+  lungeMinDistance: 5
+  lungeMaxDistance: 9.5
+  turnSweepDamage: 26
+  behindSeconds: 0.6
+  grabChance: 0.15
+  grabDamage: 45
+  grabReach: 2.2
+  leapDamage: 42
+  leapRadius: 4.5
+  leapHeight: 7
+  summonMirrorPrefab: {fileID: 7863740214336069522, guid: c46295ad207c051419763f161da2e599, type: 3}
+  inkKnightPrefab: {fileID: 7378908010228241926, guid: 083e8dfb245f4a8478c4e9c898b5cdf5, type: 3}
+  shadowReflectionPrefab: {fileID: 5258717756429047308, guid: 8430ca352abc051468971c32ade5e722, type: 3}
+  crackGlassMaterial: {fileID: 2100000, guid: 607cfb2d971be094aad9363b61ded9ea, type: 2}
+  mirrorShardMaterial: {fileID: 2100000, guid: a48395ce5ff3e4c4d85cab313c3f6d17, type: 2}
+  staggerSeconds: 3
+  punchesToBreak: 6
+  breakSeconds: 4.5
+  breakAoeRadius: 11
+  breakAoeDamage: 50
+  truthDistance: 7
+  truthSeconds: 3.5
+  fakeBurstDamage: 30
+  ambushDashDamage: 24
+  ambushDashSpeed: 16
+  ambushSide: 6
   bossNameString:
     m_TableReference:
       m_TableCollectionName: GUID:5d7ca3a28bbfe9a43a4352222ee2bb3b
@@ -471,9 +503,13 @@ MonoBehaviour:
     m_LocalVariables: []
   swordHitbox: {fileID: 818923056677836359}
   swordSlamDamage: 40
-  risingCutDamage: 34
+  risingCutDamage: 28
   horizontalCutDamage: 30
-  slamChance: 0.2
+  comboHitDamage: 22
+  comboFinisherDamage: 36
+  slamChance: 0.15
+  comboChance: 0.2
+  horizontalCutChance: 0.15
   risingCutChance: 0.5
   strikeDistance: 2.4
   facePlayerTurnSpeed: 5
@@ -481,15 +517,18 @@ MonoBehaviour:
   throwMaxDistance: 30
   throwCooldown: 7
   throwDamage: 26
-  throwLandsShort: 2.6
-  stanceHoldSeconds: 0.5
+  throwSpeed: 34
+  throwTurnDegrees: 140
+  catchDistance: 3.6
+  catchHeight: 2.2
+  slowMoSeconds: 0.3
   dodgeChance: 0.4
   dodgeDistance: 4.5
   dodgeSeconds: 0.35
   phaseTwoThreshold: 0.5
   phaseTwoSpeedMultiplier: 1.2
   phaseTwoCooldownMultiplier: 0.75
-  diveCooldown: 9
+  diveCooldown: 6
   diveRadius: 3.2
   diveDamage: 36
   divePoiseDamage: 40

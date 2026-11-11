@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Localization;
 
 /// <summary>
 /// The standing mirror at the bottom of Hell, where the final boss comes from (<see cref="InkShadowIntro"/>).
@@ -52,10 +55,66 @@ public class InkMirror : MonoBehaviour
     /// <summary>The reflection's head, or the middle of the glass if it has none yet.</summary>
     public Vector3 ReflectionFace => _reflectionHead != null ? _reflectionHead.position : GlassCentre;
 
+    [Header("Looking into it")]
+    [Tooltip("The world-space prompt prefab (UI/InteractionPrompt), the one the shrines use.")]
+    [SerializeField] private GameObject promptPrefab;
+    [SerializeField] private float interactionRadius = 4.5f;
+    [SerializeField] private float promptHeight = 5.6f;
+    [SerializeField] private LocalizedString promptString = new LocalizedString("UIStrings", "Mirror_Prompt");
+
+    /// <summary>Raised once, when the player chooses to look into it (the Interact key, standing near it).</summary>
+    public event System.Action LookedInto;
+
+    private InputAction _interact;
+    private Transform _player;
+    private GameObject _prompt;
+    private TMP_Text _promptText;
+    private bool _looked;
+
+    // Until the player looks into it, it's only a mirror: they can walk past it to the shrines and chests first.
+    private void Update()
+    {
+        if (_looked) return;
+
+        if (_player == null)
+        {
+            GameObject found = GameObject.FindGameObjectWithTag("Player");
+            if (found == null) return;
+            _player = found.transform;
+        }
+
+        bool near = Time.timeScale > 0f && Vector3.Distance(transform.position, _player.position) <= interactionRadius;
+        if (_prompt != null)
+        {
+            if (_prompt.activeSelf != near) _prompt.SetActive(near);
+            if (near)
+            {
+                _prompt.transform.position = transform.position + Vector3.up * promptHeight;
+                promptString.Arguments = new object[] { ShrineInteractable.InteractKey(_interact) };
+                if (_promptText != null) _promptText.text = promptString.GetLocalizedString();
+            }
+        }
+
+        if (near && _interact != null && _interact.WasPressedThisFrame())
+        {
+            _looked = true;
+            if (_prompt != null) _prompt.SetActive(false);
+            LookedInto?.Invoke();
+        }
+    }
+
     private void Start()
     {
+        _interact = InputSystem.actions != null ? InputSystem.actions.FindAction("Interact") : null;
+        if (promptPrefab != null)
+        {
+            _prompt = Instantiate(promptPrefab);
+            _promptText = _prompt.GetComponentInChildren<TMP_Text>();
+            _prompt.SetActive(false);
+        }
+
         _glassMaterial = glass.material;
-        _cracks = DrawCracks();
+        _cracks = GlassFx.DrawCracks(crackCentre);
         _glassMaterial.SetTexture("_CrackTex", _cracks);
         _glassMaterial.SetVector("_CrackCentre", crackCentre);
         _glassMaterial.SetVector("_GlassSize", new Vector4(glassBottomTopWidth.z, glassBottomTopWidth.y - glassBottomTopWidth.x, 0f, 0f));
@@ -71,6 +130,7 @@ public class InkMirror : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_prompt != null) Destroy(_prompt);
         if (_main != null) _main.cullingMask |= Bit;
         if (_texture != null) _texture.Release();
         Destroy(_texture);
@@ -292,71 +352,13 @@ public class InkMirror : MonoBehaviour
         _camera.enabled = false;
         if (_reflection != null) Destroy(_reflection.parent.gameObject);
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Heavy", GlassCentre);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Glass_Shatter", GlassCentre);
         EnemyFx.Impact(transform.position + transform.forward * 0.6f, 2.6f, new Color(0.75f, 0.8f, 1f, 1f));
 
-        float bottom = glassBottomTopWidth.x, top = glassBottomTopWidth.y, half = glassBottomTopWidth.z * 0.5f;
-        int debris = LayerMask.NameToLayer("Debris");
-        for (int i = 0; i < Shards; i++)
-        {
-            Vector3 local = new Vector3(Random.Range(-half, half), Random.Range(bottom, top), 0.06f);
-            GameObject shard = new GameObject("MirrorShard", typeof(MeshFilter), typeof(MeshRenderer));
-            shard.layer = debris >= 0 ? debris : 0;
-            shard.transform.SetPositionAndRotation(transform.TransformPoint(local), transform.rotation * Quaternion.Euler(0f, 0f, Random.Range(0f, 360f)));
-            shard.GetComponent<MeshFilter>().sharedMesh = ShardMesh(Random.Range(0.12f, 0.32f));
-            shard.GetComponent<MeshRenderer>().sharedMaterial = shardMaterial;
-
-            BoxCollider box = shard.AddComponent<BoxCollider>();
-            box.size = new Vector3(0.2f, 0.2f, 0.02f);
-            Rigidbody body = shard.AddComponent<Rigidbody>();
-            body.mass = 0.05f;
-            body.linearVelocity = transform.forward * Random.Range(3f, 7.5f) + Vector3.up * Random.Range(0.5f, 4f) + transform.right * Random.Range(-3f, 3f);
-            body.angularVelocity = Random.insideUnitSphere * 14f;
-            Destroy(shard, Random.Range(2f, 3.2f));
-        }
+        GlassFx.Shatter(transform, glassBottomTopWidth.x, glassBottomTopWidth.y, glassBottomTopWidth.z, shardMaterial, Shards);
     }
 
-    private static Mesh ShardMesh(float size)
-    {
-        Mesh mesh = new Mesh { name = "Shard" };
-        mesh.vertices = new[]
-        {
-            new Vector3(0f, size, 0f),
-            new Vector3(size * Random.Range(0.4f, 0.9f), -size * Random.Range(0.3f, 0.8f), 0f),
-            new Vector3(-size * Random.Range(0.4f, 0.9f), -size * Random.Range(0.3f, 0.8f), 0f)
-        };
-        mesh.triangles = new[] { 0, 1, 2, 0, 2, 1 }; // both faces
-        mesh.RecalculateNormals();
-        return mesh;
-    }
 
     // White lines on clear: rays that wander out from the crack centre, some splitting as they go.
-    private Texture2D DrawCracks()
-    {
-        const int width = 64, height = 96;
-        Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-        Color32[] pixels = new Color32[width * height];
-
-        void Ray(Vector2 at, float angle, int steps)
-        {
-            for (int s = 0; s < steps; s++)
-            {
-                angle += Random.Range(-0.45f, 0.45f);
-                at += new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 1.6f;
-                int x = Mathf.RoundToInt(at.x), y = Mathf.RoundToInt(at.y);
-                if (x < 0 || y < 0 || x >= width || y >= height) return;
-                pixels[y * width + x] = new Color32(255, 255, 255, 255);
-                if (Random.value < 0.035f) Ray(at, angle + Random.Range(-1f, 1f), (steps - s) / 2);
-            }
-        }
-
-        Vector2 centre = new Vector2(crackCentre.x * width, crackCentre.y * height);
-        const int rays = 11;
-        for (int i = 0; i < rays; i++) Ray(centre, (i + Random.value * 0.6f) / rays * Mathf.PI * 2f, Random.Range(30, 70));
-
-        texture.SetPixels32(pixels);
-        texture.Apply();
-        return texture;
-    }
     #endregion
 }

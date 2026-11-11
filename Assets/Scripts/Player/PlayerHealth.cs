@@ -262,10 +262,14 @@ public class PlayerHealth : MonoBehaviour
     }
     #endregion
 
+    /// <summary>Debug menu: no damage taken at all while this is on. Hazards that kill outright still do.</summary>
+    public static bool DebugInvincible;
+
     public void TakeDamage(float damage, int poiseDamage = 0, GameObject attacker = null)
     {
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
+        if (DebugInvincible) return;
 
         PlayerMovement movement = GetComponent<PlayerMovement>();
         if (movement != null && movement.IsInvincibleViaRoll)
@@ -426,8 +430,6 @@ public class PlayerHealth : MonoBehaviour
         //    player relaunch and resume from before they died.
         if (SaveManager.Instance != null) SaveManager.Instance.DeleteSave();
 
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Death");
-
         // 1. No more input from here on: no moving, attacking or opening the pause menu over the death.
         //    Loading a level (restart or main menu) gives it back.
         if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.SuspendWhileRunning(this);
@@ -488,6 +490,7 @@ public class PlayerHealth : MonoBehaviour
         if (cc != null) cc.enabled = false;
 
         _dying = null;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Death"); // with the screen breaking, not the hit that killed
         DeathScreenShatter.Instance.TriggerDeathShatter(killer);
     }
 

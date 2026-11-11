@@ -86,6 +86,12 @@ public abstract class BossIntroCutscene : MonoBehaviour
     /// <summary>Called on a black screen, at the normal end or after a skip: undo anything the timeline left behind.</summary>
     protected virtual void RestoreScene() { }
 
+    /// <summary>
+    /// True for an intro that starts when the player arrives in the chamber. An intro that returns false starts
+    /// itself, by calling <see cref="Begin"/>.
+    /// </summary>
+    protected virtual bool BeginsOnItsOwn => true;
+
     /// <summary>Called once the boss has become the waiting statue, as the level starts.</summary>
     protected virtual void OnArmed() { }
 
@@ -179,7 +185,7 @@ public abstract class BossIntroCutscene : MonoBehaviour
 
         if (_player == null && !FindPlayer()) return;
 
-        if (_chamber.hasSpawned || PlayerIsDroppingIn()) Begin();
+        if (BeginsOnItsOwn && (_chamber.hasSpawned || PlayerIsDroppingIn())) Begin();
     }
 
     private bool FindPlayer()
@@ -207,8 +213,11 @@ public abstract class BossIntroCutscene : MonoBehaviour
             && p.y > plate.max.y && p.y < plate.max.y + 12f;
     }
 
-    private void Begin()
+    protected void Begin()
     {
+        if (_playing || !_armed || _chamber.isCleared) return;
+        if (_player == null && !FindPlayer()) return;
+
         _playing = true;
         _spawner.OnChamberTriggerEntered(_chamber);
 

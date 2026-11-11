@@ -121,7 +121,7 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 | Paint reveal | Brutus | You! The little knight with the glass sword. | `[Story_A1_Boss_02]` |
 | Camera pulls out | Brutus | Revenge? I don't even remember their faces. | `[Story_A1_Boss_03]` |
 
-**Brutus phase 2** (at the 50% roar) · **Mode:** Narration line, fight keeps going
+**Brutus phase 2** (at the 50% roar) · **Mode:** a short cutscene (`DemonBoss.Enrage`): the camera takes in his roar, which blasts out across the floor and breaks every ward round the arena
 
 | Who | Line | Key |
 |---|---|---|
@@ -135,6 +135,13 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 | Narrator | The Demon King fell. It did not feel the way the knight had hoped. So he went deeper. | `[Story_A1_Win_02]` |
 
 > **Layer 2 hints:** Brutus can't remember their faces because there were no faces to remember. "Not how it was supposed to end" means "I was supposed to win this time." And the first taste of revenge is already hollow.
+
+**The fight** (`DemonBoss`, the Dungeon's boss platform over the spike pit):
+- **The wards:** as the fight starts, a ring of iron posts with glowing fire-glass between them rises round the edge of the platform (`WardRing`), so nobody goes off into the spikes. Each pane takes two blows: it cracks at the first and shatters at the second, leaving a gap.
+- **The charge:** whenever the player is 5 m or more away and it's ready (every 4 seconds) he winds up (head down, foot scraping; a burning stripe on the floor shows the line once it's set) and charges along it at 26 m/s. Rolled clear, he smashes into the ward at the end and stands dazed for 2 seconds: the moment to punish him. Caught, the player is carried and thrown into the ward: 55 damage and a knockdown, and the pane takes the blow.
+- **Up close:** now and then, instead of a blow, he grabs (30% of the time in reach, at most every 8 seconds; a roll gets out of it). Phase 1: both hands seize the player, lift them overhead and hurl them into the ward he's facing, 45 damage (over the edge, onto the spikes, where that ward is broken). Phase 2: he runs them through with a sword (20), lifts them on the blade, spins a turn and a quarter and flings them across the floor (40), landing short of the edge.
+- **Phase 2:** his roar breaks every ward (above). From then on a throw has nothing to stop it: over the edge onto the spikes, which kills outright, and a charge he misses just skids to a halt at the edge.
+- **Animation:** the wind-up, the run, the carry, the throw and the daze are new (`Docs/Art/InkShadow.blend`, actions `Brutus_*`, retargeted onto him); the ward post is `Docs/Art/BrutusWard.blend`.
 
 ### 5.3 Act 2: the Caves
 
@@ -174,6 +181,13 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 
 > **Layer 2 hint:** Pergius is the one character who half-knows. "Keep the pages straight" still reads as an ancient being's madness in Layer 1.
 
+**Pergius hides** (`HellLord.Fog`): as the fight starts, and again at 40% health, he vanishes into one of five banks of fog round the edge of the floor. Waves of demons (three waves: two grunts and a caster; two grunts and two eyeballs; two elites) come out of the fog, and every bank fires lasers at the player (a thin warning line, then the beam down it). A faint pair of red eyes in his bank gives him away up close. Walking into his bank drags him out, stunned for 3 seconds; walking into the wrong one bursts it in their face and stuns them for 2 seconds. Left alone for 35 seconds, he steps out on his own.
+
+| Who | Line | Key |
+|---|---|---|
+| Pergius *(hiding)* | Find me, if those eyes of yours are worth anything. | `[Story_A2_Hide_01]` |
+| Pergius *(found)* | No... How did you see me? | `[Story_A2_Found_01]` |
+
 ### 5.4 Act 3: Hell
 
 **Arrival** · **Mode:** Narration line
@@ -195,7 +209,7 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 |---|---|---|
 | Family (whisper) | It won't bring us back. You know that, don't you? | `[Story_A3_Echo_01]` |
 
-**Final boss: the Unfinished Knight** (`InkShadow`, the Narrator's shadow made of ink). At the bottom of Hell there's no throne, only a tall mirror. The knight walks up to it and sees himself. He tilts his head and the reflection doesn't; it drains to black ink, white eyes open in its helmet, it walks up to the glass and cracks it, and the glass bursts. The knight rolls back, and the shadow rises out of the ink in front of the empty frame, twice his size, carrying the sword he lost. **Mode:** cutscene (`InkShadowIntro`), then fight lines
+**Final boss: the Unfinished Knight** (`InkShadow`, the Narrator's shadow made of ink). At the bottom of Hell there's no throne, only a tall mirror. It waits: the player can use the arena's two shrines and open its two chests first, and starts the scene by looking into the mirror (the Interact key, standing near it). The knight walks up to it and sees himself. He tilts his head and the reflection doesn't; it drains to black ink, white eyes open in its helmet, it walks up to the glass and cracks it, and the glass bursts. The knight rolls back, and the shadow rises out of the ink in front of the empty frame, twice his size, carrying the sword he lost. **Mode:** cutscene (`InkShadowIntro`), then fight lines
 
 | Who | Line | Key |
 |---|---|---|
@@ -212,10 +226,10 @@ Format for each beat: **When** (the trigger in game) · **Who** · **Lines** · 
 > **Layer 2 hints:** "I always look like them" is every earlier telling, each with the knight's face. "Let's finish the story" and "now the story can end" are the Narrator's own wish.
 
 **The fight** (`InkShadow`, Hell's boss chamber, alone, no adds):
-- **Phase 1:** a sword fight. In reach: a **rising cut** (it sinks low with the blade trailing behind it, then lunges in and brings it up from the floor: roll to the side) and a **horizontal cut** (the blade drawn back at its waist, then swept round in front: roll back), and now and then a heavy slam that splashes ink and cracks the floor. Against a player who keeps their distance it **throws its sword**, point first, curving after them (it turns only so fast, so a roll bends its path). The shadow bursts into ink as it lets go, then appears in the air to catch the sword as it closes on them, and hangs there for half a second in the stance of its next cut: the moment to read it and roll the right way. Then it drops into the cut. It reads the player like a mirror: a charged heavy attack let go in its reach has a 40% chance to make it hop back out of it.
-- **Phase 2 (half health, "the ink spills"):** it sinks into the floor as a pool. The pool hunts the player, then stops: the moment to roll clear. It bursts up out of it straight into a rising cut. From then on it dives every few seconds, and moves faster.
-- **Numbers:** 1400 health (2100 in Hell); rising cut 34, horizontal cut 30, slam 40, thrown sword 26, dive 36, before Hell's ×1.3. In reach it slams 20% of the time, otherwise one of the cuts, half and half. All on the prefab (`Assets/Prefabs/Enemies/Ink-Shadow.prefab`).
-- **Model:** low-poly (about 700 triangles), built and rigged in Blender to match the knight's blocky look: `Docs/Art/InkShadow.blend`, exported to `Assets/Models/InkShadow/`. Its colours are a 4×4 palette texture, so it reads on the unlit enemy shader. Humanoid rig. Its idle, walk, death (it kneels on its planted sword), sword throw and both cuts are its own, keyed in the same file (actions `Shadow_*`, exported as `InkShadow@*.fbx`); the slam and the hop back reuse the Elite's clips.
+- **Phase 1:** a sword fight. In reach: a **rising cut**, its quick attack (it sinks low with the blade trailing behind it, then lunges in and brings it up from the floor: roll to the side), a **horizontal cut** (the blade drawn back at its waist, then swept round in front: roll back), a three-hit **combo** (a cut, the backhand back across, then a step in and an overhead chop), and now and then a heavy slam that splashes ink and cracks the floor. Against a player who keeps their distance it **throws its sword**, point first, curving after them (it turns only so fast, so a roll bends its path). The shadow bursts into ink as it lets go, then appears in the air to catch the sword as it closes on them, held in the stance of its next cut while the whole game runs in slow motion (0.3 seconds at a fifth of normal speed) and it falls to the floor: the moment to read it and roll the right way. Then it cuts. It reads the player like a mirror: a charged heavy attack let go in its reach has a 40% chance to make it hop back out of it. Its footwork: just out of reach it sometimes **circles** the player, sword raised; at 5 to 9.5 m it **lunges**, a long thrust stretched to reach them (closer than 5 m it hops back first and lunges from there); a player who stays **behind** it for more than about half a second gets a spinning backhand. In reach it sometimes **grabs** with its claw instead of cutting: it can't be blocked, only rolled. Caught, the knight is lifted overhead and slammed down (a knockdown).
+- **Phase 2 (half health, "the ink spills"):** it sinks into the floor as a pool. The pool hunts the player, then stops: the moment to roll clear. It bursts up out of it straight into a rising cut. From then on it moves faster, and every 6 seconds or so it uses one of its ink or mirror powers, mostly the mirrors (each mirror move is three times as likely as the dive, and none comes twice running): the dive; **break the mirror** (a mirror rises in front of the player and the boss's reflection slowly forms in it over 4.5 seconds: punch the glass 6 times first, a heavy counting twice, and it shatters and the boss drops to one knee for 3 seconds; too slow and the reflection's blow erupts across the floor 11 m round the mirror); **which one is real** (the boss sinks into the ink and appears in three mirrors round the player, each drawn back to lunge; the two fakes have cracked glass. Punch the real one and it falls out onto one knee for 3 seconds; punch a fake and it bursts in the player's face; wait 3.5 seconds and the real one lunges out); or the **mirror ambush** (two mirrors rise to the player's left and right, an ink copy dashes out of each in turn, then the boss leaps high and drives its sword into the floor where the player stands, inside a ring that marks it).
+- **Numbers:** 1400 health (2100 in Hell); rising cut 28, horizontal cut 30, combo 22 + 22 + 36, slam 40, thrown sword 26, lunge 30, turn sweep 26, grab 45, leap 42, break-the-mirror blow 50, a fake mirror 30, ambush dash 24, dive 36, before Hell's ×1.3. In reach: rising cut 35% of the time, combo 20%, horizontal cut 15%, grab 15%, slam 15%. The combo's hits are just over half a second apart, longer than the knight's 0.5 seconds of safety after being hit, so each one can land. All on the prefab (`Assets/Prefabs/Enemies/Ink-Shadow.prefab`).
+- **Model:** low-poly (about 700 triangles), built and rigged in Blender to match the knight's blocky look: `Docs/Art/InkShadow.blend`, exported to `Assets/Models/InkShadow/`. Its colours are a 4×4 palette texture, so it reads on the unlit enemy shader. Humanoid rig. Its idle, walk, death (it kneels on its planted sword), sword throw, combo, both cuts, strafes, lunge, turn sweep, grab, leap and summon are its own, keyed in the same file (actions `Shadow_*`, exported as `InkShadow@*.fbx`); the slam and the hop back reuse the Elite's clips.
 
 ### 5.5 Ending, Layer 1 (launch)
 

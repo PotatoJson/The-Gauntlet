@@ -11,7 +11,7 @@ public class PlayerStatsManager : MonoBehaviour
     public float BasePoiseDamage = 10f;
     public float BaseMaxPoise = 100f;
     public float BaseStaminaRegen = 60f;
-    public float BaseStaminaDelay = 3f;
+    public float BaseStaminaDelay = 1.5f;
     public float BaseMana = 100f;
     public float BaseManaRegen = 1.2f; // per second (one 20-mana cast every ~17s)
     [HideInInspector] public float berserkerDamageMultiplier = 1f;

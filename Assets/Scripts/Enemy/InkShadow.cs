@@ -8,11 +8,12 @@ using UnityEngine.Serialization;
 /// The final boss: the knight's own reflection, stepped out of the mirror at the bottom of Hell as a shadow of ink
 /// (<see cref="InkShadowIntro"/>). It fights with a sword. In reach it uses a rising cut (it sinks low with the blade
 /// trailing, then lunges in and brings it up from the floor: roll to the side), a horizontal cut (the blade drawn back
-/// at its waist, then swept round in front: roll back), and now and then a heavy slam.
+/// at its waist, then swept round in front: roll back), a three-hit combo (cut, backhand, overhead chop), and now and
+/// then a heavy slam. The rising cut is the quick one.
 ///
 /// A player who keeps their distance gets the sword thrown at them, point first, curving after them. The shadow bursts
-/// into ink as it lets go and appears in the air to catch the sword as it closes on them, frozen for a moment in the
-/// stance of the cut it is about to make: the moment to read it and roll the right way. Then it drops into the cut.
+/// into ink as it lets go and appears in the air to catch the sword as it closes on them, held in the stance of the cut
+/// it is about to make while the whole game runs in slow motion: the moment to read it and roll the right way.
 ///
 /// Like a reflection it answers the player's moves: a charged heavy attack let go in its reach is sometimes its cue
 /// to hop back out of it.
@@ -21,10 +22,10 @@ using UnityEngine.Serialization;
 /// (the moment to roll clear), and it bursts up out of it straight into a rising cut. From then on it dives every few
 /// seconds, and moves faster.
 ///
-/// Its idle, walk, death, throw and both cuts are its own (Docs/Art/InkShadow.blend); the slam and the dodge reuse
+/// Its idle, walk, death, throw, combo and both cuts are its own (Docs/Art/InkShadow.blend); the slam and the dodge reuse
 /// the Elite's clips and their events.
 /// </summary>
-public class InkShadow : BaseEnemy
+public partial class InkShadow : BaseEnemy
 {
     // Bosses fight on their own terms: no attack tokens, and no one else's alarm wakes them.
     protected override bool UsesAttackTokens => false;
@@ -44,7 +45,7 @@ public class InkShadow : BaseEnemy
     private const string HorizontalCutState = "HorizontalCut";
     private const float HorizontalCutStance = 12f / 37f;
     private const float MaxFlightSeconds = 1.6f;
-    private const float DropSeconds = 0.15f;
+    private const float SlowMoScale = 0.2f;   // how slow the world runs while it hangs after the catch
     private const float MaxHangHeight = 0.8f; // its feet off the floor while it holds the stance after the catch
     private const float MinCatchGap = 3f;     // and never closer than this to the player, across the floor
 
@@ -52,11 +53,20 @@ public class InkShadow : BaseEnemy
     public LocalizedString bossNameString;
     [SerializeField] private SwordHitbox swordHitbox;
     [SerializeField] private float swordSlamDamage = 40f;
-    [SerializeField] private float risingCutDamage = 34f;
+    [SerializeField, Tooltip("The rising cut is its quick attack: a short wind-up, less damage")]
+    private float risingCutDamage = 28f;
     [SerializeField] private float horizontalCutDamage = 30f;
-    [SerializeField, Range(0f, 1f), Tooltip("In reach, how often it slams; the rest is split between the two cuts")]
-    private float slamChance = 0.2f;
-    [SerializeField, Range(0f, 1f), Tooltip("Of the cuts, how often it's the rising cut rather than the horizontal one")]
+    [SerializeField, Tooltip("The first two hits of the combo, each")]
+    private float comboHitDamage = 22f;
+    [SerializeField, Tooltip("The overhead chop that ends the combo")]
+    private float comboFinisherDamage = 36f;
+    [SerializeField, Range(0f, 1f), Tooltip("In reach, how often it slams. What is left after the slam, the combo and the horizontal cut is the rising cut")]
+    private float slamChance = 0.15f;
+    [SerializeField, Range(0f, 1f), Tooltip("In reach, how often it starts the three-hit combo")]
+    private float comboChance = 0.25f;
+    [SerializeField, Range(0f, 1f), Tooltip("In reach, how often it uses the horizontal cut")]
+    private float horizontalCutChance = 0.2f;
+    [SerializeField, Range(0f, 1f), Tooltip("After catching its thrown sword, how often it is the rising cut rather than the horizontal one")]
     private float risingCutChance = 0.5f;
     [SerializeField, FormerlySerializedAs("leapStrikeDistance"), Tooltip("How far in front of it the blade meets the floor")]
     private float strikeDistance = 2.4f;
@@ -70,15 +80,15 @@ public class InkShadow : BaseEnemy
     [SerializeField] private float throwCooldown = 7f;
     [SerializeField] private float throwDamage = 26f;
     [SerializeField, Tooltip("How fast the sword flies, in metres a second")]
-    private float throwSpeed = 20f;
+    private float throwSpeed = 34f;
     [SerializeField, Tooltip("How fast the flying sword can turn after the player, in degrees a second")]
-    private float throwTurnDegrees = 90f;
+    private float throwTurnDegrees = 140f;
     [SerializeField, Tooltip("It catches the sword when it is this close to the player, across the floor")]
     private float catchDistance = 3.6f;
     [SerializeField, Tooltip("How high above the player the sword flies, and so where it is caught")]
     private float catchHeight = 2.2f;
-    [SerializeField, Tooltip("How long it holds its stance after catching the sword: the time to read the cut")]
-    private float stanceHoldSeconds = 0.5f;
+    [SerializeField, Tooltip("How long (in real seconds) the game runs in slow motion after it catches the sword: the time to read the cut")]
+    private float slowMoSeconds = 0.3f;
 
     [Header("Dodge")]
     [SerializeField, Range(0f, 1f), Tooltip("Chance to hop back when the player lets a charged heavy attack go in its reach")]
@@ -91,7 +101,8 @@ public class InkShadow : BaseEnemy
     [SerializeField] private float phaseTwoSpeedMultiplier = 1.2f;
     [SerializeField, Tooltip("The time between attacks is multiplied by this")]
     private float phaseTwoCooldownMultiplier = 0.75f;
-    [SerializeField] private float diveCooldown = 9f;
+    [SerializeField] [Tooltip("Phase 2: the time between its ink and mirror moves (the dive, the mirror copy, the mirror ambush)")]
+    private float diveCooldown = 9f;
     [SerializeField] private float diveRadius = 3.2f;
     [SerializeField] private float diveDamage = 36f;
     [SerializeField] private int divePoiseDamage = 40;
@@ -107,11 +118,12 @@ public class InkShadow : BaseEnemy
     private static readonly int AnimRisingCut = Animator.StringToHash(RisingCutState);
     private static readonly int AnimHorizontalCut = Animator.StringToHash(HorizontalCutState);
     private static readonly int AnimThrow = Animator.StringToHash("Throw");
+    private static readonly int AnimCombo = Animator.StringToHash("ShadowCombo");
 
     // _underground: sunk into the floor (a dive, or between a throw and rising at the sword). Nothing to hit, and the
     // coroutine doing it moves it.
     // _throwing: from the throw until the cut it rises into is under way.
-    private bool _phaseTwo, _underground, _throwing, _dodging, _playerWasCharging, _released;
+    private bool _phaseTwo, _underground, _throwing, _dodging, _playerWasCharging, _released, _slowed;
     private float _nextDodge, _nextDive, _nextThrow;
     private Vector3 _scale;
     private PlayerCombat _playerCombat;
@@ -139,13 +151,61 @@ public class InkShadow : BaseEnemy
             _swordHand = sword.parent;
             _swordLocalPosition = sword.localPosition;
             _swordLocalRotation = sword.localRotation;
+            _swordTrail = EnemyFx.BladeTrail(sword.gameObject);
+            if (_swordTrail != null) _swordTrail.emitting = false;
         }
     }
 
     protected override void Update()
     {
+        Watchdog();
         if (_underground) return;
         base.Update();
+    }
+
+    // Anything it starts ends itself (a clip's end event, a coroutine), but a clip cut off before its end event fires
+    // would leave it standing there for good. Long after any move should have finished, let it go.
+    private float _busySince = -1f, _specialSince = -1f;
+
+    private void Watchdog()
+    {
+        if (IsDead()) return;
+
+        _specialSince = _special ? (_specialSince < 0f ? Time.time : _specialSince) : -1f;
+        if (_specialSince >= 0f && Time.time - _specialSince > 20f)
+        {
+            Debug.LogWarning("[InkShadow] A mirror move never finished; ending it.");
+            StopAllCoroutines();
+            EndMoves();
+            EndSlowMo();
+            _underground = _throwing = _dodging = false;
+            transform.localScale = _scale;
+            SetVisible(true);
+            Collider body = GetComponent<Collider>();
+            if (body != null) body.enabled = true;
+            Recover();
+            return;
+        }
+
+        bool busy = isAttacking && !_special && !_underground && !_throwing && !_holding && !_dodging;
+        _busySince = busy ? (_busySince < 0f ? Time.time : _busySince) : -1f;
+        if (_busySince >= 0f && Time.time - _busySince > 6f)
+        {
+            Debug.LogWarning("[InkShadow] An attack never finished; letting it go.");
+            Recover();
+        }
+    }
+
+    private void Recover()
+    {
+        _busySince = _specialSince = -1f;
+        _lunging = false;
+        animator.speed = 1f;
+        DisableSwordHitbox();
+        ReclaimSword();
+        animator.CrossFadeInFixedTime(IdleState, 0.2f);
+        isAttacking = false;
+        OnAttackEnd();
     }
 
     protected override float FacePlayerTurnSpeed => facePlayerTurnSpeed;
@@ -179,9 +239,10 @@ public class InkShadow : BaseEnemy
                            && playerManager != null && playerManager.GetCurrentState() == PlayerState.Attacking;
         _playerWasCharging = charging;
 
-        if (isAttacking || isStunned || _dodging || _throwing) return;
+        if (isAttacking || isStunned || _dodging || _throwing || _strafing || _special || _holding) return;
 
         float distance = GetDistanceToPlayer();
+        if (TryTurnPunish(distance)) return;
 
         if (chargeLetGo && distance <= attackRange + 2f && Time.time >= _nextDodge && Random.value < dodgeChance)
         {
@@ -191,7 +252,7 @@ public class InkShadow : BaseEnemy
 
         if (_phaseTwo && Time.time >= _nextDive && attackCooldownTimer <= 0f)
         {
-            StartCoroutine(Dive(false));
+            StartSpecial();
             return;
         }
 
@@ -199,11 +260,16 @@ public class InkShadow : BaseEnemy
         {
             navAgent.isStopped = true;
             FacePlayer();
-            if (Random.value < slamChance) SwordSlam();
-            else if (Random.value < risingCutChance) Cut(AnimRisingCut);
-            else Cut(AnimHorizontalCut);
+            float roll = Random.value;
+            if (roll < slamChance) SwordSlam();
+            else if (roll < slamChance + comboChance) Cut(AnimCombo, 2f);
+            else if (roll < slamChance + comboChance + horizontalCutChance) Cut(AnimHorizontalCut);
+            else if (roll < slamChance + comboChance + horizontalCutChance + grabChance) Grab();
+            else Cut(AnimRisingCut, 1f);
             return;
         }
+
+        if (TryMidRange(distance)) return;
 
         if (distance >= throwMinDistance && distance <= throwMaxDistance && Time.time >= _nextThrow && CanPerformAction())
         {
@@ -230,48 +296,124 @@ public class InkShadow : BaseEnemy
         animator.SetTrigger(AnimSwordSlam);
     }
 
-    private void Cut(int trigger)
+    private void Cut(int trigger, float rest = 1.3f)
     {
         if (!CanPerformAction()) return;
 
         isAttacking = true;
-        attackCooldownTimer = attackCooldown * 1.3f;
+        attackCooldownTimer = attackCooldown * rest;
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         animator.SetTrigger(trigger);
+        if (trigger == AnimRisingCut) StartCoroutine(SlowWindUp());
     }
 
-    // From the clips' animation events.
+    // The rising cut's wind-up plays in slight slow motion; the cut itself snaps out at full speed.
+    private const float WindUpSpeed = 0.55f;
+    private IEnumerator SlowWindUp()
+    {
+        for (float t = 0f; !animator.GetCurrentAnimatorStateInfo(0).IsName(RisingCutState); t += Time.deltaTime)
+        {
+            if (t > 1.5f || IsDead()) yield break;
+            yield return null;
+        }
+        if (animator.speed != 1f) yield break; // frozen or slowed by something else: leave it be
+        animator.speed = WindUpSpeed;
+        while (animator.speed == WindUpSpeed && !IsDead())
+        {
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName(RisingCutState) || state.normalizedTime >= RisingCutStance) break;
+            yield return null;
+        }
+        if (animator.speed == WindUpSpeed) animator.speed = 1f; // something else set it meanwhile (a freeze): leave theirs
+    }
+
+    // A swing: the hitbox open, the blade leaving a trail, and its sound.
+    private void Swing(float damage, int poise)
+    {
+        if (swordHitbox != null) swordHitbox.EnableHitbox(damage, poise);
+        if (_swordTrail != null) { _swordTrail.Clear(); _swordTrail.emitting = true; }
+        PlayAttackSound();
+    }
+
+    // The player's camera jolts with its heavier moves, if they're near enough to feel them.
+    private void Shake(float magnitude)
+    {
+        if (PlayerCamera.Instance == null || player == null || GetDistanceToPlayer() > 25f) return;
+        PlayerCamera.Instance.Kick(player.position - transform.position, magnitude);
+    }
+
+    // Everything below here, to the end of the region, is called by the clips' animation events.
     public void EnableSwordSlamHitbox()
     {
-        if (swordHitbox != null) swordHitbox.EnableHitbox(swordSlamDamage, heavyAttackPoiseDamage);
-        PlayAttackSound();
+        Swing(swordSlamDamage, heavyAttackPoiseDamage);
         StartCoroutine(SlamLands());
     }
 
     // The blade comes up off the floor: ink where it leaves it.
     public void EnableRisingCutHitbox()
     {
-        if (swordHitbox != null) swordHitbox.EnableHitbox(risingCutDamage, heavyAttackPoiseDamage);
-        PlayAttackSound();
+        Swing(risingCutDamage, lightAttackPoiseDamage);
         EnemyFx.Impact(transform.position + transform.forward * strikeDistance, 1.8f, InkGlow);
+        Shake(0.06f);
     }
 
     public void EnableHorizontalCutHitbox()
     {
-        if (swordHitbox != null) swordHitbox.EnableHitbox(horizontalCutDamage, heavyAttackPoiseDamage);
-        PlayAttackSound();
+        Swing(horizontalCutDamage, heavyAttackPoiseDamage);
         EnemyFx.Slash(transform, 4.2f, 1.3f, InkGlow, -130f); // negative: right to left, the way the blade goes
+        Shake(0.07f);
+    }
+
+    // The combo: a cut right to left, the backhand back across, and an overhead chop.
+    public void EnableComboHitbox(int hit)
+    {
+        if (hit >= 3)
+        {
+            Swing(comboFinisherDamage, heavyAttackPoiseDamage);
+            StartCoroutine(SlamLands());
+            return;
+        }
+
+        Swing(comboHitDamage, lightAttackPoiseDamage);
+        EnemyFx.Slash(transform, 4.2f, 1.3f, InkGlow, hit == 1 ? -130f : 130f);
+        Shake(0.05f);
     }
 
     public void DisableSwordHitbox()
     {
         if (swordHitbox != null) swordHitbox.DisableHitbox();
+        if (_swordTrail != null) _swordTrail.emitting = false;
     }
 
     public void OnSwordSlamEnd() => OnAttackEnd();
     public void OnRisingCutEnd() => OnAttackEnd();
     public void OnHorizontalCutEnd() => OnAttackEnd();
+    public void OnComboEnd() => OnAttackEnd();
+
+    // Its weight on the floor as it walks.
+    public void Footstep()
+    {
+        if (navAgent == null || !navAgent.enabled || navAgent.velocity.sqrMagnitude < 0.5f) return;
+
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Enemies/Grunt_Footstep", transform.position);
+        if (GetDistanceToPlayer() < 12f) Shake(0.02f);
+    }
+
+    // Dying: the sword driven into the floor to lean on, then its knee coming down.
+    public void DeathSwordPlant()
+    {
+        Vector3 point = transform.position + transform.forward * 1.1f;
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", point);
+        EnemyFx.GroundCrack(point, 1.2f, InkGlow);
+    }
+
+    public void DeathKneel()
+    {
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Heavy", transform.position);
+        EnemyFx.Impact(transform.position, 2.6f, InkGlow);
+        Shake(0.12f);
+    }
     public void OnDodgeEnd() { } // the clip fires this, but Dodge times the step
 
     // The blade is still coming down when the hitbox opens: a splash of ink where it meets the floor.
@@ -284,6 +426,7 @@ public class InkShadow : BaseEnemy
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Slam", point);
         EnemyFx.Impact(point, 2.6f, InkGlow);
         EnemyFx.GroundCrack(point, 2.4f, InkGlow);
+        Shake(0.14f);
     }
 
     public override void OnAttackEnd()
@@ -302,8 +445,8 @@ public class InkShadow : BaseEnemy
     public void ThrowRelease() => _released = true;
 
     // The gap-closer. The sword thrown point first, curving after the player; the shadow bursts into ink as it lets go
-    // and, as the sword closes on them, appears in the air and catches it, frozen in the stance of the cut to come.
-    // It hangs there a moment (the time to read the cut and roll the right way), then drops into it.
+    // and, as the sword closes on them, appears in the air and catches it, held in the stance of the cut to come.
+    // The game slows while it falls out of the catch (the time to read the cut and roll the right way).
     private IEnumerator ThrowAndWarp()
     {
         _throwing = true;
@@ -329,6 +472,7 @@ public class InkShadow : BaseEnemy
         if (body != null) body.enabled = false;
         SetVisible(false);
         PlayAttackSound();
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Teleport", transform.position);
         EnemyFx.Impact(transform.position, 2.4f, InkGlow);
         EnemyFx.Strike(transform.position + Vector3.up * 2.5f, 2f, InkGlow);
 
@@ -337,7 +481,7 @@ public class InkShadow : BaseEnemy
 
         // Caught in the air: the stance of the cut it's about to make, hand where the sword was.
         bool rising = Random.value < risingCutChance;
-        foreach (int trigger in new[] { AnimRisingCut, AnimHorizontalCut, AnimSwordSlam, AnimThrow }) animator.ResetTrigger(trigger);
+        foreach (int trigger in new[] { AnimRisingCut, AnimHorizontalCut, AnimCombo, AnimSwordSlam, AnimThrow }) animator.ResetTrigger(trigger);
         Vector3 toPlayer = player.position - catchPoint;
         toPlayer.y = 0f;
         if (toPlayer.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(toPlayer);
@@ -349,21 +493,29 @@ public class InkShadow : BaseEnemy
         transform.position = HangPoint(transform.position);
         ReclaimSword();
         SetVisible(true);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Teleport", catchPoint);
         FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", catchPoint);
         EnemyFx.Strike(catchPoint, 1.6f, InkGlow);
+        Shake(0.1f);
 
-        yield return new WaitForSeconds(stanceHoldSeconds);
-
-        // Down to the floor below, and into the cut.
+        // The whole world slows as it falls out of the catch, held in its stance: the time to read the cut. Counted
+        // in real time, and only while time is running, so a menu opened over it doesn't use it up.
         Vector3 from = transform.position;
         Vector3 ground = EnemyFx.FloorUnder(from);
         if (NavMesh.SamplePosition(ground, out NavMeshHit hit, 3f, NavMesh.AllAreas)) ground = hit.position;
-        for (float elapsed = 0f; elapsed < DropSeconds; elapsed += Time.deltaTime)
+        _slowed = true;
+        for (float held = 0f; held < slowMoSeconds;)
         {
-            float u = elapsed / DropSeconds;
-            transform.position = Vector3.Lerp(from, ground, u * u);
+            if (Time.timeScale > 0f)
+            {
+                Time.timeScale = SlowMoScale; // every frame: a hit-stop ending would put it back to 1
+                held += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(held / slowMoSeconds);
+                transform.position = Vector3.Lerp(from, ground, u * u);
+            }
             yield return null;
         }
+        EndSlowMo();
         navAgent.Warp(ground);
         transform.position = ground; // root motion holds the transform while it's attacking, so move it too
         EnemyFx.Impact(ground, 2f, InkGlow);
@@ -374,6 +526,14 @@ public class InkShadow : BaseEnemy
         attackCooldownTimer = attackCooldown * 1.3f;
         _throwing = false;
         // The clip carries on from the stance and its events finish the attack (OnRisingCutEnd / OnHorizontalCutEnd).
+    }
+
+    private void EndSlowMo()
+    {
+        if (!_slowed) return;
+
+        _slowed = false;
+        if (Time.timeScale > 0f) Time.timeScale = 1f;
     }
 
     // Where it hangs after the catch: a leap, not a perch. No higher than MaxHangHeight off the floor, and pushed back
@@ -443,6 +603,8 @@ public class InkShadow : BaseEnemy
         navAgent.isStopped = true;
         navAgent.velocity = Vector3.zero;
         animator.SetTrigger(AnimDodgeBack);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Player/Player_Roll", transform.position);
+        EnemyFx.Impact(transform.position, 1.6f, InkGlow);
 
         Vector3 away = transform.position - player.position;
         away.y = 0f;
@@ -466,9 +628,13 @@ public class InkShadow : BaseEnemy
         chaseSpeed *= phaseTwoSpeedMultiplier;
         attackCooldown *= phaseTwoCooldownMultiplier;
         StoryDialogue.Say("Story_A3_P2_01", Speaker.Shadow, 1.2f);
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", transform.position);
+        Shake(0.15f);
 
         // Whatever it was doing, it spills now; a sword out of its hand comes back to it.
         StopAllCoroutines();
+        EndMoves();
+        EndSlowMo();
         _dodging = false;
         _throwing = false;
         animator.speed = 1f;
@@ -488,6 +654,7 @@ public class InkShadow : BaseEnemy
         animator.CrossFadeInFixedTime(IdleState, 0.1f);
 
         // Down into the floor: it flattens into a pool of itself.
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Teleport", transform.position);
         EnemyFx.Impact(transform.position, 3f, InkGlow);
         yield return Squash(transform.localScale.y / _scale.y, 0.04f, 0.45f);
         SetVisible(false);
@@ -519,6 +686,7 @@ public class InkShadow : BaseEnemy
         FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Slam", at);
         EnemyFx.Impact(at, diveRadius, InkGlow);
         EnemyFx.GroundCrack(at, diveRadius, InkGlow);
+        Shake(0.18f);
         HurtPlayerWithin(at, diveRadius);
         if (ring != null) ring.End();
         Destroy(pool.gameObject);
@@ -588,6 +756,8 @@ public class InkShadow : BaseEnemy
         hasOpenedWithCharge = true;
 
         currentHealth -= damage;
+        // Ink off it where it's struck (not for every tick of a burn).
+        if (!IsDotTick) EnemyFx.Strike(transform.position + Vector3.up * 2.4f + Random.insideUnitSphere * 0.6f, 1.1f, InkGlow);
         if (BossHealthBar.Instance != null) BossHealthBar.Instance.UpdateHealth(this, currentHealth, maxHealth, BossName);
 
         if (currentHealth <= 0)
@@ -600,6 +770,8 @@ public class InkShadow : BaseEnemy
         if (!_phaseTwo && currentHealth / maxHealth <= phaseTwoThreshold) StartPhaseTwo();
     }
 
+    public override float PhaseTwoAt => _phaseTwo ? 0f : phaseTwoThreshold;
+
     protected override void EnterHitStun() { } // it doesn't flinch
 
     protected override void Die()
@@ -608,8 +780,11 @@ public class InkShadow : BaseEnemy
         StoryDialogue.Say("Story_A3_Win_01", Speaker.Shadow);
         StoryDialogue.Say("Story_A3_Win_02");
 
+        EndSlowMo();
         DisableSwordHitbox();
         ReclaimSword(); // so that it dissolves with it
+        StopAllCoroutines();
+        EndMoves();
         animator.speed = 1f;
         base.Die();
     }

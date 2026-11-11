@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Localization;
 
-public class DemonBoss : BaseEnemy
+public partial class DemonBoss : BaseEnemy
 {
     // Bosses fight on their own terms: no attack tokens, and no one else's alarm wakes them.
     protected override bool UsesAttackTokens => false;
@@ -30,10 +30,6 @@ public class DemonBoss : BaseEnemy
     private float phaseTwoCooldownMultiplier = 0.67f;
 
     [Header("Charge")]
-    [SerializeField, Tooltip("How long the player can stay out of reach before the boss charges them")]
-    private float chargeAfterSeconds = 3f;
-    [SerializeField, Tooltip("The boss only charges a player at least this far away")]
-    private float chargeMinDistance = 6f;
     [SerializeField, Tooltip("The boss gives up a charge after this long")]
     private float chargeMaxSeconds = 2.5f;
 
@@ -83,6 +79,7 @@ public class DemonBoss : BaseEnemy
         base.Start();
         // Immediately mark this true so the boss skips the opener charge sequence from BaseEnemy
         hasOpenedWithCharge = true;
+        RaiseWards(); // the fight starts: up come the wards round the edge of his platform
     }
 
     protected override string AttackEvent => "event:/Boss/Boss_Attack";
@@ -212,7 +209,7 @@ public class DemonBoss : BaseEnemy
         bool swingStarted = playerSwinging && !_playerWasSwinging;
         _playerWasSwinging = playerSwinging;
 
-        if (isAttacking || isCharging || isStunned || isInHitStun || isDodging) return;
+        if (isAttacking || isCharging || isStunned || isInHitStun || isDodging || _rushing) return;
 
         float distance = GetDistanceToPlayer();
 
@@ -227,16 +224,14 @@ public class DemonBoss : BaseEnemy
         {
             _outOfReachSeconds = 0f;
             FacePlayer();
+            if (TryGrapple()) return;
             LightAttack();
         }
         else
         {
+            // Far enough off and it's ready: he charges, straight at them, and on into the ward behind them.
             _outOfReachSeconds += Time.deltaTime;
-            if (_outOfReachSeconds >= chargeAfterSeconds && distance >= chargeMinDistance)
-            {
-                ChargeAttack();
-                if (isCharging) return;
-            }
+            if (TryRush(distance)) return;
 
             ChasePlayer();
             FacePlayer();
@@ -289,6 +284,8 @@ public class DemonBoss : BaseEnemy
             return;
         }
     }
+
+    public override float PhaseTwoAt => isPhase2 || isIntermission ? 0f : phaseTwoThreshold;
 
     protected override void EnterHitStun()
     {
@@ -399,6 +396,7 @@ public class DemonBoss : BaseEnemy
         foreach (TrailRenderer trail in _bladeTrails) trail.emitting = false;
         _bladeTrails.Clear();
         if (_fury != null) _fury.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        StopRush();
 
         base.Die();
     }
@@ -407,6 +405,8 @@ public class DemonBoss : BaseEnemy
     {
         isIntermission = true;
         isPhase2 = true;
+        StopRush();
+        StartCoroutine(Enrage());
 
         chaseSpeed *= phaseTwoSpeedMultiplier;
         attackCooldown *= phaseTwoCooldownMultiplier;
@@ -448,7 +448,7 @@ public class DemonBoss : BaseEnemy
     private IEnumerator AttackResetFailsafe(float timeout)
     {
         yield return new WaitForSeconds(timeout);
-        if (isAttacking)
+        if (isAttacking && !_rushing) // a charge runs longer than any swing, and ends itself
         {
             Debug.LogError("[DemonBoss] Attack reset failsafe triggered: isAttacking was never set to false by OnAttackEnd().");
             isAttacking = false;
@@ -500,7 +500,7 @@ public class DemonBoss : BaseEnemy
 
     protected override bool CanPerformAction()
     {
-        return base.CanPerformAction() && !isIntermission && !isDodging;
+        return base.CanPerformAction() && !isIntermission && !isDodging && !_rushing;
     }
 
     protected override float FacePlayerTurnSpeed => facePlayerTurnSpeed;

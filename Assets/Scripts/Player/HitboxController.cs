@@ -64,6 +64,19 @@ public class HitboxController : MonoBehaviour
         // Don't hit ourselves
         if(other.transform.root == transform.root) return;
 
+        // A mirror to break, a ward to smash: something the fists can hit that isn't an enemy.
+        IPunchable punchable = other.GetComponentInParent<IPunchable>();
+        if (punchable != null)
+        {
+            if (_alreadyHit.Add(other.gameObject))
+            {
+                punchable.OnPunched(other.ClosestPoint(transform.position), _currentAttackType == CombatInput.Heavy);
+                FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", other.transform.position);
+                StartCoroutine(HitstopRoutine(0.05f));
+            }
+            return;
+        }
+
         ShieldHealth shieldHealth = other.GetComponentInParent<ShieldHealth>();
         if(shieldHealth != null)
         {
