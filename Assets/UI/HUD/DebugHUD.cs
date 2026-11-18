@@ -156,7 +156,7 @@ public class DebugHUD : MonoBehaviour
             ("Dungeon", () => DebugActions.LoadLevel("Dungeon Level")),
             ("Cave", () => DebugActions.LoadLevel("Cave Level")),
             ("Hell", () => DebugActions.LoadLevel("Hell Level")),
-            ("Tutorial", () => DebugActions.LoadLevel("Tutorial")),
+            ("Tutorial", () => DebugActions.LoadLevel(ArrivalTutorial.SceneName)),
         });
 
         BuildSection("Player / teleport", new List<(string, UnityEngine.Events.UnityAction)>
@@ -390,7 +390,7 @@ public static class DebugActions
     public static void LoadLevel(string sceneName)
     {
         // Pack the backpack so the gems carry over, unless this is the tutorial (which keeps nothing).
-        if (SceneManager.GetActiveScene().name != "Tutorial" && PersistentEquipment.Instance != null && InventoryManager.Instance != null)
+        if (SceneManager.GetActiveScene().name != ArrivalTutorial.SceneName && PersistentEquipment.Instance != null && InventoryManager.Instance != null)
         {
             PersistentEquipment.Instance.SaveEquipment(InventoryManager.Instance);
         }

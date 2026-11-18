@@ -20,10 +20,11 @@ public class AnimationBridge : MonoBehaviour
         float moveX = 0f;
         float moveZ = 0f;
 
-        // A disabled controller keeps reporting its last velocity, which would leave the player jogging on the spot.
+        // A disabled controller keeps reporting its last velocity, which would leave the player jogging on the spot,
+        // and so does a disabled PlayerMovement (a cutscene has the player): neither is moving him, so he's standing.
         // PlayerMovement's Velocity covers the whole frame, stair snapping included; the controller's own velocity
         // only covers its last Move, which on stairs is just the step down.
-        Vector3 velocity = _controller.enabled ? _movement.Velocity : Vector3.zero;
+        Vector3 velocity = _controller.enabled && _movement.enabled ? _movement.Velocity : Vector3.zero;
 
         if (_movement.isTargetLocked)
         {

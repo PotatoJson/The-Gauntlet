@@ -172,15 +172,19 @@ public class MainMenuManager : MonoBehaviour
         Time.timeScale = 1f;
         StoryDialogue.NewRun();
 
+        // A first-timer lands in the tutorial (the bottom of the pit); after that, runs start in the Dungeon.
+        ArrivalTutorial.ReplayFromMenu = false;
+        string firstScene = ArrivalTutorial.Done ? "Dungeon Level" : ArrivalTutorial.SceneName;
+
         if (!withPrologue)
         {
-            SceneManager.LoadScene("Dungeon Level");
+            SceneManager.LoadScene(firstScene);
             return;
         }
 
         // The prologue, over the faded-out menu: the night Hell took the knight's family and his sword shattered.
-        // It ends by falling into the pit, straight into the Dungeon.
-        StoryDialogue.Tell(() => SceneManager.LoadScene("Dungeon Level"), "Story_Pro_03", new Vector2(0.5f, 0.33f),
+        // It ends by falling into the pit, and the next scene opens on him falling.
+        StoryDialogue.Tell(() => SceneManager.LoadScene(firstScene), "Story_Pro_03", new Vector2(0.5f, 0.33f),
             ("Story_Pro_01", Speaker.Narrator),
             ("Story_Pro_02", Speaker.Narrator),
             ("Story_Pro_03", Speaker.Narrator),
@@ -236,7 +240,9 @@ public class MainMenuManager : MonoBehaviour
         Time.timeScale = 1f;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
-        FadeThen(() => SceneManager.LoadScene("Tutorial"));
+        // The tutorial again, on its own: its portal leads back here instead of into a run.
+        ArrivalTutorial.ReplayFromMenu = true;
+        FadeThen(() => SceneManager.LoadScene(ArrivalTutorial.SceneName));
     }
     public void CloseSettings()
     {

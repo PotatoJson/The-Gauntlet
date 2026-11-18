@@ -31,6 +31,7 @@ public class EyeEnemy : BaseEnemy
     private bool hasFiredThisAttack;
     private Coroutine deathRoutine;
     private EyeChargeFx chargeFx;
+    private float scriptedShotDamage; // set by FireNow, for that one shot
 
     private Vector3 FireballChargePoint => fireballSpawnPoint.position + transform.TransformDirection(fireballChargeOffset);
 
@@ -153,6 +154,21 @@ public class EyeEnemy : BaseEnemy
         StartCoroutine(ChargeThenShoot());
     }
 
+    /// <summary>
+    /// Charges and fires one shot at the player right now, whatever it was doing, for this much damage. For scripted
+    /// moments, like the tutorial's ambush.
+    /// </summary>
+    public void FireNow(float damage)
+    {
+        scriptedShotDamage = damage;
+        isAttacking = true;
+        hasFiredThisAttack = false;
+        fireballTimer = fireballCooldown;
+        if (navAgent != null && navAgent.isOnNavMesh) navAgent.isStopped = true;
+
+        StartCoroutine(ChargeThenShoot());
+    }
+
     private System.Collections.IEnumerator ChargeThenShoot()
     {
         if (fireballSpawnPoint != null)
@@ -195,6 +211,7 @@ public class EyeEnemy : BaseEnemy
     {
         if (chargeFx != null) chargeFx.Cancel();
         chargeFx = null;
+        scriptedShotDamage = 0f;
     }
 
     /// <summary>
@@ -205,6 +222,8 @@ public class EyeEnemy : BaseEnemy
     {
         if (hasFiredThisAttack) return;
         hasFiredThisAttack = true;
+        float shotDamage = scriptedShotDamage;
+        scriptedShotDamage = 0f;
 
         if (fireballPrefab != null && fireballSpawnPoint != null)
         {
@@ -230,6 +249,7 @@ public class EyeEnemy : BaseEnemy
                 projectile.Initialize(gameObject);
                 projectile.SetDirection(directionToPlayer);
                 projectile.stopOnEnvironment = true; // bursts on walls instead of flying through them
+                if (shotDamage > 0f) projectile.Damage = shotDamage;
             }
 
             ApplyRecoil();

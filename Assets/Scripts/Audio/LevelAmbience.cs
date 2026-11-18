@@ -12,6 +12,7 @@ public class LevelAmbience : MonoBehaviour
 {
     private static readonly Dictionary<string, string> EventByScene = new Dictionary<string, string>
     {
+        { ArrivalTutorial.SceneName, "event:/Ambience/Amb_Hell" }, // the bottom of the pit
         { "Dungeon Level", "event:/Ambience/Amb_Dungeon" },
         { "Cave Level", "event:/Ambience/Amb_Cave" },
         { "Hell Level", "event:/Ambience/Amb_Hell" },

@@ -73,6 +73,9 @@ public class PlayerHealth : MonoBehaviour
 
     public bool IsDead => _currentHealth <= 0;
     public float HealthPercentage => _currentHealth / maxHealth;
+
+    /// <summary>Ends the short invincibility after a hit, so a scripted hit (the tutorial's ambush) is sure to land.</summary>
+    public void EndHitInvincibility() => isInvincible = false;
     public float CurrentHealth => _currentHealth;
 
     public GameObject LastCheckPoint;

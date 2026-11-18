@@ -61,9 +61,17 @@ public class GauntletInteractable : MonoBehaviour
 
     private void GenerateRandomLoot()
     {
+        // One gauntlet (the tutorial's chest): that one, plain, and no second choice.
+        if (PossibleGauntlets != null && PossibleGauntlets.Count == 1)
+        {
+            GauntletPrefabA = PossibleGauntlets[0];
+            RarityA = GauntletRarity.Common;
+            return;
+        }
+
         if (PossibleGauntlets == null || PossibleGauntlets.Count < 2)
         {
-            Debug.LogError("GauntletInteractable needs at least 2 gauntlets in its PossibleGauntlets list!");
+            Debug.LogError("GauntletInteractable needs at least 1 gauntlet in its PossibleGauntlets list!");
             return;
         }
 

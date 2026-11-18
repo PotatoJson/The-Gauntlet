@@ -148,12 +148,14 @@ public class GauntletChoiceUI : MonoBehaviour
     {
         _activeInteractable = interactable;
         _isOpening = true;
-        StoryDialogue.SayOnce("Story_Chest_01");
+        if (interactable.GauntletPrefabB != null) StoryDialogue.SayOnce("Story_Chest_01"); // "Two pairs of gauntlets..."
         _isWarningActive = false; // Reset warning state
         if (WarningPanel != null) WarningPanel.SetActive(false);
 
         gameObject.SetActive(true);
         Time.timeScale = 0f;
+        // Or the click that picks a gauntlet is also a punch, thrown the moment time runs again.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.Suspend(this);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
 
@@ -162,6 +164,8 @@ public class GauntletChoiceUI : MonoBehaviour
 
         _spawnedPrefabA = SetupChoice(ButtonA, NameTextA, SlotsTextA, SecondaryTextA, GauntletAnchorA, interactable.GauntletPrefabA, interactable.RarityA);
         _spawnedPrefabB = SetupChoice(ButtonB, NameTextB, SlotsTextB, SecondaryTextB, GauntletAnchorB, interactable.GauntletPrefabB, interactable.RarityB);
+        // A chest with a single gauntlet (the tutorial's) shows only that one.
+        ButtonB.gameObject.SetActive(interactable.GauntletPrefabB != null);
 
         /*Navigation navA = new Navigation { mode = Navigation.Mode.Explicit };
         navA.selectOnLeft = ButtonB;
@@ -299,6 +303,7 @@ public class GauntletChoiceUI : MonoBehaviour
 
         gameObject.SetActive(false);
         Time.timeScale = 1f;
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
 
         // Hide cursor and unlock game since we backed out
         Cursor.visible = false;
@@ -406,6 +411,8 @@ public class GauntletChoiceUI : MonoBehaviour
             InventoryManager.Instance.TryEquipNewGauntlet(chosenPrefab, chosenRarity);
             if (_activeInteractable != null) _activeInteractable.CompleteInteraction();
         }
+        // The character screen holds input now (it suspends it as it opens); this only drops our hold.
+        if (GameplayInputGate.Instance != null) GameplayInputGate.Instance.RestoreWhenReleased(this);
     }
 
     private Color GetRarityColor(GauntletRarity rarity)

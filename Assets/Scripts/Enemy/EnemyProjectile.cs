@@ -11,6 +11,9 @@ public class EnemyProjectile : MonoBehaviour
     [SerializeField] private ImpactFx impactPrefab;
     [SerializeField] private float impactRadius = 1.2f;
 
+    /// <summary>What it does to the player. A scripted shot can set its own.</summary>
+    public float Damage { get => damage; set => damage = value; }
+
     /// <summary>Off for the Caster's fireballs: it plays its own landing burst where they hit the ground.</summary>
     [System.NonSerialized] public bool spawnImpactOnHit = true;
 

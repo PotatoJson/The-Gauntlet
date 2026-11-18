@@ -19,6 +19,8 @@ public partial class InventoryManager : MonoBehaviour
     [Header("Starting Equipment")]
     [SerializeField] private GameObject defaultGauntletPrefab;
     public GameObject DefaultGauntletPrefab => defaultGauntletPrefab;
+    /// <summary>While set, a scene starts with bare hands instead of the default gauntlets (the tutorial hands them out).</summary>
+    public static bool StartEmptyHanded;
     [HideInInspector] public GameObject activePrimaryPrefab;
     [HideInInspector] public GameObject activeSecondaryPrefab;
 
@@ -252,6 +254,17 @@ public Transform primaryGauntlet;
     /// this frame (PlayerStatsManager.SyncWithUI, for one) could then read the dying gauntlet
     /// instead of the new one.
     /// </summary>
+    /// <summary>Bare hands: takes both gauntlets off (the tutorial starts like this; its chest hands one out).</summary>
+    public void RemoveAllGauntlets()
+    {
+        ClearGauntletContainer(primaryGauntlet);
+        ClearGauntletContainer(secondaryGauntlet);
+        activePrimaryPrefab = activeSecondaryPrefab = null;
+
+        PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+        if (stats != null) stats.SyncWithUI(primaryGauntlet, secondaryGauntlet);
+    }
+
     private void ClearGauntletContainer(Transform container)
     {
         if (container == null) return;
@@ -293,7 +306,7 @@ public Transform primaryGauntlet;
     public void InitializeDefaultEquipment()
     {
         // Don't do anything if we forgot to assign the prefab in the Inspector
-        if (defaultGauntletPrefab == null) return;
+        if (defaultGauntletPrefab == null || StartEmptyHanded) return;
 
         // 1. If Primary is empty, spawn a Basic Primary Gauntlet
         if (primaryGauntlet != null && primaryGauntlet.childCount == 0)

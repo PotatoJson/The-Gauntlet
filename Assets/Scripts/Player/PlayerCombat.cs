@@ -340,7 +340,8 @@ public class PlayerCombat : MonoBehaviour
 
     #endregion
 
-    private void UsePotion()
+    /// <summary>Drinks a potion if he can (standing or walking, hurt, with one left). Also what the Heal key does.</summary>
+    public void UsePotion()
     {
         PlayerState currentState = _stateManager.GetCurrentState();
         if(currentState != PlayerState.Idle && currentState != PlayerState.Walking) return;

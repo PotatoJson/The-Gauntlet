@@ -123,12 +123,18 @@ public class CutsceneCamera : MonoBehaviour
 
     private IEnumerator Bars(float from, float to, float seconds)
     {
-        for (float elapsed = 0f; elapsed <= seconds; elapsed += Time.unscaledDeltaTime)
+        for (float elapsed = 0f; elapsed < seconds; elapsed += Time.unscaledDeltaTime)
         {
-            float height = Screen.height * BarHeight * Mathf.Lerp(from, to, elapsed / seconds);
-            _top.sizeDelta = new Vector2(0f, height);
-            _bottom.sizeDelta = new Vector2(0f, height);
+            SetBars(Mathf.Lerp(from, to, elapsed / seconds));
             yield return null;
         }
+        SetBars(to); // a long first frame (a cutscene starting on a hitch) must still end with the bars in
+    }
+
+    private void SetBars(float amount)
+    {
+        float height = Screen.height * BarHeight * amount;
+        _top.sizeDelta = new Vector2(0f, height);
+        _bottom.sizeDelta = new Vector2(0f, height);
     }
 }

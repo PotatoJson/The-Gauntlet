@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,11 @@ public class ChamberData
 
     [Tooltip("The trigger collider that the player walks into to start the spawn. Leave blank if Spawn On Start is true.")]
     public List<Collider> chamberTriggers = new List<Collider>();
+
+    [Tooltip("Roll a new fight every run: the spawn points below set the room's difficulty and where enemies stand, " +
+             "and the roll picks a fresh mix of enemies for them (see EncounterRoller). Untick for a scripted room " +
+             "that must always spawn exactly what's placed.")]
+    public bool randomizeEncounter = true;
 
     [Header("Spawn Point Containers")]
     [Tooltip("Parent GameObject containing all Grunt spawn points. Leave empty if none.")]
@@ -58,6 +64,9 @@ public class ChamberData
     [HideInInspector] public bool hasSpawned = false;
     [HideInInspector] public bool isCleared = false;
     [HideInInspector] public List<GameObject> activeEnemies = new List<GameObject>();
+    // Rolled waves still to come; the room isn't clear until they've come and been beaten.
+    [System.NonSerialized] public List<List<EncounterRoller.Spawn>> pendingWaves = new List<List<EncounterRoller.Spawn>>();
+    [System.NonSerialized] public bool waveIncoming;
 }
 
 public class EnemySpawner : MonoBehaviour
@@ -84,6 +93,16 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private float enemyHealthMultiplier = 1f;
     [Tooltip("...and its hits do this much damage: 1 is the prefab's own.")]
     [SerializeField] private float enemyDamageMultiplier = 1f;
+
+    [Header("Random Encounters")]
+    [SerializeField, Range(0f, 0.5f), Tooltip("A rolled room's budget varies this much either way from what was placed.")]
+    private float encounterBudgetVariance = 0.15f;
+    [SerializeField, Tooltip("A rolled room with more enemies than this (plus a couple) comes in waves of about this many.")]
+    private int enemiesPerWave = 7;
+    [SerializeField, Tooltip("No room comes in more waves than this; a bigger room just has bigger waves.")]
+    private int maxWaves = 3;
+    [SerializeField, Tooltip("The next wave comes when this many of the current one are left.")]
+    private int nextWaveAt = 1;
 
     // Every enemy comes through here, so the level's difficulty reaches all of them.
     private GameObject SpawnEnemy(GameObject prefab, Vector3 position, Quaternion rotation)
@@ -174,14 +193,19 @@ public class EnemySpawner : MonoBehaviour
             MetricsTracker.Instance.StartChamber(chamber.chamberName, startingHealth);
         }
 
-        // Spawn standard enemy types from their containers
-        SpawnEnemyType(gruntPrefab, chamber.gruntSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(peeperPrefab, chamber.peeperSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(casterPrefab, chamber.casterSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(shieldPrefab, chamber.shieldSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(spinningPrefab, chamber.spinningSpawnPoints, chamber.activeEnemies);
-        SpawnEnemyType(biterPrefab, chamber.biterSpawnPoints, chamber.activeEnemies);
+        if (chamber.randomizeEncounter)
+        {
+            chamber.pendingWaves = EncounterRoller.Roll(this, chamber, encounterBudgetVariance, enemiesPerWave, maxWaves);
+            if (chamber.pendingWaves.Count > 0)
+            {
+                SpawnWave(chamber, chamber.pendingWaves[0]);
+                chamber.pendingWaves.RemoveAt(0);
+            }
+        }
+        else
+        {
+            SpawnPlaced(chamber);
+        }
 
         // Each boss entry picks its own prefab, so a chamber can spawn several different bosses.
         foreach (BossSpawnPoint bossSpawn in chamber.bossSpawns)
@@ -192,6 +216,57 @@ public class EnemySpawner : MonoBehaviour
             chamber.activeEnemies.Add(spawnedBoss);
             FMODUnity.RuntimeManager.PlayOneShot("event:/Boss/Boss_Roar", bossSpawn.spawnPoint.position);
         }
+    }
+
+    private void SpawnWave(ChamberData chamber, List<EncounterRoller.Spawn> wave)
+    {
+        foreach (EncounterRoller.Spawn spawn in wave)
+            chamber.activeEnemies.Add(SpawnEnemy(spawn.Prefab, spawn.Position, spawn.Rotation));
+    }
+
+    // A later wave is telegraphed: the floor flares where each one will appear, then they're there. Any spawn too
+    // close to the player moves to the room's spawn point farthest from them, so nothing appears on top of them.
+    private IEnumerator NextWave(ChamberData chamber)
+    {
+        chamber.waveIncoming = true;
+        List<EncounterRoller.Spawn> wave = chamber.pendingWaves[0];
+        chamber.pendingWaves.RemoveAt(0);
+
+        PlayerHealth player = FindFirstObjectByType<PlayerHealth>();
+        if (player != null)
+        {
+            List<Transform> points = EncounterRoller.SpawnPoints(chamber);
+            for (int i = 0; i < wave.Count; i++)
+            {
+                if (Vector3.Distance(wave[i].Position, player.transform.position) >= 5f || points.Count == 0) continue;
+
+                Transform far = points[0];
+                foreach (Transform point in points)
+                    if ((point.position - player.transform.position).sqrMagnitude > (far.position - player.transform.position).sqrMagnitude) far = point;
+                EncounterRoller.Spawn moved = wave[i];
+                moved.Position = EncounterRoller.OnNavMesh(far.position + new Vector3(Random.Range(-1.5f, 1.5f), 0f, Random.Range(-1.5f, 1.5f)));
+                wave[i] = moved;
+            }
+        }
+
+        if (wave.Count > 0) FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Teleport", wave[0].Position);
+        foreach (EncounterRoller.Spawn spawn in wave) EnemyFx.Impact(spawn.Position, 1.6f, EnemyFx.Hell);
+        yield return new WaitForSeconds(0.8f);
+
+        SpawnWave(chamber, wave);
+        chamber.waveIncoming = false;
+    }
+
+    // The room exactly as it was placed: one enemy on every spawn point.
+    private void SpawnPlaced(ChamberData chamber)
+    {
+        SpawnEnemyType(gruntPrefab, chamber.gruntSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(elitePrefab, chamber.eliteSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(peeperPrefab, chamber.peeperSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(casterPrefab, chamber.casterSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(shieldPrefab, chamber.shieldSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(spinningPrefab, chamber.spinningSpawnPoints, chamber.activeEnemies);
+        SpawnEnemyType(biterPrefab, chamber.biterSpawnPoints, chamber.activeEnemies);
     }
 
     // A boss with an intro cutscene is already standing there when the player arrives.
@@ -239,6 +314,16 @@ public class EnemySpawner : MonoBehaviour
     {
         // Clean out any destroyed enemies from the list (since they get Destroy()'d on death)
         chamber.activeEnemies.RemoveAll(enemy => enemy == null);
+
+        if (chamber.waveIncoming) return;
+        if (chamber.pendingWaves.Count > 0)
+        {
+            int alive = 0;
+            foreach (GameObject enemy in chamber.activeEnemies)
+                if (enemy.TryGetComponent(out BaseEnemy stats) && !stats.IsDead()) alive++;
+            if (alive <= nextWaveAt) StartCoroutine(NextWave(chamber));
+            return;
+        }
 
         // If there are no active enemies left, the chamber is complete
         if (chamber.activeEnemies.Count == 0)
@@ -313,6 +398,7 @@ public class EnemySpawner : MonoBehaviour
             }
         }
         chamber.activeEnemies.Clear();
+        chamber.pendingWaves.Clear();
 
         // Mark the chamber as cleared
         chamber.isCleared = true;
@@ -341,6 +427,7 @@ public class EnemySpawner : MonoBehaviour
                 if (enemy != null) Destroy(enemy);
             }
             chamber.activeEnemies.Clear();
+        chamber.pendingWaves.Clear();
 
             chamber.hasSpawned = true;
             chamber.isCleared = true;

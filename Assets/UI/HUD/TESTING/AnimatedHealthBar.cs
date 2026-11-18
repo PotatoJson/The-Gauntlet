@@ -28,6 +28,8 @@ public class AnimatedHealthBar : MonoBehaviour
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged += HandleHealthChanged;
+            // Hidden a while (a cutscene hides the HUD), it missed whatever happened meanwhile: catch up now.
+            if (playerHealth.MaxHealth > 0) HandleHealthChanged(playerHealth.CurrentHealth, playerHealth.MaxHealth);
         }
     }
 
@@ -79,5 +81,6 @@ public class AnimatedHealthBar : MonoBehaviour
         // and don't accidentally wrap around to the first frame (full state).
         float animationScrubTime = Mathf.Clamp(1f - percent, 0f, 0.99f);
         _animator.Play(animationStateName, 0, animationScrubTime);
+        _animator.Update(0f); // shown now, even while time is stopped (a scaled-time animator wouldn't advance)
     }
 }
