@@ -23,6 +23,9 @@ public class PlayerMovement : MonoBehaviour
     
     [Header("Combat Settings")]
     public bool isTargetLocked = false;
+    /// <summary>Bow out (PlayerBow): strafe facing where the camera looks, slower, no sprint.</summary>
+    [System.NonSerialized] public bool Aiming;
+    private const float AimSpeedScale = 0.7f;
     
     [Header("Roll Settings")]
     public AnimationCurve rollSpeedCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
@@ -436,7 +439,7 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f && !isHealing;
+        bool actualSprint = _isSprinting && _moveInput.magnitude > 0.1f && !isHealing && !Aiming;
 
         if (actualSprint && _stateManager.IsInCombat)
         {
@@ -467,7 +470,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 moveDir = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
 
-        if (isTargetLocked && !actualSprint)
+        if ((isTargetLocked || Aiming) && !actualSprint)
         {
             if (camForward != Vector3.zero)
             {
@@ -487,6 +490,7 @@ public class PlayerMovement : MonoBehaviour
         _targetSpeed = actualSprint ? sprintSpeed : walkSpeed;
 
         if(isHealing) _targetSpeed = walkSpeed * 0.65f;
+        if (Aiming) _targetSpeed = walkSpeed * AimSpeedScale;
         _smoothSpeed = Mathf.Lerp(_smoothSpeed, _targetSpeed, 10f * Time.deltaTime);
         
         // Save the speed instead of moving directly

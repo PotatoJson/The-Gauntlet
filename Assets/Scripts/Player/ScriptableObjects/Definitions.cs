@@ -68,7 +68,8 @@ public enum SkillCategory
     Buff,
     Parry,
     Wave,
-    Cleave
+    Cleave,
+    Bow, // a toggle, not a cast: the gauntlet becomes a bow (PlayerBow). Appended last: assets store this by number.
 }
 
 public class Definitions : MonoBehaviour

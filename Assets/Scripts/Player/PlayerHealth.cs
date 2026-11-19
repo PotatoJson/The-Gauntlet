@@ -76,6 +76,49 @@ public class PlayerHealth : MonoBehaviour
 
     /// <summary>Ends the short invincibility after a hit, so a scripted hit (the tutorial's ambush) is sure to land.</summary>
     public void EndHitInvincibility() => isInvincible = false;
+
+    // Crystallise (an Earth reaction): a crystal shield that takes the next hit, for a few seconds.
+    private float _crystalUntil;
+    private GroundFx _crystalRing;
+    private GameObject _crystalAura;
+
+    public void GrantCrystalShield(float seconds, Color colour)
+    {
+        _crystalUntil = Time.time + seconds;
+        if (_crystalRing == null) _crystalRing = EnemyFx.Ring(transform, 1.1f, colour, 0.05f, 60f);
+        if (_crystalAura == null && ReactionVfx.Instance != null)
+            _crystalAura = ReactionVfx.Play(ReactionVfx.Instance.shieldAura, transform.position + Vector3.down * 0.9f, 1.4f, transform);
+        StopCoroutine(nameof(CrystalExpiry));
+        StartCoroutine(nameof(CrystalExpiry));
+    }
+
+    private IEnumerator CrystalExpiry()
+    {
+        while (Time.time < _crystalUntil) yield return null;
+        EndCrystalShield();
+    }
+
+    private void EndCrystalShield()
+    {
+        _crystalUntil = 0f;
+        if (_crystalRing != null) _crystalRing.End();
+        _crystalRing = null;
+        if (_crystalAura != null) Destroy(_crystalAura);
+        _crystalAura = null;
+    }
+
+    // True if the shield took this hit (it breaks doing so).
+    private bool CrystalShieldTakes()
+    {
+        if (Time.time >= _crystalUntil) return false;
+        EndCrystalShield();
+        FMODUnity.RuntimeManager.PlayOneShot("event:/Environment/Glass_Shatter", transform.position);
+        EnemyFx.Impact(transform.position, 1.6f, ElementReactions.EarthColour);
+        if (ReactionVfx.Instance != null) ReactionVfx.Play(ReactionVfx.Instance.shieldBreak, transform.position, 1.6f);
+        isInvincible = true; // the rest of that attack doesn't get through either
+        invincibilityTimer = invincibilityDuration;
+        return true;
+    }
     public float CurrentHealth => _currentHealth;
 
     public GameObject LastCheckPoint;
@@ -273,6 +316,7 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("TakeDamage Test");
         if (IsDead || isInvincible) return;
         if (DebugInvincible) return;
+        if (CrystalShieldTakes()) return;
 
         PlayerMovement movement = GetComponent<PlayerMovement>();
         if (movement != null && movement.IsInvincibleViaRoll)

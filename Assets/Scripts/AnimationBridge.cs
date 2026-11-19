@@ -26,7 +26,7 @@ public class AnimationBridge : MonoBehaviour
         // only covers its last Move, which on stairs is just the step down.
         Vector3 velocity = _controller.enabled && _movement.enabled ? _movement.Velocity : Vector3.zero;
 
-        if (_movement.isTargetLocked)
+        if (_movement.isTargetLocked || _movement.Aiming) // strafing: facing one way, moving any way
         {
             Vector3 localVelocity = transform.InverseTransformDirection(velocity);
             moveX = localVelocity.x / _movement.walkSpeed;

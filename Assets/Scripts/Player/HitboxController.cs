@@ -30,11 +30,13 @@ public class HitboxController : MonoBehaviour
     }
 
     private AttackPassive _passive;
+    private ElementType _element; // this fist's gauntlet's element, for reactions with the other fist
 
     public void EnableCollider(int damage, int poise, CombatInput attackType, ElementType element, AttackPassive passive = default)
     {
         _alreadyHit.Clear();
         _passive = passive;
+        _element = element;
         _currentDamage = damage;
         _currentPoiseDamage = poise;
         _currentAttackType = attackType;
@@ -121,6 +123,8 @@ public class HitboxController : MonoBehaviour
 
                 // Passive skill gem in this fist's gauntlet: burn / chain lightning / frost.
                 AttackPassiveEffects.OnHit(_passive, enemyScript, _currentDamage, _currentAttackType, this);
+                // Two gauntlets of different elements: this fist's element meets the other fist's mark.
+                ElementReactions.OnPunch(this, _element, _passive, enemyScript, _currentDamage);
 
                 if (_currentAttackType == CombatInput.Heavy)
                 {

@@ -174,6 +174,7 @@ public class DebugHUD : MonoBehaviour
             ("Fly: off", ToggleFly),
             ("Invincible: off", ToggleInvincible),
             ("Stamina: normal", ToggleInfiniteStamina),
+            ("Mana: normal", ToggleInfiniteMana),
         });
 
         // One button per gauntlet the game knows about.
@@ -190,6 +191,22 @@ public class DebugHUD : MonoBehaviour
             gauntlets.Add((prefab.name.Replace("Gauntlet", "").Replace("(Clone)", "").Trim(), () => SpawnGauntlet(captured)));
         }
         if (gauntlets.Count > 0) BuildSection("Spawn gauntlet", gauntlets);
+
+        // One button per gem the game knows about (the Backpack's list, which is every gem that can drop or be saved).
+        var gems = new List<(string, UnityEngine.Events.UnityAction)>();
+        if (PersistentEquipment.Instance != null)
+        {
+            foreach (GameObject prefab in PersistentEquipment.Instance.masterGemDatabase)
+            {
+                if (prefab == null) continue;
+                GameObject captured = prefab;
+                DraggableGem gem = prefab.GetComponent<DraggableGem>();
+                string label = gem != null && gem.LinkedGemData != null && !string.IsNullOrEmpty(gem.LinkedGemData.Name)
+                    ? gem.LinkedGemData.Name : prefab.name;
+                gems.Add((label, () => SpawnGem(captured)));
+            }
+        }
+        if (gems.Count > 0) BuildSection("Spawn gem", gems);
         RefreshToggles();
 
         rootGo.SetActive(false);
@@ -282,6 +299,27 @@ public class DebugHUD : MonoBehaviour
     #endregion
 
     #region Actions that need this component's references
+    /// <summary>
+    /// Offers this one gem in the level-up reward screen, as if it had been rolled: drag it into whichever gauntlet's
+    /// socket you want (skill gems into the skill slot), or merge it with one you have.
+    /// </summary>
+    public void SpawnGem(GameObject gemPrefab)
+    {
+        RewardMenuManager rewards = RewardMenuManager.Instance != null ? RewardMenuManager.Instance : FindFirstObjectByType<RewardMenuManager>(FindObjectsInactive.Include);
+        if (rewards == null)
+        {
+            Debug.LogWarning("[DebugMenu] No RewardMenuManager in this scene.");
+            return;
+        }
+
+        Debug.Log($"[DebugMenu] Offering {gemPrefab.name}");
+        rewards.SetNextRewards(new[] { gemPrefab });
+        rewards.OpenRewardMenu();
+        // Then out of the way. In this order: the screen has frozen time, so hiding leaves its cursor alone. The other
+        // way round locked the cursor and the screen unlocked it the same frame, which leaves it hidden until alt-tab.
+        Apply(State.Hidden);
+    }
+
     public void SpawnGauntlet(GameObject gauntletPrefab)
     {
         if (inventoryManager == null) inventoryManager = InventoryManager.Instance;
@@ -295,8 +333,8 @@ public class DebugHUD : MonoBehaviour
         GauntletRarity rarity = (GauntletRarity)Random.Range(0, 3);
         Debug.Log($"[DebugMenu] Spawning {gauntletPrefab.name} with rarity {rarity}");
 
-        Apply(State.Hidden); // get out of the way: the inventory takes over the screen
         inventoryManager.TryEquipNewGauntlet(gauntletPrefab, rarity);
+        Apply(State.Hidden); // after the screen is up, for the cursor's sake (see SpawnGem)
     }
 
     // The button shows whether flying is on. It's named after its first label ("Fly: off").
@@ -318,12 +356,19 @@ public class DebugHUD : MonoBehaviour
         RefreshToggles();
     }
 
+    private void ToggleInfiniteMana()
+    {
+        PlayerMana.DebugInfinite = !PlayerMana.DebugInfinite;
+        RefreshToggles();
+    }
+
     // The settings outlive the menu (a death or restart rebuilds it), so the labels are read back from them.
     private void RefreshToggles()
     {
         SetLabel("Fly: off", DebugFly.IsOn ? "Fly: ON" : "Fly: off");
         SetLabel("Invincible: off", PlayerHealth.DebugInvincible ? "Invincible: ON" : "Invincible: off");
         SetLabel("Stamina: normal", PlayerStamina.DebugInfinite ? "Stamina: INFINITE" : "Stamina: normal");
+        SetLabel("Mana: normal", PlayerMana.DebugInfinite ? "Mana: INFINITE" : "Mana: normal");
     }
 
     private void SetLabel(string button, string text)

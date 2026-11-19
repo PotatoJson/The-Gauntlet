@@ -319,7 +319,7 @@ public class GauntletChoiceUI : MonoBehaviour
         GauntletManager gmInfo = prefab.GetComponent<GauntletManager>();
         string localizedName = (gmInfo != null && gmInfo.LinkedGauntletData != null) ? gmInfo.LinkedGauntletData.Name : prefab.name;
 
-        nameTxt.text = $"{localizedName}\n<size=70%>{rarity}</size>";
+        nameTxt.text = $"{localizedName}\n<size=70%>{rarity}</size>" + ReactionPreview(gmInfo != null ? gmInfo.LinkedGauntletData : null);
 
         int rarityBonus = (int)rarity;
         int pSlots = 3 + rarityBonus;
@@ -353,6 +353,32 @@ public class GauntletChoiceUI : MonoBehaviour
         btn.onClick.RemoveAllListeners();
         btn.onClick.AddListener(() => OnGauntletChosen(prefab, rarity));
         return visualGauntlet;
+    }
+
+    // What this gauntlet would make with each one being worn ("Shatter with your Fire Gauntlet"), in the reaction's
+    // colour, so picking a gauntlet is picking a reaction. Nothing for no reaction (same element, the plain gauntlet).
+    private static string ReactionPreview(GauntletData offered)
+    {
+        if (offered == null) return "";
+        PlayerStatsManager stats = FindFirstObjectByType<PlayerStatsManager>();
+        if (stats == null) return "";
+
+        string lines = "";
+        var shown = new System.Collections.Generic.HashSet<ElementReaction>();
+        foreach (RunTimeGauntlet worn in new[] { stats.PrimaryGauntlet, stats.SecondaryGauntlet })
+        {
+            if (worn == null || worn.BaseGauntlet == null) continue;
+            ElementReaction reaction = ElementReactions.Between(offered.Element, worn.BaseGauntlet.Element);
+            if (reaction == ElementReaction.None || !shown.Add(reaction)) continue;
+
+            // A deep shade of the reaction's colour: the bright one vanishes on the card's pale paper.
+            Color deep = Color.Lerp(ElementReactions.ColourOf(reaction, offered.Element, worn.BaseGauntlet.Element), Color.black, 0.45f);
+            string colour = ColorUtility.ToHtmlStringRGB(deep);
+            string words = new LocalizedString("UIStrings", "React_With").GetLocalizedString(
+                ElementReactions.Name(reaction).TrimEnd('!', '！'), worn.BaseGauntlet.Name);
+            lines += $"\n<size=62%><b><color=#{colour}>{words}</color></b></size>";
+        }
+        return lines;
     }
 
     // It came out of a chest, so no arm and no skin showing: the bare fingers swap for gloved ones of the same name.

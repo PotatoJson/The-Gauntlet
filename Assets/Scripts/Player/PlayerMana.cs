@@ -22,6 +22,9 @@ public class PlayerMana : MonoBehaviour
     public float MaxMana => _maxMana;
     public float SkillCost => _skillCost;
 
+    /// <summary>Debug menu: mana is never spent (skills and the Spirit Bow cost nothing).</summary>
+    public static bool DebugInfinite;
+
     private void Awake()
     {
         _statsManager = GetComponent<PlayerStatsManager>();
@@ -59,6 +62,7 @@ public class PlayerMana : MonoBehaviour
 
     public void ConsumeMana(float amount)
     {
+        if (DebugInfinite) return;
         _currentMana = Mathf.Max(0f, _currentMana - amount);
         UpdateUI();
     }

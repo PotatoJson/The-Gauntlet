@@ -310,9 +310,43 @@ public class PlayerCamera : MonoBehaviour
         _previousTargetPosition = playerTarget.position;
     }
 
+    #region Over the shoulder (bow aiming)
+    [Header("Aiming")]
+    [Tooltip("How far right the camera sits while aiming, so the player isn't in the way of the crosshair.")]
+    [SerializeField] private float aimShoulder = 0.85f;
+    [Tooltip("Aiming pulls the camera in to this fraction of its usual distance.")]
+    [SerializeField] private float aimDistanceScale = 0.6f;
+    [Tooltip("Degrees of field of view a full draw takes away (a slight zoom).")]
+    [SerializeField] private float drawZoom = 8f;
+
+    /// <summary>0 = normal, 1 = over the right shoulder. Set by the bow; eased here.</summary>
+    [System.NonSerialized] public float AimTarget;
+    /// <summary>How far a shot is drawn (0-1): the view narrows a little as it's drawn.</summary>
+    [System.NonSerialized] public float DrawTarget;
+    private float _aim, _draw, _baseFov = -1f;
+
+    private void ApplyAim()
+    {
+        float step = 1f - Mathf.Exp(-10f * Time.unscaledDeltaTime);
+        _aim = Mathf.Lerp(_aim, AimTarget, step);
+        _draw = Mathf.Lerp(_draw, DrawTarget * AimTarget, step);
+        if (_baseFov < 0f) _baseFov = cameraObject.fieldOfView;
+        cameraObject.fieldOfView = _baseFov - drawZoom * _draw;
+    }
+    #endregion
+
     private void HandleCollisions()
     {
-        _targetCameraZPosition = _cameraZPosition;
+        ApplyAim();
+        _targetCameraZPosition = _cameraZPosition * Mathf.Lerp(1f, aimDistanceScale, _aim);
+        // The shoulder offset, short of any wall on that side.
+        float shoulder = aimShoulder * _aim;
+        if (shoulder > 0.01f && Physics.SphereCast(cameraPivotTransform.position, cameraCollisionRadius, cameraPivotTransform.right,
+                out RaycastHit side, shoulder, collideWithLayers))
+        {
+            shoulder = Mathf.Max(0f, side.distance - cameraCollisionRadius);
+        }
+        _cameraObjectPosition.x = shoulder;
         RaycastHit hit;
         Vector3 direction = cameraObject.transform.position - cameraPivotTransform.position;
         direction.Normalize();
@@ -498,22 +532,29 @@ public class PlayerCamera : MonoBehaviour
 
     private void HandleLockOnUI()
     {
-        if (currentLockOnTarget != null && lockOnReticle != null)
+        if (lockOnReticle != null && LockOnPoint(out _, out Vector3 targetScreenPos))
         {
-            Vector3 targetWorldPos = GetLockOnTargetPosition(currentLockOnTarget);
-            Vector3 targetScreenPos = cameraObject.WorldToScreenPoint(targetWorldPos);
-
-            if (cameraObject.targetTexture != null)
-            {
-                float scaleX = (float)Screen.width / cameraObject.targetTexture.width;
-                float scaleY = (float)Screen.height / cameraObject.targetTexture.height;
-
-                targetScreenPos.x *= scaleX;
-                targetScreenPos.y *= scaleY;
-            }
-
             lockOnReticle.transform.position = targetScreenPos;
         }
+    }
+
+    /// <summary>
+    /// The point the lock-on reticle marks on the locked-on enemy, in the world and on the screen (screen pixels,
+    /// allowing for the low-res render texture). False when nothing is locked on. The bow aims here.
+    /// </summary>
+    public bool LockOnPoint(out Vector3 world, out Vector3 screen)
+    {
+        world = screen = Vector3.zero;
+        if (currentLockOnTarget == null) return false;
+
+        world = GetLockOnTargetPosition(currentLockOnTarget);
+        screen = cameraObject.WorldToScreenPoint(world);
+        if (cameraObject.targetTexture != null)
+        {
+            screen.x *= (float)Screen.width / cameraObject.targetTexture.width;
+            screen.y *= (float)Screen.height / cameraObject.targetTexture.height;
+        }
+        return true;
     }
 
     private void HandleTargetSwitching(Vector2 input, bool isMouseInput)

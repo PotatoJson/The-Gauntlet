@@ -77,7 +77,11 @@ public static class AttackPassiveEffects
         }
     }
 
-    private static IEnumerator ChainRoutine(BaseEnemy first, float damage, int jumps, float radius)
+    /// <summary>Lightning leaps on from <paramref name="first"/> to the nearest enemies, one after another.</summary>
+    public static void Chain(MonoBehaviour runner, BaseEnemy first, float damage, int jumps, float radius, System.Action<BaseEnemy> onJump = null) =>
+        runner.StartCoroutine(ChainRoutine(first, damage, jumps, radius, onJump));
+
+    private static IEnumerator ChainRoutine(BaseEnemy first, float damage, int jumps, float radius, System.Action<BaseEnemy> onJump = null)
     {
         var alreadyHit = new HashSet<BaseEnemy> { first };
         BaseEnemy from = first;
@@ -92,6 +96,7 @@ public static class AttackPassiveEffects
 
             alreadyHit.Add(next);
             Zap(from.transform.position + Vector3.up, next.transform.position + Vector3.up);
+            onJump?.Invoke(next);
 
             // Quiet damage: the punch itself already played the hit feedback.
             HitFeel.InMelee = true;

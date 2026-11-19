@@ -59,6 +59,13 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private Transform _leftSkillSpawnPoint;
     [SerializeField] private Transform _rightSkillSpawnPoint;
     private AnimatorOverrideController _overrideController;
+    private PlayerBow _bow;
+
+    /// <summary>The two fists' hitboxes; a bow's arrows count as the fist of the gauntlet that shot them.</summary>
+    public HitboxController LeftFist => _leftHitbox;
+    public HitboxController RightFist => _rightHitbox;
+    /// <summary>The Attunement (passive skill gem) on one gauntlet: right = Primary, left = Secondary.</summary>
+    public AttackPassive AttunementFor(bool rightFist) => PassiveFor(rightFist);
 
     private float _leftSkillCooldownTimer = 0f;
     private float _rightSkillCooldownTimer = 0f;
@@ -89,6 +96,8 @@ public class PlayerCombat : MonoBehaviour
     void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+        _bow = GetComponent<PlayerBow>();
+        if (_bow == null) _bow = gameObject.AddComponent<PlayerBow>();
         _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
         _animator.runtimeAnimatorController = _overrideController;
         _stateManager = GetComponent<PlayerManager>();
@@ -133,13 +142,23 @@ public class PlayerCombat : MonoBehaviour
     // --- NEW: Input Action Wrappers ---
     private void OnLeftSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(true);
     private void OnRightSkillInput(InputAction.CallbackContext ctx) => AttemptSkillCast(false);
-    private void OnLightAttackInputWrapper(InputAction.CallbackContext ctx) => OnLightAttackInput();
+    // With a bow out (PlayerBow), the attack buttons shoot instead of punching.
+    private void OnLightAttackInputWrapper(InputAction.CallbackContext ctx)
+    {
+        if (_bow != null && _bow.IsActive) { _bow.QuickShot(); return; }
+        OnLightAttackInput();
+    }
     private void OnHeavyAttackStart(InputAction.CallbackContext ctx) 
     {
+        if (_bow != null && _bow.IsActive) { _bow.BeginCharge(); return; }
         _isHoldingHeavy = true;
         OnHeavyAttackInput();
     }
-    private void OnHeavyAttackCancel(InputAction.CallbackContext ctx) => OnHeavyAttackReleased();
+    private void OnHeavyAttackCancel(InputAction.CallbackContext ctx)
+    {
+        if (_bow != null && _bow.IsCharging) { _bow.ReleaseCharge(); return; }
+        OnHeavyAttackReleased();
+    }
     private void OnHealInput(InputAction.CallbackContext ctx) => UsePotion();
     #endregion
 
@@ -243,6 +262,8 @@ public class PlayerCombat : MonoBehaviour
 
         if (targetGauntlet == null || targetGauntlet.ActiveSkillGem == null) return;
         if (targetGauntlet.ActiveSkillGem.IsPassive) return; // nothing to cast, and it must not cost mana
+        // A bow gem is a toggle: this gauntlet's bow comes out, or goes away. It costs mana while out, not to cast.
+        if (targetGauntlet.ActiveSkillGem.Category == SkillCategory.Bow) { _bow.Toggle(isLeftGauntlet); return; }
 
         SkillGemData slottedSkill = targetGauntlet.ActiveSkillGem;
 
