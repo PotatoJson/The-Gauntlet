@@ -432,6 +432,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 797
+--- !u!114 &-5175824791709553282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Bow/Arrow_Hit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Bow/Arrow_Hit
+  Guid:
+    Data1: -108817309
+    Data2: 1342085641
+    Data3: 18472853
+    Data4: 180870653
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 700
 --- !u!114 &-4897045839791856422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -513,6 +540,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 0
+--- !u!114 &-4232555864020873807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Bow/Bow_Draw
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Bow/Bow_Draw
+  Guid:
+    Data1: 1411945139
+    Data2: 1234411335
+    Data3: -1909307235
+    Data4: 262250825
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 1200
 --- !u!114 &-3547983565346696681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1116,13 +1170,16 @@ MonoBehaviour:
   - {fileID: 5982806932081259626}
   - {fileID: -805535996291987688}
   - {fileID: -7222037833420059544}
+  - {fileID: 8591529552050536552}
+  - {fileID: -5175824791709553282}
+  - {fileID: -4232555864020873807}
   EditorParameters: []
   MasterBanks:
   - {fileID: 2066265338496270884}
   StringsBanks:
   - {fileID: 1943974540647462933}
   cacheVersion: 131861
-  cacheTime: 639300131518297445
+  cacheTime: 639308240435109643
   SerializableEventsDict:
   - key: event:/Environment/Vase_Break
     index: 0
@@ -1284,6 +1341,12 @@ MonoBehaviour:
     index: 78
   - key: event:/Boss/Pergius_Growl
     index: 79
+  - key: event:/Bow/Bow_Release
+    index: 80
+  - key: event:/Bow/Arrow_Hit
+    index: 81
+  - key: event:/Bow/Bow_Draw
+    index: 82
 --- !u!114 &274256312649714189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1569,10 +1632,10 @@ MonoBehaviour:
   Path: HellBent-FMOD/Build/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639300131518297445
+  lastModified: 639308240435109643
   FileSizes:
   - Name: Desktop
-    Value: 4678
+    Value: 4832
   Exists: 1
 --- !u!114 &2066265338496270884
 MonoBehaviour:
@@ -1589,10 +1652,10 @@ MonoBehaviour:
   Path: HellBent-FMOD/Build/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639300131518259287
+  lastModified: 639308240435059326
   FileSizes:
   - Name: Desktop
-    Value: 821440
+    Value: 848320
   Exists: 1
 --- !u!114 &2122556550182375229
 MonoBehaviour:
@@ -2404,6 +2467,33 @@ MonoBehaviour:
   MinDistance: 1
   MaxDistance: 20
   Length: 1596
+--- !u!114 &8591529552050536552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Bow/Bow_Release
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Bow/Bow_Release
+  Guid:
+    Data1: 721901583
+    Data2: 1175122821
+    Data3: 949079962
+    Data4: -700980245
+  Banks:
+  - {fileID: 2066265338496270884}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 700
 --- !u!114 &8854611694193632358
 MonoBehaviour:
   m_ObjectHideFlags: 0

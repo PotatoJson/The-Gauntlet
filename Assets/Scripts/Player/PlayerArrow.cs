@@ -10,6 +10,7 @@ using UnityEngine;
 public class PlayerArrow : MonoBehaviour
 {
     private const float Radius = 0.25f;
+    private const string HitSound = "event:/Bow/Arrow_Hit";
 
     private MonoBehaviour _runner;     // the bow: chain lightning and the like run on it, not on this short-lived arrow
     private Vector3 _velocity;
@@ -95,15 +96,30 @@ public class PlayerArrow : MonoBehaviour
             if (enemy != null)
             {
                 if (enemy.IsDead() || !_hit.Add(enemy)) continue;
-                Strike(enemy, hit.point);
-                if (!_pierce) { Burst(hit.point); Destroy(gameObject); return; }
+                Vector3 at = hit.point == Vector3.zero ? transform.position : hit.point;
+                Strike(enemy, at);
+                ArrowHitFx.Play(at, _velocity, _colour, _pierce);
+                if (!_pierce) { Destroy(gameObject); return; }
+
+                // Through it, and on behind it. The bow is held above an enemy's middle, so the shot comes in a
+                // little downward and would bury itself in the floor just past them; it levels out instead.
+                if (_velocity.y < 0f)
+                {
+                    float speed = _velocity.magnitude;
+                    _velocity.y = 0f;
+                    _velocity = _velocity.normalized * speed;
+                    step = _velocity * Time.deltaTime;
+                    transform.rotation = Quaternion.LookRotation(_velocity);
+                    break; // what else this sweep found lay along the old, downward path (the floor, usually)
+                }
                 continue;
             }
 
             // Scenery stops it; other triggers (rooms, pickups) don't.
             if (!hit.collider.isTrigger)
             {
-                Burst(hit.point == Vector3.zero ? transform.position : hit.point);
+                ArrowHitFx.Play(hit.point == Vector3.zero ? transform.position : hit.point, _velocity, _colour, _pierce, solid: true);
+                FMODUnity.RuntimeManager.PlayOneShot(HitSound, transform.position);
                 Destroy(gameObject);
                 return;
             }
@@ -120,12 +136,11 @@ public class PlayerArrow : MonoBehaviour
         try { enemy.TakeDamage(_damage); }
         finally { HitFeel.InMelee = false; }
         HitFeel.EnemyHit(enemy, enemy.IsDead() ? HitStrength.Kill : _pierce ? HitStrength.Heavy : HitStrength.Light);
-        FMODUnity.RuntimeManager.PlayOneShot(_pierce ? "event:/Combat/Impact_Heavy" : "event:/Combat/Impact_Light", at);
+        FMODUnity.RuntimeManager.PlayOneShot(HitSound, at);
 
         // As if the gauntlet that shot it had punched: its Attunement, and its half of a reaction.
         AttackPassiveEffects.OnHit(_attunement, enemy, _damage, kind, _runner);
         if (_fist != null) ElementReactions.OnPunch(_fist, _element, _attunement, enemy, _damage);
     }
 
-    private void Burst(Vector3 at) => EnemyFx.Impact(at, 0.8f, _colour);
 }

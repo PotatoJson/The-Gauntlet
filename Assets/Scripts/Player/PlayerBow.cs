@@ -19,7 +19,9 @@ public class PlayerBow : MonoBehaviour
 
     // Shots, as multiples of the punch damage (PlayerStatsManager.CurrentDamage)
     private const float QuickDamage = 0.6f;
-    private const float QuickCooldown = 0.35f;
+    private const float QuickCooldown = 0.35f;    // from the click (the quick draw is inside it)
+    private const float QuickDrawTime = 0.2f;     // a quick shot still pulls the string back before it's loosed...
+    private const float QuickDrawPull = 0.6f;     // ... this far
     private const float QuickSpeed = 38f;
     private const float ChargeSeconds = 0.9f;     // to full draw
     private const float MinDraw = 0.35f;          // released before this much draw, nothing is loosed (no tap-spam)
@@ -27,9 +29,18 @@ public class PlayerBow : MonoBehaviour
     private const float ChargedCooldown = 0.6f;   // after a drawn shot, before the next can be drawn
     private const float ChargedSpeed = 55f;
     private const float Range = 40f;
+    private const float MinAimReach = 2f;         // the crosshair's point is taken at least this far past him
+    private const float ShoulderHeight = 0.4f;    // above his origin (which is at his middle)
+
+    private const float RaiseHold = 0.6f;         // seconds the bow stays up after a shot before it's lowered again
+
+    // Sounds
+    private const string DrawSound = "event:/Bow/Bow_Draw";
+    private const string ReleaseSound = "event:/Bow/Bow_Release";
 
     private const string LayerName = "Bow";
-    private const string AimState = "Bow_Aim", ShootState = "Bow_Shoot";
+    private const string AimState = "Bow_Aim", ShootState = "Bow_Shoot"; // playing Bow_Draw (by DrawParam) and Bow_Loose
+    private static readonly int DrawParam = Animator.StringToHash("BowDraw");
 
     private PlayerCombat _combat;
     private PlayerMovement _movement;
@@ -38,7 +49,8 @@ public class PlayerBow : MonoBehaviour
     private PlayerStatsManager _stats;
     private Animator _animator;
     private int _layer = -1;
-    private float _layerWeight;
+    private float _layerWeight;   // how far the bow is raised to aim (0 = carried at his side)
+    private float _shown;         // 0 while the arms are busy with something else (a potion, a roll)
 
     private bool _leftOut, _rightOut;
     private bool _nextIsLeft;
@@ -47,10 +59,16 @@ public class PlayerBow : MonoBehaviour
 
     private SpiritBowVisual _visual;
     private BowReticle _reticle;
-    private ChargePulseVFX _chargeFx;
+    private BowStance _stance;
     private bool _fullDrawCued;
+    private float _released = -10f;   // when the last arrow was loosed
+    private Vector3 _aimDirection;
+    private FMOD.Studio.EventInstance _drawSound;
 
-    private float Draw => IsCharging ? Mathf.Clamp01((Time.time - _chargeStart) / ChargeSeconds) : 0f;
+    private float _quickStart = -1f;  // when a quick shot's draw began (-1: none under way)
+
+    private float Draw => IsCharging ? Mathf.Clamp01((Time.time - _chargeStart) / ChargeSeconds)
+                        : _quickStart >= 0f ? Mathf.Clamp01((Time.time - _quickStart) / QuickDrawTime) * QuickDrawPull : 0f;
 
     public bool IsActive => _leftOut || _rightOut;
     public bool IsCharging => _chargeStart >= 0f;
@@ -63,7 +81,12 @@ public class PlayerBow : MonoBehaviour
         _mana = GetComponent<PlayerMana>();
         _stats = GetComponent<PlayerStatsManager>();
         _animator = GetComponentInChildren<Animator>();
-        if (_animator != null) _layer = _animator.GetLayerIndex(LayerName);
+        if (_animator != null)
+        {
+            _layer = _animator.GetLayerIndex(LayerName);
+            _stance = _animator.GetComponent<BowStance>();
+            if (_stance == null) _stance = _animator.gameObject.AddComponent<BowStance>();
+        }
     }
 
     /// <summary>Q / E with the bow gem in that gauntlet: its bow comes out, or goes away.</summary>
@@ -89,7 +112,7 @@ public class PlayerBow : MonoBehaviour
 
     private void Refresh()
     {
-        if (!IsActive) { _chargeStart = -1f; if (_chargeFx != null) _chargeFx.Cancel(); }
+        if (!IsActive) { _chargeStart = _quickStart = -1f; StopDrawSound(); }
         if (_movement != null) _movement.Aiming = IsActive;
 
         if (IsActive)
@@ -123,11 +146,25 @@ public class PlayerBow : MonoBehaviour
             if (_mana.CurrentMana <= 0f) PutAway();
         }
 
-        // The arms raise the bow; they drop it for anything that needs them (a potion, a stagger, a roll).
+        // Carried in the left hand at his side; raised to aim while drawing and for a moment after a shot.
+        // Put away for anything that needs the arms (a potion, a stagger, a roll).
         bool armsFree = IsActive && CanAct();
-        _layerWeight = Mathf.MoveTowards(_layerWeight, armsFree ? 1f : 0f, Time.deltaTime * 8f);
+        // A quick shot: drawn, then loosed (dropped if the arms are needed for something else meanwhile).
+        if (_quickStart >= 0f)
+        {
+            if (!armsFree) _quickStart = -1f;
+            else if (Time.time - _quickStart >= QuickDrawTime) { _quickStart = -1f; Fire(QuickDamage, QuickSpeed, false, 1f); }
+        }
+
+        bool raised = armsFree && (IsCharging || _quickStart >= 0f || Time.time - _released < RaiseHold);
+        _shown = Mathf.MoveTowards(_shown, armsFree ? 1f : 0f, Time.deltaTime * 8f);
+        _layerWeight = Mathf.MoveTowards(_layerWeight, raised ? 1f : 0f, Time.deltaTime * (raised ? 9f : 4f));
         if (_layer >= 0) _animator.SetLayerWeight(_layer, _layerWeight);
-        if (_visual != null) _visual.SetDrawn(Draw, _layerWeight);
+        if (_visual != null) _visual.SetDrawn(Draw, _shown, _layerWeight);
+
+        // The draw clip follows the draw; the stance turns him side-on while the bow is up.
+        if (_layer >= 0) _animator.SetFloat(DrawParam, Draw);
+        if (_stance != null) _stance.Raise = IsActive && _visual != null ? _layerWeight : 0f;
 
         // Over the right shoulder while a bow is out, and a little zoom as a shot is drawn.
         if (PlayerCamera.Instance != null)
@@ -163,9 +200,9 @@ public class PlayerBow : MonoBehaviour
     // ---------------- Shooting ----------------
     public void QuickShot()
     {
-        if (!IsActive || IsCharging || Time.time < _nextShot || !CanAct()) return;
+        if (!IsActive || IsCharging || _quickStart >= 0f || Time.time < _nextShot || !CanAct()) return;
         _nextShot = Time.time + QuickCooldown;
-        Fire(QuickDamage, QuickSpeed, false, 1f);
+        _quickStart = Time.time; // loosed by Update once drawn
     }
 
     public void BeginCharge()
@@ -173,9 +210,10 @@ public class PlayerBow : MonoBehaviour
         if (!IsActive || !CanAct() || Time.time < _nextShot) return;
         _chargeStart = Time.time;
         _fullDrawCued = false;
-        FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Charge_Start", transform.position);
-        if (_chargeFx == null) _chargeFx = ChargePulseVFX.Create(new GameObject("Bow Charge").transform);
-        _chargeFx.Begin(Colour(ElementOf(NextIsLeft())));
+        StopDrawSound();
+        _drawSound = FMODUnity.RuntimeManager.CreateInstance(DrawSound);
+        _drawSound.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(transform.position));
+        _drawSound.start();
     }
 
     public void ReleaseCharge()
@@ -183,14 +221,9 @@ public class PlayerBow : MonoBehaviour
         if (!IsCharging) return;
         float draw = Draw;
         _chargeStart = -1f;
-        if (!IsActive || !CanAct()) { if (_chargeFx != null) _chargeFx.Cancel(); return; }
-        if (draw < MinDraw)
-        {
-            // Let go too soon: the arrow is dropped, not loosed.
-            if (_chargeFx != null) _chargeFx.Cancel();
-            return;
-        }
-        if (_chargeFx != null) _chargeFx.Release();
+        StopDrawSound();
+        if (!IsActive || !CanAct()) return;
+        if (draw < MinDraw) return; // let go too soon: the arrow is dropped, not loosed
         _nextShot = Time.time + ChargedCooldown;
         float power = Mathf.InverseLerp(MinDraw, 1f, draw);
         Fire(Mathf.Lerp(QuickDamage, ChargedMaxDamage, power), ChargedSpeed, draw >= 0.99f, 1f + draw * 0.6f);
@@ -207,23 +240,28 @@ public class PlayerBow : MonoBehaviour
 
         Vector3 from = _visual != null ? _visual.Nock : transform.position + Vector3.up * 1.4f + transform.forward * 0.6f;
         Vector3 direction = Aim(from);
+        _released = Time.time;
         PlayerArrow.Shoot(this, from, direction, speed, Range / speed, damage, element, Colour(element), fist, attunement, pierce, size);
 
-        if (_layer >= 0 && _layerWeight > 0.5f)
-        {
-            _animator.CrossFadeInFixedTime(ShootState, 0.05f, _layer);
-        }
-        FMODUnity.RuntimeManager.PlayOneShot(SkillSound(element), from);
+        if (_layer >= 0) _animator.CrossFadeInFixedTime(ShootState, 0.05f, _layer); // from the carry, this raises the bow into it
+        if (_visual != null) _visual.Loose();
+        FMODUnity.RuntimeManager.PlayOneShot(ReleaseSound, from);
+    }
+
+    private void StopDrawSound()
+    {
+        if (!_drawSound.isValid()) return;
+        _drawSound.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+        _drawSound.release();
+        _drawSound.clearHandle();
     }
 
     // Locked on: at the locked-on enemy (the reticle sits on it). Otherwise straight at whatever is under the reticle
     // in the middle of the screen, with no help at all: the arrow goes exactly where you point.
-    private Vector3 Aim(Vector3 from)
-    {
-        if (PlayerCamera.Instance != null && PlayerCamera.Instance.LockOnPoint(out Vector3 locked, out _))
-            return (locked - from).normalized;
-        return (AimPoint(out _) - from).normalized;
-    }
+    private Vector3 Aim(Vector3 from) => (Target() - from).normalized;
+
+    private Vector3 Target() =>
+        PlayerCamera.Instance != null && PlayerCamera.Instance.LockOnPoint(out Vector3 locked, out _) ? locked : AimPoint(out _);
 
     // The first thing (not the player) under the middle of the screen, or a point far off along that line.
     private Vector3 AimPoint(out BaseEnemy enemy)
@@ -235,13 +273,18 @@ public class PlayerBow : MonoBehaviour
         Ray ray = view.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         RaycastHit[] hits = Physics.RaycastAll(ray, Range + 10f, ~0, QueryTriggerInteraction.Ignore);
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        // Nothing between the camera and him counts (a pillar the camera is behind), and anything hard up against him
+        // is aimed at from a little way down the same line: a point a hand's width from the bow would swing the aim
+        // (and the stance turning to it) round and round with every twitch.
+        float along = Vector3.Dot(transform.position - ray.origin, ray.direction);
+        float nearest = along + MinAimReach;
         foreach (RaycastHit hit in hits)
         {
-            if (hit.collider.transform.IsChildOf(transform)) continue;
+            if (hit.collider.transform.IsChildOf(transform) || hit.distance < along) continue;
             BaseEnemy found = hit.collider.GetComponentInParent<BaseEnemy>();
             if (found != null && found.IsDead()) continue;
             enemy = found;
-            return hit.point;
+            return ray.origin + ray.direction * Mathf.Max(hit.distance, nearest);
         }
         return ray.origin + ray.direction * Range;
     }
@@ -250,20 +293,19 @@ public class PlayerBow : MonoBehaviour
     // Which gauntlet looses the next arrow.
     private bool NextIsLeft() => _leftOut && _rightOut ? !_nextIsLeft : _leftOut;
 
+    // The spirit arrow on the string points along the shot, in the next arrow's colour; full draw is felt as a nudge.
     private void UpdateCharge()
     {
-        if (_chargeFx == null) return;
-        if (_visual != null) _chargeFx.transform.parent.position = _visual.Nock;
-        if (!IsCharging) return;
+        if (_visual == null) return;
+        Vector3 target = Target();
+        _aimDirection = (target - _visual.Nock).normalized;
+        _visual.SetShot(_aimDirection, Colour(ElementOf(NextIsLeft())));
+        // The stance turns to the target as seen from his shoulders, which the turn doesn't move (the bow does).
+        if (_stance != null) _stance.Aim = target - (transform.position + Vector3.up * ShoulderHeight);
 
-        float draw = Draw;
-        _chargeFx.SetCharge(draw);
-        if (draw >= 0.99f && !_fullDrawCued)
+        if (IsCharging && Draw >= 0.99f && !_fullDrawCued)
         {
-            // Fully drawn: a flash at the nock and a nudge, so you feel it's ready.
             _fullDrawCued = true;
-            EnemyFx.Impact(_visual != null ? _visual.Nock : transform.position, 0.6f, Colour(ElementOf(NextIsLeft())));
-            FMODUnity.RuntimeManager.PlayOneShot("event:/Combat/Impact_Light", transform.position);
             if (PlayerCamera.Instance != null) PlayerCamera.Instance.Kick(transform.forward, 0.04f);
         }
     }
@@ -292,7 +334,7 @@ public class PlayerBow : MonoBehaviour
         // The camera outlives the player (it carries over between levels): leave it as it was.
         if (PlayerCamera.Instance != null) { PlayerCamera.Instance.AimTarget = 0f; PlayerCamera.Instance.DrawTarget = 0f; }
         if (_reticle != null) Destroy(_reticle.gameObject);
-        if (_chargeFx != null) Destroy(_chargeFx.transform.parent.gameObject);
+        StopDrawSound();
     }
 
     private static Vector3 Centre(Transform target)
